@@ -20,6 +20,9 @@
 /* Calypsonet Terminal Card */
 #include "ApduResponseApi.h"
 
+/* Keyple Core Service */
+#include "KeypleServiceExport.h"
+
 namespace keyple {
 namespace core {
 namespace service {
@@ -32,7 +35,7 @@ using namespace calypsonet::terminal::card;
  *
  * @since 2.0.0
  */
-class ApduResponseAdapter final : public ApduResponseApi {
+class KEYPLESERVICE_API ApduResponseAdapter final : public ApduResponseApi {
 public:
     /**
      * (package-private)<br>
