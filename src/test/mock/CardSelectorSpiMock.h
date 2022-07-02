@@ -25,7 +25,7 @@ class CardSelectorSpiMock final : public CardSelectorSpi {
 public:
     MOCK_METHOD((const std::string&), getCardProtocol, (), (const, override));
     MOCK_METHOD((const std::string&), getPowerOnDataRegex, (), (const, override));
-    MOCK_METHOD((const std::vector<uint8_t>), getAid, (), (const, override));
+    MOCK_METHOD((const std::vector<uint8_t>&), getAid, (), (const, override));
     MOCK_METHOD(FileOccurrence, getFileOccurrence, (), (const, override));
     MOCK_METHOD(FileControlInformation, getFileControlInformation, (), (const, override));
     MOCK_METHOD((const std::vector<int>&), getSuccessfulSelectionStatusWords, (), (const,override));

@@ -29,5 +29,5 @@ using namespace calypsonet::terminal::reader::selection::spi;
 class SmartCardMock final : public SmartCard, public SmartCardSpi {
 public:
     MOCK_METHOD((const std::string&), getPowerOnData, (), (const, override));
-    MOCK_METHOD((const std::vector<uint8_t>&), getSelectApplicationResponse, (), (const, override));
+    MOCK_METHOD((const std::vector<uint8_t>), getSelectApplicationResponse, (), (const, override));
 };

@@ -16,6 +16,7 @@
 
 /* Keyple Core Service */
 #include "AbstractObservableLocalPluginAdapter.h"
+#include "KeypleServiceExport.h"
 
 /* Keyple Core Plugin */
 #include "AutonomousObservablePluginApi.h"
@@ -38,7 +39,7 @@ using namespace keyple::core::util::cpp;
  *
  * @since 2.0.0
  */
-class AutonomousObservableLocalPluginAdapter final
+class KEYPLESERVICE_API AutonomousObservableLocalPluginAdapter final
 : public AbstractObservableLocalPluginAdapter,
   public AutonomousObservablePluginApi,
   public std::enable_shared_from_this<AutonomousObservableLocalPluginAdapter> {

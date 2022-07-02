@@ -34,7 +34,7 @@ class ReaderObserverSpiMock final : public CardReaderObserverSpi {
 public:
     ReaderObserverSpiMock(const std::shared_ptr<RuntimeException> e) : mThrowEx(e) {}
 
-    void onReaderEvent(std::shared_ptr<CardReaderEvent> readerEvent)
+    void onReaderEvent(const std::shared_ptr<CardReaderEvent> readerEvent) override
     {
         mEventTypeReceived.insert({readerEvent->getType(), readerEvent});
         if (mThrowEx != nullptr) {

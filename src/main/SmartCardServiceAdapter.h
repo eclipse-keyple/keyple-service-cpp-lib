@@ -23,6 +23,7 @@
 
 /* Keyple Core Service */
 #include "AbstractPluginAdapter.h"
+#include "KeypleServiceExport.h"
 #include "SmartCardService.h"
 
 /* Keyple Core Plugin */
@@ -46,7 +47,7 @@ using namespace keyple::core::util::cpp;
  *
  * @since 2.0.0
  */
-class SmartCardServiceAdapter final : public SmartCardService {
+class KEYPLESERVICE_API SmartCardServiceAdapter final : public SmartCardService {
 public:
     /**
      * (package-private)<br>

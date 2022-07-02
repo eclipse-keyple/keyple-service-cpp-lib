@@ -14,6 +14,9 @@
 
 #include <ostream>
 
+/* Keyple Core Service */
+#include "KeypleServiceExport.h"
+
 namespace keyple {
 namespace core {
 namespace service {
@@ -54,7 +57,7 @@ enum class MonitoringState {
     WAIT_FOR_CARD_REMOVAL
 };
 
-std::ostream& operator<<(std::ostream& os, const MonitoringState ms);
+KEYPLESERVICE_API std::ostream& operator<<(std::ostream& os, const MonitoringState ms);
 
 }
 }

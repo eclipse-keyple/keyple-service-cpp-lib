@@ -21,6 +21,7 @@
 #include "KeyplePluginExtension.h"
 
 /* Keyple Core Service */
+#include "KeypleServiceExport.h"
 #include "Reader.h"
 
 namespace keyple {
@@ -36,7 +37,7 @@ using namespace keyple::core::common;
  *
  * @since 2.0.0
  */
-class Plugin {
+class KEYPLESERVICE_API Plugin {
 public:
     /**
      * 

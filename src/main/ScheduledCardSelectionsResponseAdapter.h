@@ -21,6 +21,9 @@
 /* Calypsonet Terminal Reader */
 #include "ScheduledCardSelectionsResponse.h"
 
+/* Keyple Core Service */
+#include "KeypleServiceExport.h"
+
 namespace keyple {
 namespace core {
 namespace service {
@@ -34,7 +37,7 @@ using namespace calypsonet::terminal::reader::selection;
  *
  * @since 2.0.0
  */
-class ScheduledCardSelectionsResponseAdapter : public ScheduledCardSelectionsResponse {
+class KEYPLESERVICE_API ScheduledCardSelectionsResponseAdapter : public ScheduledCardSelectionsResponse {
 public:
     /**
      * (package-private)<br>

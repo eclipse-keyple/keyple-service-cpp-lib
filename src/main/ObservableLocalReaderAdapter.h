@@ -30,6 +30,7 @@
 /* Keyple Core Service */
 #include "CardSelectionScenarioAdapter.h"
 #include "Job.h"
+#include "KeypleServiceExport.h"
 #include "LocalReaderAdapter.h"
 #include "MonitoringState.h"
 #include "ObservationManagerAdapter.h"
@@ -62,7 +63,7 @@ using NotificationMode = ObservableCardReader::NotificationMode;
  *
  * @since 2.0.0
  */
-class ObservableLocalReaderAdapter
+class KEYPLESERVICE_API ObservableLocalReaderAdapter
 : public LocalReaderAdapter,
   public ObservableReader,
   public WaitForCardInsertionAutonomousReaderApi,

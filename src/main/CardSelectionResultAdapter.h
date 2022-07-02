@@ -19,6 +19,9 @@
 #include "CardSelectionResult.h"
 #include "SmartCard.h"
 
+/* Keyple Core Service */
+#include "KeypleServiceExport.h"
+
 namespace keyple {
 namespace core {
 namespace service {
@@ -32,7 +35,7 @@ using namespace calypsonet::terminal::reader::selection::spi;
  *
  * @since 2.0.0
  */
-class CardSelectionResultAdapter final : public CardSelectionResult {
+class KEYPLESERVICE_API CardSelectionResultAdapter final : public CardSelectionResult {
 public:
     /**
      * (package-private)<br>

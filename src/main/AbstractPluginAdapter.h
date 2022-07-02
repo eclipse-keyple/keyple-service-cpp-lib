@@ -23,6 +23,7 @@
 #include "KeyplePluginExtension.h"
 
 /* Keyple Core Service */
+#include "KeypleServiceExport.h"
 #include "LocalReaderAdapter.h"
 #include "Plugin.h"
 #include "Reader.h"
@@ -40,7 +41,7 @@ using namespace keyple::core::util::cpp;
  *
  * @since 2.0.0
  */
-class AbstractPluginAdapter : virtual public Plugin {
+class KEYPLESERVICE_API AbstractPluginAdapter : virtual public Plugin {
 public:
     /**
      * (package-private)<br>

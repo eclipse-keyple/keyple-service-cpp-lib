@@ -168,6 +168,7 @@ public:
             Thread::sleep(mWaitInsertion);
             mInsertions++;
         } catch (const InterruptedException& e) {
+            (void)e;
         }
 
         /* If card already inserted, throw ex */
@@ -188,6 +189,7 @@ public:
             /* Card removal is detected after a timeout */
             mRemovals++;
         } catch (const InterruptedException& e) {
+            (void)e;
         }
 
         if (mRemovals > 1) {

@@ -16,6 +16,7 @@
 
 /* Keyple Core Service */
 #include "AbstractPluginAdapter.h"
+#include "KeypleServiceExport.h"
 
 /* Keyple Core Plugin */
 #include "PluginSpi.h"
@@ -35,7 +36,7 @@ using namespace keyple::core::plugin::spi;
  *
  * @since 2.0.0
  */
-class LocalPluginAdapter : public AbstractPluginAdapter {
+class KEYPLESERVICE_API LocalPluginAdapter : public AbstractPluginAdapter {
 public:    
     /**
      * (package-private)<br>

@@ -26,6 +26,7 @@
 #include "AbstractReaderAdapter.h"
 #include "ApduResponseAdapter.h"
 #include "CardResponseAdapter.h"
+#include "KeypleServiceExport.h"
 
 /* Keyple Core Util */
 #include "LoggerFactory.h"
@@ -52,7 +53,7 @@ using FileOccurrence = CardSelectorSpi::FileOccurrence;
  *
  * @since 2.0.0
  */
-class LocalReaderAdapter : public AbstractReaderAdapter {
+class KEYPLESERVICE_API LocalReaderAdapter : public AbstractReaderAdapter {
 public:
     /**
      * (package-private)<br>

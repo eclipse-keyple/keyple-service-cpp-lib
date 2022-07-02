@@ -18,6 +18,7 @@
 
 /* Keyple Core Service */
 #include "Job.h"
+#include "KeypleServiceExport.h"
 
 /* Keyple Core Util */
 #include "LoggerFactory.h"
@@ -29,7 +30,7 @@ namespace cpp {
 
 using namespace keyple::core::util::cpp;
 
-class ExecutorService final {
+class KEYPLESERVICE_API ExecutorService final {
 public:
     /**
      *

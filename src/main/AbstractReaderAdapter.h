@@ -28,6 +28,7 @@
 #include "LoggerFactory.h"
 
 /* Keyple Core Service */
+#include "KeypleServiceExport.h"
 #include "MultiSelectionProcessing.h"
 #include "Reader.h"
 
@@ -45,7 +46,7 @@ using namespace keyple::core::util::cpp;
  *
  * @since 2.0.0
  */
-class AbstractReaderAdapter : virtual public Reader, public ProxyReaderApi {
+class KEYPLESERVICE_API AbstractReaderAdapter : virtual public Reader, public ProxyReaderApi {
 public:
     /**
      * (package-private)<br>

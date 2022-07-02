@@ -19,6 +19,7 @@
 
 /* Keyple Core Service */
 #include "Job.h"
+#include "KeypleServiceExport.h"
 #include "LocalPluginAdapter.h"
 #include "PluginObserverSpi.h"
 #include "ObservationManagerAdapter.h"
@@ -43,7 +44,7 @@ using namespace keyple::core::service::spi;
  *
  * @since 2.0.0
  */
-class AbstractObservableLocalPluginAdapter : public LocalPluginAdapter, public ObservablePlugin {
+class KEYPLESERVICE_API AbstractObservableLocalPluginAdapter : public LocalPluginAdapter, public ObservablePlugin {
 public:
     /**
      * (package-private)<br>

@@ -28,7 +28,7 @@ using namespace keyple::core::util::cpp::exception;
 
 AbstractPluginAdapter::AbstractPluginAdapter(const std::string& pluginName,
                                              std::shared_ptr<KeyplePluginExtension> pluginExtension)
-: mPluginName(pluginName), mPluginExtension(pluginExtension) {}
+: mPluginName(pluginName), mPluginExtension(pluginExtension), mIsRegistered(false) {}
 
 std::shared_ptr<LocalReaderAdapter> AbstractPluginAdapter::buildLocalReaderAdapter(
     std::shared_ptr<ReaderSpi> readerSpi)

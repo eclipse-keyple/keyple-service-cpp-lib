@@ -20,6 +20,7 @@
 
 /* Keyple Core Service */
 #include "AbstractPluginAdapter.h"
+#include "KeypleServiceExport.h"
 #include "PoolPlugin.h"
 
 /* Keyple Core Plugin */
@@ -38,7 +39,7 @@ using namespace keyple::core::util::cpp;
  *
  * @since 2.0.0
  */
-class LocalPoolPluginAdapter final : public AbstractPluginAdapter, public PoolPlugin {
+class KEYPLESERVICE_API LocalPoolPluginAdapter final : public AbstractPluginAdapter, public PoolPlugin {
 public:
     /**
      * (package-private)<br>

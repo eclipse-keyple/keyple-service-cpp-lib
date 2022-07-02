@@ -21,6 +21,7 @@
 
 /* Keyple Core Service */
 #include "AbstractObservableLocalPluginAdapter.h"
+#include "KeypleServiceExport.h"
 #include "PluginEvent.h"
 #include "Reader.h"
 
@@ -41,7 +42,7 @@ using namespace keyple::core::util::cpp;
  *
  * @since 2.0.0
  */
-class ObservableLocalPluginAdapter final : public AbstractObservableLocalPluginAdapter {
+class KEYPLESERVICE_API ObservableLocalPluginAdapter final : public AbstractObservableLocalPluginAdapter {
 public:
     /**
      * (package-private)<br>

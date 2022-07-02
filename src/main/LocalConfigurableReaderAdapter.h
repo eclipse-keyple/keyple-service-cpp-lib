@@ -14,6 +14,7 @@
 
 /* Keyple Core Service */
 #include "ConfigurableReader.h"
+#include "KeypleServiceExport.h"
 #include "LocalReaderAdapter.h"
 
 /* Keyple Core Plugin */
@@ -31,7 +32,7 @@ using namespace keyple::core::plugin::spi::reader;
  *
  * @since 2.0.0
  */
-class LocalConfigurableReaderAdapter final
+class KEYPLESERVICE_API LocalConfigurableReaderAdapter final
 : public LocalReaderAdapter, public ConfigurableReader {
 public:
     /**
