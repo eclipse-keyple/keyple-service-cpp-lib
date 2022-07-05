@@ -21,6 +21,8 @@ SET(KEYPLE_PLUGIN_DIR      "../../../keyple-plugin-cpp-api")
 SET(KEYPLE_UTIL_DIR        "../../../keyple-util-cpp-lib")
 SET(KEYPLE_UTIL_LIB        "keypleutilcpplib")
 
+FIND_PACKAGE(Threads REQUIRED)
+
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp
@@ -93,4 +95,4 @@ ADD_LIBRARY(
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/Job.cpp
 )
 
-TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${KEYPLE_UTIL_LIB})
+TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${KEYPLE_UTIL_LIB} Threads::Threads)
