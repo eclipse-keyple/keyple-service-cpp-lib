@@ -14,42 +14,7 @@ SET(LIBRARY_NAME keypleservicecpplib)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DKEYPLESERVICE_EXPORT")
 
-SET(CALYPSONET_CARD_DIR    "../../../calypsonet-terminal-card-cpp-api")
-SET(CALYPSONET_READER_DIR  "../../../calypsonet-terminal-reader-cpp-api")
-SET(KEYPLE_COMMON_DIR      "../../../keyple-common-cpp-api")
-SET(KEYPLE_PLUGIN_DIR      "../../../keyple-plugin-cpp-api")
-SET(KEYPLE_UTIL_DIR        "../../../keyple-util-cpp-lib")
-SET(KEYPLE_UTIL_LIB        "keypleutilcpplib")
-
 FIND_PACKAGE(Threads REQUIRED)
-
-INCLUDE_DIRECTORIES(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/spi
-
-    ${CALYPSONET_CARD_DIR}/src/main
-    ${CALYPSONET_CARD_DIR}/src/main/spi
-
-    ${CALYPSONET_READER_DIR}/src/main
-    ${CALYPSONET_READER_DIR}/src/main/selection
-    ${CALYPSONET_READER_DIR}/src/main/selection/spi
-    ${CALYPSONET_READER_DIR}/src/main/spi
-
-    ${KEYPLE_COMMON_DIR}/src/main
-
-    ${KEYPLE_PLUGIN_DIR}/src/main
-    ${KEYPLE_PLUGIN_DIR}/src/main/spi
-    ${KEYPLE_PLUGIN_DIR}/src/main/spi/reader
-    ${KEYPLE_PLUGIN_DIR}/src/main/spi/reader/observable
-    ${KEYPLE_PLUGIN_DIR}/src/main/spi/reader/observable/state/insertion
-    ${KEYPLE_PLUGIN_DIR}/src/main/spi/reader/observable/state/processing
-    ${KEYPLE_PLUGIN_DIR}/src/main/spi/reader/observable/state/removal
-
-    ${KEYPLE_UTIL_DIR}/src/main
-    ${KEYPLE_UTIL_DIR}/src/main/cpp
-    ${KEYPLE_UTIL_DIR}/src/main/cpp/exception
-)
 
 ADD_LIBRARY(
     ${LIBRARY_NAME}
@@ -95,4 +60,22 @@ ADD_LIBRARY(
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/Job.cpp
 )
 
-TARGET_LINK_LIBRARIES(${LIBRARY_NAME} ${KEYPLE_UTIL_LIB} Threads::Threads)
+TARGET_INCLUDE_DIRECTORIES(
+    ${LIBRARY_NAME} 
+        PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/spi
+)
+
+TARGET_LINK_LIBRARIES(
+    ${LIBRARY_NAME} 
+        PUBLIC
+    CalypsoNet::TerminalCard 
+    CalypsoNet::TerminalReader 
+    Keyple::CommonApi 
+    Keyple::PluginApi 
+    Keyple::Util 
+    Threads::Threads)
+
+ADD_LIBRARY(Keyple::Service ALIAS ${LIBRARY_NAME})
