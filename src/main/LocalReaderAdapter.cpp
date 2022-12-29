@@ -26,7 +26,7 @@
 /* Keyple Core Util */
 #include "ApduUtil.h"
 #include "Arrays.h"
-#include "ByteArrayUtil.h"
+#include "HexUtil.h"
 #include "IllegalStateException.h"
 #include "KeypleAssert.h"
 #include "KeypleStd.h"
@@ -162,7 +162,7 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::processExplicitAidSelec
 
     mLogger->debug("[%] openLogicalChannel => Select Application with AID = %\n",
                    getName(),
-                   ByteArrayUtil::toHex(aid));
+                   HexUtil::toHex(aid));
 
     /*
      * Build a get response command the actual length expected by the card in the get response
