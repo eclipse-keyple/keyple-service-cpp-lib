@@ -80,7 +80,7 @@ static const std::vector<uint8_t> selectResponseApdu2 = ByteArrayUtil::fromHex("
 static const std::vector<int> statusWords({0x9000, 0x6283});
 
 /* ? */
-const std::vector<int> dummy;
+const std::vector<int> ok_sw = {0x9000};
 const std::vector<uint8_t> uint8_t_dummy;
 const std::string info = "dummy info";
 std::vector<std::shared_ptr<ApduRequestSpi>> apduRequests;
@@ -116,7 +116,7 @@ static void setUp()
     EXPECT_CALL(*cardSelectionRequestSpi.get(), getCardRequest()).WillRepeatedly(Return(nullptr));
 
     apduRequestSpi = std::make_shared<ApduRequestSpiMock>();
-    EXPECT_CALL(*apduRequestSpi.get(), getSuccessfulStatusWords()).WillRepeatedly(ReturnRef(dummy));
+    EXPECT_CALL(*apduRequestSpi.get(), getSuccessfulStatusWords()).WillRepeatedly(ReturnRef(ok_sw));
     EXPECT_CALL(*apduRequestSpi.get(), getInfo()).WillRepeatedly(ReturnRef(info));
     apduRequests.push_back(apduRequestSpi);
 
@@ -525,7 +525,7 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_shouldReturnResponse)
     setUp();
 
     const std::vector<uint8_t> responseApdu = ByteArrayUtil::fromHex("123456786283");
-    const std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
+    std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
 
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(responseApdu));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu()).WillRepeatedly(ReturnRef(requestApdu));
@@ -549,21 +549,21 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_isCase4)
 {
     setUp();
 
-    const std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("11223344041234567803");
+    std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("11223344041234567802");
     const std::vector<uint8_t> responseApdu = ByteArrayUtil::fromHex("9000");
-    const std::vector<uint8_t> responseCase4Apdu = ByteArrayUtil::fromHex("0000");
-    const std::vector<uint8_t> APDU_GET_RESPONSE = {0x00, 0xC0, 0x00, 0x00, 0x00};
+    const std::vector<uint8_t> getResponseRApdu = ByteArrayUtil::fromHex("00C0000002");
+    const std::vector<uint8_t> getResponseCApdu = ByteArrayUtil::fromHex("00009000");
 
     EXPECT_CALL(*apduRequestSpi.get(), getApdu()).WillRepeatedly(ReturnRef(requestApdu));
     EXPECT_CALL(*readerSpi.get(), transmitApdu(requestApdu)).WillRepeatedly(Return(responseApdu));
-    EXPECT_CALL(*readerSpi.get(), transmitApdu(APDU_GET_RESPONSE)).WillRepeatedly(Return(responseCase4Apdu));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(getResponseRApdu)).WillRepeatedly(Return(getResponseCApdu));
 
     LocalReaderAdapter localReaderAdapter(readerSpi, PLUGIN_NAME);
     localReaderAdapter.doRegister();
     auto response = localReaderAdapter.transmitCardRequest(cardRequestSpi,
                                                            ChannelControl::CLOSE_AFTER);
 
-    ASSERT_EQ(response->getApduResponses()[0]->getApdu(), responseCase4Apdu);
+    ASSERT_EQ(response->getApduResponses()[0]->getApdu(), getResponseCApdu);
 
     tearDown();
 }
@@ -573,7 +573,7 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_withUnsuccessfulStatusWord_shou
     setUp();
 
     const std::vector<uint8_t> responseApdu = ByteArrayUtil::fromHex("123456789000");
-    const std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
+    std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
     const std::vector<int> resp = {0x9001};
 
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(responseApdu));
@@ -594,7 +594,7 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_withCardExceptionOnTransmit_sho
 {
     setUp();
 
-    const std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
+    std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
 
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Throw(CardIOException("")));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu()).WillRepeatedly(ReturnRef(requestApdu));
@@ -612,7 +612,7 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_withCardExceptionOnTransmit_sho
 {
     setUp();
 
-    const std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
+    std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
 
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Throw(ReaderIOException("")));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu()).WillRepeatedly(ReturnRef(requestApdu));

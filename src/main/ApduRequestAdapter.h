@@ -77,7 +77,7 @@ public:
      *
      * @since 2.0.0
      */
-    virtual const std::vector<uint8_t>& getApdu() const override;
+    virtual std::vector<uint8_t>& getApdu() override;
 
     /**
      * {@inheritDoc}
@@ -113,7 +113,7 @@ private:
     /**
      *
      */
-    const std::vector<uint8_t> mApdu;
+    std::vector<uint8_t> mApdu;
 
     /**
      *

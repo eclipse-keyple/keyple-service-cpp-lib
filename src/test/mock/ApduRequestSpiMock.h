@@ -24,7 +24,7 @@ using namespace calypsonet::terminal::card::spi;
 
 class ApduRequestSpiMock final : public ApduRequestSpi {
 public:
-    MOCK_METHOD(const std::vector<uint8_t>&, getApdu, (), (const, override));
+    MOCK_METHOD(std::vector<uint8_t>&, getApdu, (), (override));
     MOCK_METHOD(const std::vector<int>&, getSuccessfulStatusWords, (), (const, override));
     MOCK_METHOD(const std::string&, getInfo, (), (const, override));
 };

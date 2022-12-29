@@ -24,6 +24,9 @@ int main(int argc, char **argv)
     /* Initialize GTest */
     ::testing::InitGoogleTest(&argc, argv);
 
+    /* Set logger to error only */
+    Logger::setLoggerLevel(Logger::Level::logError);
+
     /* Run */
     return RUN_ALL_TESTS();
 }
