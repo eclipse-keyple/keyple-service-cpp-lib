@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -249,6 +249,58 @@ TEST(LocalPluginAdapterTest, getExtension_whenRegistered_shouldReturnExtension)
     const auto extension = localPluginAdapter.getExtension(typeid(PluginSpiMock));
     const auto pluginMock = std::static_pointer_cast<PluginSpiMock>(extension);
     ASSERT_NE(pluginMock, nullptr);
+
+    tearDown();
+}
+
+TEST(LocalPluginAdapterTest, getReaderExtension_whenReaderIsRegistered_shouldReturnExtension)
+{
+    setUp();
+
+    std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
+    readerSpis.push_back(readerSpi1);
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders()).WillRepeatedly(Return(readerSpis));
+
+    LocalPluginAdapter localPluginAdapter(pluginSpi);
+    localPluginAdapter.doRegister();
+    const auto extension = localPluginAdapter.getReaderExtension(typeid(PluginSpiMock),
+                                                                 READER_NAME_1);
+
+    ASSERT_EQ(extension, readerSpi1);
+
+    tearDown();
+}
+
+TEST(LocalPluginAdapterTest, getReaderExtension_whenReaderNameIsUnknown_shouldReturnIAE)
+{
+    setUp();
+
+    std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
+    readerSpis.push_back(readerSpi1);
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders()).WillRepeatedly(Return(readerSpis));
+
+    LocalPluginAdapter localPluginAdapter(pluginSpi);
+    localPluginAdapter.doRegister();
+
+
+    EXPECT_THROW(localPluginAdapter.getReaderExtension(typeid(PluginSpiMock), "UNKNOWN"),
+                 IllegalArgumentException);
+
+    tearDown();
+}
+
+TEST(LocalPluginAdapterTest, getReaderExtension_whenPluginIsNotRegistered_shouldISE)
+{
+    setUp();
+
+    std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
+    readerSpis.push_back(readerSpi1);
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders()).WillRepeatedly(Return(readerSpis));
+
+    LocalPluginAdapter localPluginAdapter(pluginSpi);
+
+    EXPECT_THROW(localPluginAdapter.getReaderExtension(typeid(PluginSpiMock), READER_NAME_1),
+                 IllegalStateException);
 
     tearDown();
 }

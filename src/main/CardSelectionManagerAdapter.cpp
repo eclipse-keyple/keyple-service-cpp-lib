@@ -94,9 +94,6 @@ const std::shared_ptr<CardSelectionResult>
                                              std::make_shared<CardBrokenCommunicationException>(e));
         }
 
-        /* Clear the selection requests list */
-        mCardSelectionRequests.clear();
-
         /* Analyze the received responses */
         return processCardSelectionResponses(cardSelectionResponses);
     }

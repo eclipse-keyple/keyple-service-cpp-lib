@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -86,7 +86,7 @@ public:
      * defined by MultiSelectionProcessing}.<br>
      * At the end of the treatment of each case, the channel is left open or is closed according to
      * the channel control policy.
-     * 
+     *
      * C++: method should be final but cannot perform UTs if so...
      *
      * @param cardSelectionRequests A list of selection cases composed of one or more {@link
@@ -98,7 +98,7 @@ public:
      * @throw CardBrokenCommunicationException if the communication with the card has failed.
      * @since 2.0.0
      */
-    virtual const std::vector<std::shared_ptr<CardSelectionResponseApi>> 
+    virtual const std::vector<std::shared_ptr<CardSelectionResponseApi>>
         transmitCardSelectionRequests(
             const std::vector<std::shared_ptr<CardSelectionRequestSpi>>& cardSelectionRequests,
             const MultiSelectionProcessing multiSelectionProcessing,
@@ -181,8 +181,8 @@ public:
      *
      * @since 2.0.0
      */
-    virtual std::shared_ptr<KeypleReaderExtension> getExtension(
-        const std::type_info& readerExtensionClass) const override final;
+    std::shared_ptr<KeypleReaderExtension> getExtension(
+        const std::type_info& readerExtensionClass) const final;
 
     /**
      * {@inheritDoc}

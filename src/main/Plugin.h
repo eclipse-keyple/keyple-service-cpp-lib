@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -31,7 +31,7 @@ namespace service {
 using namespace keyple::core::common;
 
 /**
- * Manager for one or more Reader from the same family.
+ * Manager for one or more CardReader from the same family.
  *
  * <p>Provides the means to get the plugin name, enumerate and retrieve the readers.
  *
@@ -40,10 +40,10 @@ using namespace keyple::core::common;
 class KEYPLESERVICE_API Plugin {
 public:
     /**
-     * 
+     *
      */
     virtual ~Plugin() = default;
-    
+
     /**
      * Gets the name of the plugin.
      *
@@ -66,6 +66,22 @@ public:
         const std::type_info& pluginExtensionClass) const = 0;
 
     /**
+     * Returns the {@link KeypleReaderExtension} that is reader-specific.
+     *
+     * <p>Note: the provided argument is used at compile time to check the type consistency.
+     *
+     * @param readerExtensionClass The specific class of the reader.
+     * @param readerName The name of the reader.
+     * @param <T> The type of the reader extension.
+     * @return A {@link KeypleReaderExtension}.
+     * @throw IllegalStateException If plugin or reader is no longer registered.
+     * @throw IllegalArgumentException If the reader name is unknown.
+     * @since 2.1.0
+     */
+    virtual std::shared_ptr<KeypleReaderExtension> getReaderExtension(
+        const std::type_info& readerExtensionClass, const std::string& readerName) const = 0;
+
+    /**
      * Gets the names of all connected readers.
      *
      * @return An empty set if there's no reader connected.
@@ -84,7 +100,7 @@ public:
     virtual const std::vector<std::shared_ptr<Reader>> getReaders() const = 0;
 
     /**
-     * Gets the Reader whose name is provided.
+     * Gets the CardReader whose name is provided.
      *
      * @param name The name of the reader.
      * @return Null if the reader has not been found.

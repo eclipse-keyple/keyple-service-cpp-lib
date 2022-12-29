@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -55,7 +55,7 @@ public:
                           std::shared_ptr<KeyplePluginExtension> pluginExtension);
 
     /**
-     * 
+     *
      */
     virtual ~AbstractPluginAdapter() = default;
 
@@ -107,8 +107,16 @@ public:
      *
      * @since 2.0.0
      */
-    std::shared_ptr<KeyplePluginExtension> getExtension(const std::type_info& pluginExtensionClass) 
+    std::shared_ptr<KeyplePluginExtension> getExtension(const std::type_info& pluginExtensionClass)
         const final;
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.1.0
+     */
+    std::shared_ptr<KeypleReaderExtension> getReaderExtension(
+        const std::type_info& readerExtensionClass, const std::string& readerName) const final;
 
     /**
      * (package-private)<br>
@@ -141,10 +149,10 @@ public:
 
 private:
     /**
-     * 
+     *
      */
     const std::unique_ptr<Logger> mLogger = LoggerFactory::getLogger(typeid(AbstractPluginAdapter));
-    
+
     /**
      *
      */

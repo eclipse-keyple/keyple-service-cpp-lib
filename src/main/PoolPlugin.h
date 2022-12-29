@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -16,6 +16,9 @@
 #include <string>
 #include <vector>
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+
 /* Keyple Core Service */
 #include "Plugin.h"
 
@@ -23,8 +26,10 @@ namespace keyple {
 namespace core {
 namespace service {
 
+using namespace calypsonet::terminal::reader;
+
 /**
- * Plugin able to handle the access to an undefined number of {@link Reader}.
+ * Plugin able to handle the access to an undefined number of CardReader.
  *
  * <p>It is typically used to define a plugin built on top of an HSM interface that can allocate a
  * large number of virtual reader slots.
@@ -47,8 +52,8 @@ public:
     virtual const std::vector<std::string> getReaderGroupReferences() const = 0;
 
     /**
-     * Gets a {@link Reader} and makes it exclusive to the caller until the {@link
-     * #releaseReader(Reader)} method is invoked.
+     * Gets a CardReader and makes it exclusive to the caller until the releaseReader(CardReader)
+     * method is invoked.
      *
      * <p>The allocated reader belongs to the group targeted with provided reference.
      *
@@ -69,7 +74,7 @@ public:
      * @param reader The Reader to be released.
      * @since 2.0.0
      */
-    virtual void releaseReader(const std::shared_ptr<Reader> reader) = 0;
+    virtual void releaseReader(const std::shared_ptr<CardReader> reader) = 0;
 };
 
 }

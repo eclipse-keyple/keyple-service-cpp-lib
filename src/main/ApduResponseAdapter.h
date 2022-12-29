@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -47,7 +47,7 @@ public:
     ApduResponseAdapter(const std::vector<uint8_t>& apdu);
 
     /**
-     * 
+     *
      */
     virtual ~ApduResponseAdapter() = default;
 

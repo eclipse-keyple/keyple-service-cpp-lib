@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -37,10 +37,10 @@ std::shared_ptr<LocalReaderAdapter> AbstractPluginAdapter::buildLocalReaderAdapt
 
     const auto& observable = std::dynamic_pointer_cast<ObservableReaderSpi>(readerSpi);
     const auto& configurable = std::dynamic_pointer_cast<ConfigurableReaderSpi>(readerSpi);
-    
+
     if (observable) {
         if (configurable) {
-            adapter = 
+            adapter =
                 std::make_shared<ObservableLocalConfigurableReaderAdapter>(configurable, getName());
         } else {
             adapter = std::make_shared<ObservableLocalReaderAdapter>(observable, getName());
@@ -71,17 +71,17 @@ void AbstractPluginAdapter::doRegister()
 void AbstractPluginAdapter::doUnregister()
 {
     mIsRegistered = false;
-    
+
     for (const auto& pair : mReaders) {
         try {
             std::dynamic_pointer_cast<AbstractReaderAdapter>(pair.second)->doUnregister();
         } catch (const Exception& e) {
-            mLogger->error("Error during the unregistration of reader '%'\n", 
-                           pair.second->getName(), 
+            mLogger->error("Error during the unregistration of reader '%'\n",
+                           pair.second->getName(),
                            e);
         }
     }
-    
+
     mReaders.clear();
     mIsRegistered = false;
 }
@@ -99,6 +99,19 @@ std::shared_ptr<KeyplePluginExtension> AbstractPluginAdapter::getExtension(
     checkStatus();
 
     return mPluginExtension;
+}
+
+std::shared_ptr<KeypleReaderExtension> AbstractPluginAdapter::getReaderExtension(
+    const std::type_info& readerExtensionClass, const std::string& readerName) const
+{
+    checkStatus();
+
+    const auto reader = std::dynamic_pointer_cast<AbstractReaderAdapter>(getReader(readerName));
+    if (reader == nullptr) {
+        throw IllegalArgumentException("Reader '" + readerName + "'not found!");
+    }
+
+    return reader->getExtension(readerExtensionClass);
 }
 
 std::map<const std::string, std::shared_ptr<Reader>>& AbstractPluginAdapter::getReadersMap()

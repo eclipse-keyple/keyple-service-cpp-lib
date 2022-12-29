@@ -12,32 +12,19 @@
 
 #pragma once
 
-/* Keyple Core Service */
-#include "Reader.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
-/* Calypsnet Terminal Reader */
-#include "ConfigurableCardReader.h"
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
 
-namespace keyple {
-namespace core {
-namespace service {
+using namespace testing;
 
 using namespace calypsonet::terminal::reader;
 
-/**
- * Drives the underlying hardware to configure the protocol to use.
- *
- * @since 2.0.0
- * @deprecated Use ConfigurableCardReader instead.
- */
-class ConfigurableReader : virtual public Reader, virtual public ConfigurableCardReader {
+class CardReaderMock final : public CardReader {
 public:
-    /**
-     *
-     */
-    virtual ~ConfigurableReader() = default;
+    MOCK_METHOD(const std::string&, getName, (), (const, override));
+    MOCK_METHOD(bool, isContactless,(), (override));
+    MOCK_METHOD(bool, isCardPresent,(), (override));
 };
-
-}
-}
-}

@@ -10,34 +10,29 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
-#pragma once
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 /* Keyple Core Service */
-#include "Reader.h"
+#include "ApduResponseAdapter.h"
 
-/* Calypsnet Terminal Reader */
-#include "ConfigurableCardReader.h"
+/* Keyple Core Util */
+#include "HexUtil.h"
 
-namespace keyple {
-namespace core {
-namespace service {
+using namespace testing;
 
-using namespace calypsonet::terminal::reader;
+using namespace keyple::core::service;
+using namespace keyple::core::util;
 
-/**
- * Drives the underlying hardware to configure the protocol to use.
- *
- * @since 2.0.0
- * @deprecated Use ConfigurableCardReader instead.
- */
-class ConfigurableReader : virtual public Reader, virtual public ConfigurableCardReader {
-public:
-    /**
-     *
-     */
-    virtual ~ConfigurableReader() = default;
-};
+static const std::string HEX_REQUEST = "123456789000";
+static const std::string HEX_REQUEST_DATA = "12345678";
 
-}
-}
+
+TEST(ApduResponseAdapterTest, buildApduResponseAdapter)
+{
+    ApduResponseAdapter apduResponseAdapter(HexUtil::toByteArray(HEX_REQUEST));
+
+    ASSERT_EQ(apduResponseAdapter.getApdu(), HexUtil::toByteArray(HEX_REQUEST));
+    ASSERT_EQ(apduResponseAdapter.getStatusWord(), 0x9000);
+    ASSERT_EQ(apduResponseAdapter.getDataOut(), HexUtil::toByteArray(HEX_REQUEST_DATA));
 }

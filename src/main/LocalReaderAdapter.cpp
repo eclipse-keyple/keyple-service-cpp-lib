@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -25,7 +25,8 @@
 
 /* Keyple Core Util */
 #include "ApduUtil.h"
-#include "ByteArrayUtil.h"
+#include "Arrays.h"
+#include "HexUtil.h"
 #include "IllegalStateException.h"
 #include "KeypleAssert.h"
 #include "KeypleStd.h"
@@ -57,8 +58,13 @@ using namespace keyple::core::util::cpp::exception;
 
 /* LOCAL READER ADAPTER ------------------------------------------------------------------------- */
 
-const std::vector<uint8_t> LocalReaderAdapter::APDU_GET_RESPONSE = {0x00, 0xC0, 0x00, 0x00, 0x00};
-const int LocalReaderAdapter::DEFAULT_SUCCESSFUL_CODE = 0x9000;
+const int LocalReaderAdapter::SW_9000 = 0x9000;
+
+const int LocalReaderAdapter::SW_6100 = 0x6100;
+const int LocalReaderAdapter::SW_6C00 = 0x6C00;
+
+const int LocalReaderAdapter::SW1_MASK = 0xFF00;
+const int LocalReaderAdapter::SW2_MASK = 0x00FF;
 
 LocalReaderAdapter::LocalReaderAdapter(std::shared_ptr<ReaderSpi> readerSpi,
                                        const std::string& pluginName)
@@ -156,7 +162,7 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::processExplicitAidSelec
 
     mLogger->debug("[%] openLogicalChannel => Select Application with AID = %\n",
                    getName(),
-                   ByteArrayUtil::toHex(aid));
+                   HexUtil::toHex(aid));
 
     /*
      * Build a get response command the actual length expected by the card in the get response
@@ -190,6 +196,12 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::selectByAid(
     std::shared_ptr<CardSelectorSpi> cardSelector)
 {
     std::shared_ptr<ApduResponseAdapter> fciResponse = nullptr;
+
+    /*
+     * RL-SEL-P2LC.1
+     * RL-SEL-DFNAME.1
+     */
+    Assert::getInstance().isInRange(cardSelector->getAid().size(), 0, 16, "aid");
 
     auto reader = std::dynamic_pointer_cast<AutonomousSelectionReaderSpi>(mReaderSpi);
     if (reader) {
@@ -331,36 +343,6 @@ std::shared_ptr<CardSelectionResponseApi> LocalReaderAdapter::processCardSelecti
                cardResponse);
 }
 
-std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::case4HackGetResponse()
-{
-    uint64_t timeStamp = System::nanoTime();
-    uint64_t elapsed10ms = (timeStamp - mBefore) / 100000;
-    mBefore = timeStamp;
-
-    mLogger->debug("[%] case4HackGetResponse => ApduRequest: NAME = \"Internal Get Response\", " \
-                   "RAWDATA = %, elapsed = %\n",
-                   getName(),
-                   ByteArrayUtil::toHex(APDU_GET_RESPONSE),
-                   elapsed10ms / 10.0);
-
-    const std::vector<uint8_t> getResponseHackResponseBytes =
-        mReaderSpi->transmitApdu(APDU_GET_RESPONSE);
-
-    std::shared_ptr<ApduResponseAdapter> getResponseHackResponse =
-        std::make_shared<ApduResponseAdapter>(getResponseHackResponseBytes);
-
-    timeStamp = System::nanoTime();
-    elapsed10ms = (timeStamp - mBefore) / 100000;
-    mBefore = timeStamp;
-
-    mLogger->debug("[%] case4HackGetResponse => Internal %, elapsed % ms\n",
-                   getName(),
-                   getResponseHackResponseBytes,
-                   elapsed10ms / 10.0);
-
-    return getResponseHackResponse;
-}
-
 std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::processApduRequest(
     const std::shared_ptr<ApduRequestSpi> apduRequest)
 {
@@ -378,14 +360,6 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::processApduRequest(
     apduResponse = std::make_shared<ApduResponseAdapter>(
                        mReaderSpi->transmitApdu(apduRequest->getApdu()));
 
-    /* RL-SW-ANALYSIS.1 */
-    if (ApduUtil::isCase4(apduRequest->getApdu()) &&
-        apduResponse->getDataOut().size() == 0 &&
-        apduResponse->getStatusWord() == DEFAULT_SUCCESSFUL_CODE) {
-        /* Do the get response command */
-        apduResponse = case4HackGetResponse();
-    }
-
     timeStamp = System::nanoTime();
     elapsed10ms = (timeStamp - mBefore) / 100000;
     mBefore = timeStamp;
@@ -394,6 +368,50 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::processApduRequest(
                    getName(),
                    apduResponse,
                    elapsed10ms / 10.0);
+
+    if (apduResponse->getDataOut().size() == 0) {
+
+        if ((apduResponse->getStatusWord() & SW1_MASK) == SW_6100) {
+            /*
+             * RL-SW-61XX.1
+             * Build a GetResponse APDU command with the provided "le"
+             */
+            const uint8_t le = apduResponse->getStatusWord() & SW2_MASK;
+            const std::vector<uint8_t> getResponseApdu = {0x00, 0xC0, 0x00, 0x00, le};
+
+            /* Execute APDU */
+            auto adapter = std::make_shared<ApduRequestAdapter>(getResponseApdu);
+            adapter->setInfo("Internal Get Response");
+            apduResponse = processApduRequest(adapter);
+
+        } else if ((apduResponse->getStatusWord() & SW1_MASK) == SW_6C00) {
+            /*
+             * RL-SW-6CXX.1
+             * Update the last command with the provided "le"
+             */
+            apduRequest->getApdu()[apduRequest->getApdu().size() - 1] =
+                (apduResponse->getStatusWord() & SW2_MASK);
+
+            /* Replay the last command APDU */
+            apduResponse = processApduRequest(apduRequest);
+
+        } else if (ApduUtil::isCase4(apduRequest->getApdu()) &&
+                   Arrays::contains(apduRequest->getSuccessfulStatusWords(),
+                                    apduResponse->getStatusWord())) {
+            /*
+             * RL-SW-ANALYSIS.1
+             * RL-SW-CASE4.1 (SW=6200 not taken into account here)
+             * Build a GetResponse APDU command with the original "le"
+             */
+            const uint8_t le = apduRequest->getApdu()[apduRequest->getApdu().size() - 1];
+            const std::vector<uint8_t> getResponseApdu = {0x00, 0xC0, 0x00, 0x00, le};
+
+            /* Execute GetResponse APDU */
+            auto adapter = std::make_shared<ApduRequestAdapter>(getResponseApdu);
+            adapter->setInfo("Internal Get Response");
+            apduResponse = processApduRequest(adapter);
+        }
+    }
 
     return apduResponse;
 }
@@ -600,6 +618,12 @@ std::vector<std::shared_ptr<CardSelectionResponseApi>>
 
 void LocalReaderAdapter::doUnregister()
 {
+    try {
+        mReaderSpi->closePhysicalChannel();
+    } catch (const Exception& e) {
+        mLogger->error("Error during the closing physical channel on reader '%'\n", getName(), e);
+    }
+
     try {
         mReaderSpi->onUnregister();
     } catch (const Exception& e) {

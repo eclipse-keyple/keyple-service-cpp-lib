@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -32,7 +32,7 @@
 #include "KeypleReaderExtension.h"
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
+#include "HexUtil.h"
 
 /* Keyple Core Service */
 #include "LocalReaderAdapter.h"
@@ -75,12 +75,10 @@ static std::shared_ptr<CardRequestSpiMock> cardRequestSpi;
 static const std::vector<int> successfulStatusWords({0x9000});
 static const std::string powerOnData = "";
 static const std::string protocol = "";
-static const std::vector<uint8_t> selectResponseApdu1 = ByteArrayUtil::fromHex("123456789000");
-static const std::vector<uint8_t> selectResponseApdu2 = ByteArrayUtil::fromHex("123456786283");
 static const std::vector<int> statusWords({0x9000, 0x6283});
 
 /* ? */
-const std::vector<int> dummy;
+const std::vector<int> ok_sw = {0x9000};
 const std::vector<uint8_t> uint8_t_dummy;
 const std::string info = "dummy info";
 std::vector<std::shared_ptr<ApduRequestSpi>> apduRequests;
@@ -99,7 +97,7 @@ static void setUp()
     EXPECT_CALL(*readerSpi.get(), openPhysicalChannel()).WillRepeatedly([]() { mPhysicalChannelOpen = true; });
     EXPECT_CALL(*readerSpi.get(), isPhysicalChannelOpen()).WillRepeatedly(Return(mPhysicalChannelOpen));
     EXPECT_CALL(*readerSpi.get(), isContactless()).WillRepeatedly(Return(true));
-    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(ByteArrayUtil::fromHex("6D00")));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(HexUtil::toByteArray("6D00")));
     EXPECT_CALL(*readerSpi.get(), isProtocolSupported(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*readerSpi.get(), isCurrentProtocol(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*readerSpi.get(), activateProtocol(_)).WillRepeatedly(Return());
@@ -116,7 +114,7 @@ static void setUp()
     EXPECT_CALL(*cardSelectionRequestSpi.get(), getCardRequest()).WillRepeatedly(Return(nullptr));
 
     apduRequestSpi = std::make_shared<ApduRequestSpiMock>();
-    EXPECT_CALL(*apduRequestSpi.get(), getSuccessfulStatusWords()).WillRepeatedly(ReturnRef(dummy));
+    EXPECT_CALL(*apduRequestSpi.get(), getSuccessfulStatusWords()).WillRepeatedly(ReturnRef(ok_sw));
     EXPECT_CALL(*apduRequestSpi.get(), getInfo()).WillRepeatedly(ReturnRef(info));
     apduRequests.push_back(apduRequestSpi);
 
@@ -235,7 +233,7 @@ TEST(LocalReaderAdapterTest,
 {
     setUp();
 
-    const std::vector<uint8_t> aid = ByteArrayUtil::fromHex("1122334455");
+    const std::vector<uint8_t> aid = HexUtil::toByteArray("1122334455");
     EXPECT_CALL(*cardSelector.get(), getAid()).WillRepeatedly(ReturnRef(aid));
     EXPECT_CALL(*cardSelectionRequestSpi.get(), getCardSelector()).WillRepeatedly(Return(cardSelector));
 
@@ -263,8 +261,9 @@ TEST(LocalReaderAdapterTest,
 {
     setUp();
 
-    const std::vector<uint8_t> aid = ByteArrayUtil::fromHex("1122334455");
-    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(selectResponseApdu1));
+    auto selectResponseApdu = HexUtil::toByteArray("123456789000");
+    const std::vector<uint8_t> aid = HexUtil::toByteArray("1122334455");
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(selectResponseApdu));
     EXPECT_CALL(*cardSelector.get(), getAid()).WillRepeatedly(ReturnRef(aid));
     EXPECT_CALL(*cardSelectionRequestSpi.get(), getCardSelector()).WillRepeatedly(Return(cardSelector));
 
@@ -281,7 +280,7 @@ TEST(LocalReaderAdapterTest,
 
     ASSERT_EQ(cardSelectionResponses.size(), 1);
     ASSERT_EQ(cardSelectionResponses[0]->getPowerOnData(), POWER_ON_DATA);
-    ASSERT_EQ(cardSelectionResponses[0]->getSelectApplicationResponse()->getApdu(), selectResponseApdu1);
+    ASSERT_EQ(cardSelectionResponses[0]->getSelectApplicationResponse()->getApdu(), selectResponseApdu);
     ASSERT_TRUE(cardSelectionResponses[0]->hasMatched());
     ASSERT_TRUE(localReaderAdapter.isLogicalChannelOpen());
 
@@ -293,8 +292,9 @@ TEST(LocalReaderAdapterTest,
 {
     setUp();
 
-    const std::vector<uint8_t> aid = ByteArrayUtil::fromHex("1122334455");
-    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(selectResponseApdu2));
+    auto selectResponseApdu = HexUtil::toByteArray("123456786283");
+    const std::vector<uint8_t> aid = HexUtil::toByteArray("1122334455");
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(selectResponseApdu));
     EXPECT_CALL(*cardSelector.get(), getAid()).WillRepeatedly(ReturnRef(aid));
     EXPECT_CALL(*cardSelectionRequestSpi.get(), getCardSelector()).WillRepeatedly(Return(cardSelector));
 
@@ -311,7 +311,7 @@ TEST(LocalReaderAdapterTest,
 
     ASSERT_EQ(cardSelectionResponses.size(), 1);
     ASSERT_EQ(cardSelectionResponses[0]->getPowerOnData(), POWER_ON_DATA);
-    ASSERT_EQ(cardSelectionResponses[0]->getSelectApplicationResponse()->getApdu(), selectResponseApdu2);
+    ASSERT_EQ(cardSelectionResponses[0]->getSelectApplicationResponse()->getApdu(), selectResponseApdu);
     ASSERT_FALSE(cardSelectionResponses[0]->hasMatched());
     ASSERT_FALSE(localReaderAdapter.isLogicalChannelOpen());
 
@@ -323,8 +323,9 @@ TEST(LocalReaderAdapterTest,
 {
     setUp();
 
-    const std::vector<uint8_t> aid = ByteArrayUtil::fromHex("1122334455");
-    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(selectResponseApdu2));
+    auto selectResponseApdu = HexUtil::toByteArray("123456786283");
+    const std::vector<uint8_t> aid = HexUtil::toByteArray("1122334455");
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(selectResponseApdu));
     EXPECT_CALL(*cardSelector.get(), getAid()).WillRepeatedly(ReturnRef(aid));
     EXPECT_CALL(*cardSelector.get(), getSuccessfulSelectionStatusWords()).WillRepeatedly(ReturnRef(statusWords));
     EXPECT_CALL(*cardSelectionRequestSpi.get(), getCardSelector()).WillRepeatedly(Return(cardSelector));
@@ -342,7 +343,7 @@ TEST(LocalReaderAdapterTest,
 
     ASSERT_EQ(cardSelectionResponses.size(), 1);
     ASSERT_EQ(cardSelectionResponses[0]->getPowerOnData(), POWER_ON_DATA);
-    ASSERT_EQ(cardSelectionResponses[0]->getSelectApplicationResponse()->getApdu(), selectResponseApdu2);
+    ASSERT_EQ(cardSelectionResponses[0]->getSelectApplicationResponse()->getApdu(), selectResponseApdu);
     ASSERT_TRUE(cardSelectionResponses[0]->hasMatched());
     ASSERT_TRUE(localReaderAdapter.isLogicalChannelOpen());
 
@@ -428,7 +429,7 @@ TEST(LocalReaderAdapterTest,
 {
     setUp();
 
-    const std::vector<uint8_t> aid = ByteArrayUtil::fromHex("12341234");
+    const std::vector<uint8_t> aid = HexUtil::toByteArray("12341234");
     EXPECT_CALL(*cardSelectionRequestSpi.get(), getCardSelector()).WillRepeatedly(Return(cardSelector));
     EXPECT_CALL(*cardSelector.get(), getAid()).WillRepeatedly(ReturnRef(aid));
     EXPECT_CALL(*readerSpi.get(), openPhysicalChannel()).Times(1).WillOnce(Throw(CardIOException("Card IO Exception")));
@@ -453,7 +454,7 @@ TEST(LocalReaderAdapterTest,
 {
     setUp();
 
-    const std::vector<uint8_t> aid = ByteArrayUtil::fromHex("12341234");
+    const std::vector<uint8_t> aid = HexUtil::toByteArray("12341234");
     EXPECT_CALL(*cardSelectionRequestSpi.get(), getCardSelector()).WillRepeatedly(Return(cardSelector));
     EXPECT_CALL(*cardSelector.get(), getAid()).WillRepeatedly(ReturnRef(aid));
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).Times(1).WillOnce(Throw(ReaderIOException("Reader IO Exception")));
@@ -478,7 +479,7 @@ TEST(LocalReaderAdapterTest,
 {
     setUp();
 
-    const std::vector<uint8_t> aid = ByteArrayUtil::fromHex("1122334455");
+    const std::vector<uint8_t> aid = HexUtil::toByteArray("1122334455");
     EXPECT_CALL(*cardSelector.get(), getAid()).WillRepeatedly(ReturnRef(aid));
     EXPECT_CALL(*cardSelectionRequestSpi.get(), getCardSelector()).WillRepeatedly(Return(cardSelector));
 
@@ -486,7 +487,7 @@ TEST(LocalReaderAdapterTest,
     localReaderAdapter.doRegister();
 
     /* First successful selection */
-    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(ByteArrayUtil::fromHex("AABBCCDDEE9000")));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(HexUtil::toByteArray("AABBCCDDEE9000")));
 
     std::vector<std::shared_ptr<CardSelectionResponseApi>> cardSelectionResponses =
         localReaderAdapter.transmitCardSelectionRequests(
@@ -499,7 +500,7 @@ TEST(LocalReaderAdapterTest,
     ASSERT_TRUE(localReaderAdapter.isLogicalChannelOpen());
 
     /* Second not matching selection */
-    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(ByteArrayUtil::fromHex("6B00")));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(HexUtil::toByteArray("6B00")));
 
     cardSelectionResponses =
         localReaderAdapter.transmitCardSelectionRequests(
@@ -524,8 +525,8 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_shouldReturnResponse)
 {
     setUp();
 
-    const std::vector<uint8_t> responseApdu = ByteArrayUtil::fromHex("123456786283");
-    const std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
+    const std::vector<uint8_t> responseApdu = HexUtil::toByteArray("123456786283");
+    std::vector<uint8_t> requestApdu = HexUtil::toByteArray("0000");
 
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(responseApdu));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu()).WillRepeatedly(ReturnRef(requestApdu));
@@ -549,21 +550,21 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_isCase4)
 {
     setUp();
 
-    const std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("11223344041234567803");
-    const std::vector<uint8_t> responseApdu = ByteArrayUtil::fromHex("9000");
-    const std::vector<uint8_t> responseCase4Apdu = ByteArrayUtil::fromHex("0000");
-    const std::vector<uint8_t> APDU_GET_RESPONSE = {0x00, 0xC0, 0x00, 0x00, 0x00};
+    std::vector<uint8_t> requestApdu = HexUtil::toByteArray("11223344041234567802");
+    const std::vector<uint8_t> responseApdu = HexUtil::toByteArray("9000");
+    const std::vector<uint8_t> getResponseRApdu = HexUtil::toByteArray("00C0000002");
+    const std::vector<uint8_t> getResponseCApdu = HexUtil::toByteArray("00009000");
 
     EXPECT_CALL(*apduRequestSpi.get(), getApdu()).WillRepeatedly(ReturnRef(requestApdu));
     EXPECT_CALL(*readerSpi.get(), transmitApdu(requestApdu)).WillRepeatedly(Return(responseApdu));
-    EXPECT_CALL(*readerSpi.get(), transmitApdu(APDU_GET_RESPONSE)).WillRepeatedly(Return(responseCase4Apdu));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(getResponseRApdu)).WillRepeatedly(Return(getResponseCApdu));
 
     LocalReaderAdapter localReaderAdapter(readerSpi, PLUGIN_NAME);
     localReaderAdapter.doRegister();
     auto response = localReaderAdapter.transmitCardRequest(cardRequestSpi,
                                                            ChannelControl::CLOSE_AFTER);
 
-    ASSERT_EQ(response->getApduResponses()[0]->getApdu(), responseCase4Apdu);
+    ASSERT_EQ(response->getApduResponses()[0]->getApdu(), getResponseCApdu);
 
     tearDown();
 }
@@ -572,8 +573,8 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_withUnsuccessfulStatusWord_shou
 {
     setUp();
 
-    const std::vector<uint8_t> responseApdu = ByteArrayUtil::fromHex("123456789000");
-    const std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
+    const std::vector<uint8_t> responseApdu = HexUtil::toByteArray("123456789000");
+    std::vector<uint8_t> requestApdu = HexUtil::toByteArray("0000");
     const std::vector<int> resp = {0x9001};
 
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Return(responseApdu));
@@ -594,7 +595,7 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_withCardExceptionOnTransmit_sho
 {
     setUp();
 
-    const std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
+    std::vector<uint8_t> requestApdu = HexUtil::toByteArray("0000");
 
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Throw(CardIOException("")));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu()).WillRepeatedly(ReturnRef(requestApdu));
@@ -612,7 +613,7 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_withCardExceptionOnTransmit_sho
 {
     setUp();
 
-    const std::vector<uint8_t> requestApdu = ByteArrayUtil::fromHex("0000");
+    std::vector<uint8_t> requestApdu = HexUtil::toByteArray("0000");
 
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_)).WillRepeatedly(Throw(ReaderIOException("")));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu()).WillRepeatedly(ReturnRef(requestApdu));

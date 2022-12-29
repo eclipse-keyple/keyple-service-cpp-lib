@@ -14,7 +14,6 @@
 
 /* Calypsonet Terminal Reader */
 #include "CardReaderEvent.h"
-#include "ScheduledCardSelectionsResponse.h"
 
 namespace keyple {
 namespace core {
@@ -32,6 +31,7 @@ using Type = CardReaderEvent::Type;
  * event.
  *
  * @since 2.0.0
+ * @deprecated Use CardReaderEvent instead.
  */
 class ReaderEvent : public CardReaderEvent {
 public:
@@ -40,30 +40,9 @@ public:
      *
      * @return A not empty string.
      * @since 2.0.0
+     * @deprecated No longer supported.
      */
     virtual const std::string& getPluginName() const = 0;
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 2.0.0
-     */
-    virtual const std::string& getReaderName() const override = 0;
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 2.0.0
-     */
-    virtual Type getType() const override = 0;
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 2.0.0
-     */
-    virtual const std::shared_ptr<ScheduledCardSelectionsResponse>
-        getScheduledCardSelectionsResponse() const override = 0;
 };
 
 }

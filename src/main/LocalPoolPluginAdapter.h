@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -14,6 +14,9 @@
 
 #include <memory>
 #include <typeinfo>
+
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
 
 /* Keyple Core Util */
 #include "LoggerFactory.h"
@@ -30,6 +33,7 @@ namespace keyple {
 namespace core {
 namespace service {
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::core::plugin::spi;
 using namespace keyple::core::util::cpp;
 
@@ -78,7 +82,7 @@ public:
      *
      * @since 2.0.0
      */
-    void releaseReader(const std::shared_ptr<Reader> reader) final;
+    void releaseReader(const std::shared_ptr<CardReader> reader) final;
 
 private:
     /**

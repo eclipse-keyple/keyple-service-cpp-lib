@@ -61,21 +61,26 @@ ADD_LIBRARY(
 )
 
 TARGET_INCLUDE_DIRECTORIES(
-    ${LIBRARY_NAME} 
-        PUBLIC 
+    ${LIBRARY_NAME}
+
+    PUBLIC
+
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/spi
 )
 
 TARGET_LINK_LIBRARIES(
-    ${LIBRARY_NAME} 
-        PUBLIC
-    CalypsoNet::TerminalCard 
-    CalypsoNet::TerminalReader 
-    Keyple::CommonApi 
-    Keyple::PluginApi 
-    Keyple::Util 
-    Threads::Threads)
+    ${LIBRARY_NAME}
+
+    PUBLIC
+
+    CalypsoNet::TerminalCard
+    CalypsoNet::TerminalReader
+    Keyple::CommonApi
+    Keyple::PluginApi
+    Keyple::Util
+    Threads::Threads
+)
 
 ADD_LIBRARY(Keyple::Service ALIAS ${LIBRARY_NAME})

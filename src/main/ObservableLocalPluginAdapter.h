@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -14,6 +14,9 @@
 
 #include <memory>
 #include <typeinfo>
+
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
 
 /* Keyple Core Util */
 #include "LoggerFactory.h"
@@ -33,6 +36,7 @@ namespace keyple {
 namespace core {
 namespace service {
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::core::plugin::spi;
 using namespace keyple::core::util::cpp;
 
@@ -95,18 +99,18 @@ private:
     class UncaughtExceptionHandler : public Thread::UncaughtExceptionHandler {
     public:
         /**
-         * 
+         *
          */
         UncaughtExceptionHandler(ObservableLocalPluginAdapter* parent);
 
         /**
-         * 
+         *
          */
         void uncaughtException(std::shared_ptr<Thread> t, std::shared_ptr<Exception> e);
 
     private:
         /**
-         * 
+         *
          */
         ObservableLocalPluginAdapter *mParent;
     };
@@ -151,7 +155,7 @@ private:
         bool mRunning;
 
         /**
-         * 
+         *
          */
         bool mStarted;
 
@@ -178,7 +182,7 @@ private:
          * (private)<br>
          * Removes a reader from the list of known readers (by the plugin)
          */
-        void removeReader(const std::shared_ptr<Reader> reader);
+        void removeReader(const std::shared_ptr<CardReader> reader);
 
         /**
          * (private)<br>
@@ -202,7 +206,7 @@ private:
          * Reader monitoring loop<br>
          * Checks reader insertions and removals<br>
          * Notifies observers of any changes
-         * 
+         *
          * C++: this replaces run() override
          */
         void execute() override;

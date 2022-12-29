@@ -22,7 +22,7 @@ using namespace testing;
 
 using namespace calypsonet::terminal::reader::spi;
 
-class CardReaderObservationExceptionHandlerSpiMock
+class CardReaderObservationExceptionHandlerSpiMock final
 : public CardReaderObservationExceptionHandlerSpi {
 public:
     MOCK_METHOD(void, onReaderObservationError, (const std::string& contextInfo, const std::string& readerName, const std::shared_ptr<Exception> e), (override));

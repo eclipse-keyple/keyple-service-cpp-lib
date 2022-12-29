@@ -151,7 +151,8 @@ void ObservableLocalPluginAdapter::EventThread::addReader(const std::string& rea
                             readerName);
 }
 
-void ObservableLocalPluginAdapter::EventThread::removeReader(const std::shared_ptr<Reader> reader)
+void ObservableLocalPluginAdapter::EventThread::removeReader(
+    const std::shared_ptr<CardReader> reader)
 {
     std::dynamic_pointer_cast<LocalReaderAdapter>(reader)->doUnregister();
     mParent->getReadersMap().erase(reader->getName());
@@ -169,7 +170,8 @@ void ObservableLocalPluginAdapter::EventThread::notifyChanges(
                    type == PluginEvent::Type::READER_CONNECTED ? "connection" : "disconnection",
                    changedReaderNames);
 
-    mParent->notifyObservers(std::make_shared<PluginEventAdapter>(mPluginName, changedReaderNames, type));
+    mParent->notifyObservers(
+        std::make_shared<PluginEventAdapter>(mPluginName, changedReaderNames, type));
 }
 
 void ObservableLocalPluginAdapter::EventThread::processChanges(

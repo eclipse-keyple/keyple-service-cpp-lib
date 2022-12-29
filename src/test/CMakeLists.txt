@@ -1,6 +1,5 @@
 # *************************************************************************************************
-# Copyright (c) 2021 Calypso Networks Association                                                 *
-# https://www.calypsonet-asso.org/                                                                *
+# Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                         *
 #                                                                                                 *
 # See the NOTICE file(s) distributed with this work for additional information regarding          *
 # copyright ownership.                                                                            *
@@ -13,10 +12,18 @@
 
 SET(EXECTUABLE_NAME keypleservicecpplib_ut)
 
+INCLUDE_DIRECTORIES(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../main
+    ${CMAKE_CURRENT_SOURCE_DIR}/../test/mock
+    ${CMAKE_CURRENT_SOURCE_DIR}/../test/util
+)
+
 ADD_EXECUTABLE(
     ${EXECTUABLE_NAME}
 
     ${CMAKE_CURRENT_SOURCE_DIR}/AbstractReaderAdapterTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ApduResponseAdapterTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/AutonomousObservableLocalPluginAdapterTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CardSelectionResultAdapterTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/LocalPluginAdapterTest.cpp
@@ -33,8 +40,26 @@ ADD_EXECUTABLE(
     ${CMAKE_CURRENT_SOURCE_DIR}/util/ReaderAdapterTestUtils.cpp
 )
 
+TARGET_INCLUDE_DIRECTORIES(
+    ${EXECTUABLE_NAME}
+
+    PUBLIC
+
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 # Add Google Test
 SET(GOOGLETEST_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 INCLUDE(CMakeLists.txt.googletest)
 
-TARGET_LINK_LIBRARIES(${EXECTUABLE_NAME} gtest gmock Keyple::Service)
+TARGET_LINK_LIBRARIES(
+    ${EXECTUABLE_NAME}
+
+    PUBLIC
+
+    gtest
+    gmock
+    Keyple::Service
+    Keyple::Util
+)
+

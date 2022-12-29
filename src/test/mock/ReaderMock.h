@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -16,7 +16,7 @@
 #include "gtest/gtest.h"
 
 /* Keyple Core Service */
-#include "Reader.h"
+#include "KeypleReaderExtension.h"
 
 /* Keyple Core Plugin */
 #include "ReaderSpi.h"
@@ -26,11 +26,10 @@ using namespace testing;
 using namespace keyple::core::plugin::spi::reader;
 using namespace keyple::core::service;
 
-class ReaderMock final : public Reader, public ReaderSpi {
+class ReaderMock final : public KeypleReaderExtension, public ReaderSpi {
 public:
     MOCK_METHOD((const std::string&), getName, (), (const, override, final));
     MOCK_METHOD(bool, isContactless, (), (override, final));
-    MOCK_METHOD(bool, isCardPresent, (), (override, final));
     MOCK_METHOD(void, openPhysicalChannel, (), (override));
     MOCK_METHOD(void, closePhysicalChannel, (), (override));
     MOCK_METHOD(bool, isPhysicalChannelOpen, (), (const, override));
@@ -38,5 +37,4 @@ public:
     MOCK_METHOD((const std::string), getPowerOnData, (), (const, override));
     MOCK_METHOD(void, onUnregister, (), (override));
     MOCK_METHOD((const std::vector<uint8_t>), transmitApdu, (const std::vector<uint8_t>& apduIn), (override));
-    MOCK_METHOD((std::shared_ptr<KeypleReaderExtension>), getExtension, (const std::type_info& readerExtensionClass), (const, override));
 };

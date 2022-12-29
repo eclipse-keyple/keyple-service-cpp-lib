@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -178,8 +178,13 @@ private:
     /**
      * Predefined ISO values
      */
-    static const std::vector<uint8_t> APDU_GET_RESPONSE;
-    static const int DEFAULT_SUCCESSFUL_CODE;
+    static const int SW_9000;
+
+    static const int SW_6100;
+    static const int SW_6C00;
+
+    static const int SW1_MASK;
+    static const int SW2_MASK;
 
     /**
      *
@@ -359,19 +364,6 @@ private:
      */
     std::shared_ptr<CardSelectionResponseApi> processCardSelectionRequest(
         std::shared_ptr<CardSelectionRequestSpi> cardSelectionRequest);
-
-    /**
-     * (private)<br>
-     * Process dedicated to some cards not following the ISO standard for case 4 management.
-     *
-     * <p>Execute an explicit get response command in order to get the outgoing data from specific
-     * cards answering 9000 with no data although the command has outgoing data.
-     *
-     * @return ApduResponse the response to the get response command
-     * @throw ReaderIOException if the communication with the reader has failed.
-     * @throw CardIOException if the communication with the card has failed.
-     */
-    std::shared_ptr<ApduResponseAdapter> case4HackGetResponse();
 
     /**
      * (private)<br>

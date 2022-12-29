@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -95,6 +95,20 @@ public:
      * @since 2.0.0
      */
     std::shared_ptr<Plugin> getPlugin(const std::string& pluginName) const final;
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.1.0
+     */
+    std::shared_ptr<Plugin> getPlugin(const std::shared_ptr<CardReader> cardReader) const override;
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.1.0
+     */
+    virtual std::shared_ptr<CardReader> getReader(const std::string& readerName) const override;
 
     /**
      * {@inheritDoc}

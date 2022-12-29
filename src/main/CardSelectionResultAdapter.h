@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -31,7 +31,7 @@ using namespace calypsonet::terminal::reader::selection::spi;
 
 /**
  * (package-private)<br>
- * Implementation of {@link CardSelectionResult}.
+ * Implementation of CardSelectionResult.
  *
  * @since 2.0.0
  */
@@ -47,7 +47,7 @@ public:
 
     /**
      * (package-private)<br>
-     * Append a {@link SmartCard} to the internal list
+     * Append a SmartCard to the internal list
      *
      * @param selectionIndex The index of the selection that resulted in the smart card.
      * @param smartCard The smart card.
