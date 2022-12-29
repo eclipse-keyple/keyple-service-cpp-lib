@@ -197,6 +197,12 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::selectByAid(
 {
     std::shared_ptr<ApduResponseAdapter> fciResponse = nullptr;
 
+    /*
+     * RL-SEL-P2LC.1
+     * RL-SEL-DFNAME.1
+     */
+    Assert::getInstance().isInRange(cardSelector->getAid().size(), 0, 16, "aid");
+
     auto reader = std::dynamic_pointer_cast<AutonomousSelectionReaderSpi>(mReaderSpi);
     if (reader) {
         const std::vector<uint8_t>& aid = cardSelector->getAid();
