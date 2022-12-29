@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -35,9 +35,13 @@
 #include "KeyplePluginExtension.h"
 #include "KeyplePluginExtensionFactory.h"
 
+/* Keyple Core Util */
+#include "Arrays.h"
+
 /* Mock */
 #include "AutonomousObservablePluginSpiMock.h"
 #include "CardExtensionMock.h"
+#include "CardReaderMock.h"
 #include "ObservablePluginSpiMock.h"
 #include "PluginFactoryMock.h"
 #include "PluginSpiMock.h"
@@ -51,6 +55,7 @@ using namespace keyple::core::common;
 using namespace keyple::core::plugin::spi;
 using namespace keyple::core::plugin::spi::reader;
 using namespace keyple::core::service;
+using namespace keyple::core::util::cpp;
 
 static const std::string PLUGIN_NAME = "plugin";
 static const std::string OBSERVABLE_PLUGIN_NAME = "observablePlugin";
@@ -102,6 +107,7 @@ static void setUp()
 {
     _reader = std::make_shared<ReaderMock>();
     EXPECT_CALL(*_reader.get(), getName()).WillRepeatedly(ReturnRef(READER_NAME));
+    EXPECT_CALL(*_reader, onUnregister()).WillRepeatedly(Return());
 
     plugin = std::make_shared<PluginSpiMock>();
     EXPECT_CALL(*plugin.get(), getName()).WillRepeatedly(ReturnRef(PLUGIN_NAME));
@@ -150,7 +156,7 @@ static void setUp()
     EXPECT_CALL(*autonomousObservablePluginFactory.get(), getCommonApiVersion()).WillRepeatedly(ReturnRef(COMMON_API_VERSION));
     EXPECT_CALL(*autonomousObservablePluginFactory.get(), getPluginApiVersion()).WillRepeatedly(ReturnRef(PLUGIN_API_VERSION));
     EXPECT_CALL(*autonomousObservablePluginFactory.get(), getPlugin()).WillRepeatedly(Return(autonomousObservablePlugin));
-    
+
     poolPluginFactory = std::make_shared<PoolPluginFactoryMock>();
     EXPECT_CALL(*poolPluginFactory.get(), getPoolPluginName()).WillRepeatedly(ReturnRef(POOL_PLUGIN_NAME));
     EXPECT_CALL(*poolPluginFactory.get(), getCommonApiVersion()).WillRepeatedly(ReturnRef(COMMON_API_VERSION));
@@ -226,7 +232,7 @@ TEST(SmartCardServiceAdapterTest, getInstance_whenIsInvokedTwice_shouldReturnSam
 
 /* Register regular plugin */
 
-TEST(SmartCardServiceAdapterTest, 
+TEST(SmartCardServiceAdapterTest,
      registerPlugin_whenPluginIsCorrect_shouldProducePlugin_BeRegistered_withoutWarning)
 {
     setUp();
@@ -240,7 +246,7 @@ TEST(SmartCardServiceAdapterTest,
     tearDown();
 }
 
-TEST(SmartCardServiceAdapterTest, 
+TEST(SmartCardServiceAdapterTest,
     registerPlugin_whenPluginIsObservable_shouldProduceObservablePlugin_BeRegistered_withoutWarning)
 {
     setUp();
@@ -250,11 +256,11 @@ TEST(SmartCardServiceAdapterTest,
     ASSERT_NE(std::dynamic_pointer_cast<ObservableLocalPluginAdapter>(p), nullptr);
     const auto plugins = service->getPluginNames();
     ASSERT_TRUE(std::count(plugins.begin(), plugins.end(), OBSERVABLE_PLUGIN_NAME));
-    
+
     tearDown();
 }
 
-TEST(SmartCardServiceAdapterTest, 
+TEST(SmartCardServiceAdapterTest,
      registerPlugin_whenPluginIsAutonomousObservable_shouldProduceAutonomousObservablePlugin_BeRegistered_withoutWarning)
 {
     setUp();
@@ -281,21 +287,21 @@ TEST(SmartCardServiceAdapterTest, registerPlugin_whenFactoryDoesNotImplementSpi_
 {
     setUp();
 
-    EXPECT_THROW(service->registerPlugin(std::make_shared<KeyplePluginExtensionFactory>()), 
+    EXPECT_THROW(service->registerPlugin(std::make_shared<KeyplePluginExtensionFactory>()),
                  IllegalArgumentException);
 
     tearDown();
 }
 
-TEST(SmartCardServiceAdapterTest, 
+TEST(SmartCardServiceAdapterTest,
      registerPlugin_whenFactoryPluginNameMismatchesPluginName_shouldIAE_and_notRegister)
 {
     setUp();
 
     const std::string pluginName = "otherPluginName";
     EXPECT_CALL(*pluginFactory.get(), getPluginName()).WillRepeatedly(ReturnRef(pluginName));
-    
-    
+
+
     EXPECT_THROW(service->registerPlugin(pluginFactory), IllegalArgumentException);
 
     const std::vector<std::string>& pluginNames = service->getPluginNames();
@@ -311,9 +317,9 @@ TEST(SmartCardServiceAdapterTest,
 
     const std::string apiVersion = "2.1";
     EXPECT_CALL(*pluginFactory.get(), getCommonApiVersion()).WillRepeatedly(ReturnRef(apiVersion));
-    
+
     service->registerPlugin(pluginFactory);
-    
+
     const std::vector<std::string>& pluginNames = service->getPluginNames();
     ASSERT_TRUE(std::count(pluginNames.begin(), pluginNames.end(), PLUGIN_NAME));
 
@@ -331,7 +337,7 @@ TEST(SmartCardServiceAdapterTest,
     EXPECT_CALL(*pluginFactory.get(), getPluginApiVersion()).WillRepeatedly(ReturnRef(apiVersion));
 
     service->registerPlugin(pluginFactory);
-   
+
     const std::vector<std::string>& pluginNames = service->getPluginNames();
     ASSERT_TRUE(std::count(pluginNames.begin(), pluginNames.end(), PLUGIN_NAME));
 
@@ -356,7 +362,7 @@ TEST(SmartCardServiceAdapterTest, registerPlugin_whenIoException_shouldThrowKeyp
 
     EXPECT_CALL(*plugin.get(), searchAvailableReaders())
         .WillRepeatedly(Throw(PluginIOException("Plugin IO Exception")));
-    
+
     EXPECT_THROW(service->registerPlugin(pluginFactory), KeyplePluginException);
 
     tearDown();
@@ -364,7 +370,7 @@ TEST(SmartCardServiceAdapterTest, registerPlugin_whenIoException_shouldThrowKeyp
 
 /* Register Pool Plugin */
 
-TEST(SmartCardServiceAdapterTest, 
+TEST(SmartCardServiceAdapterTest,
      registerPlugin_Pool_whenPluginIsCorrect_shouldProducePlugin_BeRegistered_withoutWarning)
 {
     setUp();
@@ -407,7 +413,7 @@ TEST(SmartCardServiceAdapterTest,
     EXPECT_THROW(service->registerPlugin(poolPluginFactory), IllegalArgumentException);
     const auto plugins = service->getPluginNames();
     ASSERT_FALSE(std::count(plugins.begin(), plugins.end(), POOL_PLUGIN_NAME));
-    
+
     tearDown();
 }
 
@@ -423,7 +429,7 @@ TEST(SmartCardServiceAdapterTest,
     service->registerPlugin(poolPluginFactory);
     const auto plugins = service->getPluginNames();
     ASSERT_TRUE(std::count(plugins.begin(), plugins.end(), POOL_PLUGIN_NAME));
-    
+
     // verify(logger).warn(anyString(), eq(POOL_PLUGIN_NAME), eq("2.1"), eq(COMMON_API_VERSION));
 
     tearDown();
@@ -441,7 +447,7 @@ TEST(SmartCardServiceAdapterTest,
     service->registerPlugin(poolPluginFactory);
     const auto plugins = service->getPluginNames();
     ASSERT_TRUE(std::count(plugins.begin(), plugins.end(), POOL_PLUGIN_NAME));
-    
+
     // verify(logger).warn(anyString(), eq(POOL_PLUGIN_NAME), eq("2.1"), eq(PLUGIN_API_VERSION));
 
     tearDown();
@@ -530,7 +536,7 @@ TEST(SmartCardServiceAdapterTest, registerPlugin_whenApiVersionHasBadLength_shou
 
     const std::string apiVersion = "2.0.0";
     EXPECT_CALL(*pluginFactory.get(), getCommonApiVersion()).WillRepeatedly(ReturnRef(apiVersion));
-    
+
     EXPECT_THROW(service->registerPlugin(pluginFactory), IllegalStateException);
 
     tearDown();
@@ -542,7 +548,7 @@ TEST(SmartCardServiceAdapterTest, registerPlugin_whenApiVersionHasBadFormat_shou
 
     const std::string apiVersion = "2.A";
     EXPECT_CALL(*pluginFactory.get(), getCommonApiVersion()).WillRepeatedly(ReturnRef(apiVersion));
-    
+
     EXPECT_THROW(service->registerPlugin(pluginFactory), IllegalStateException);
 
     tearDown();
@@ -570,7 +576,7 @@ TEST(SmartCardServiceAdapterTest, unregisterPlugin_whenPluginIsRegistered_should
 
     const auto plugins1 = service->getPluginNames();
     ASSERT_TRUE(std::count(plugins1.begin(), plugins1.end(), PLUGIN_NAME));
-    
+
     service->unregisterPlugin(PLUGIN_NAME);
 
     const auto plugins2 = service->getPluginNames();
@@ -627,30 +633,110 @@ TEST(SmartCardServiceAdapterTest, unregisterPlugin_Pool_whenPluginIsRegistered_s
 //     assertThat(service->getPluginNames().contains(REMOTE_PLUGIN_NAME)).isFalse();
 //   }
 
-//   @Test
-//   public void getPlugin_whenPluginIsNotRegistered_shouldReturnNull() {
-//     assertThat(service->getPlugin(PLUGIN_NAME)).isNull();
-//   }
+TEST(SmartCardServiceAdapterTest,
+    getPlugin_fromPluginName_whenPluginIsNotRegistered_shouldReturnNull)
+{
+    setUp();
 
-//   @Test
-//   public void getPlugin_whenPluginIsRegistered_shouldPluginInstance() {
-//     service->registerPlugin(pluginFactory);
-//     assertThat(service->getPlugin(PLUGIN_NAME)).isNotNull();
-//   }
+    ASSERT_EQ(service->getPlugin(PLUGIN_NAME), nullptr);
 
-//   @Test
-//   public void getPlugins_whenNoPluginRegistered_shouldReturnEmptyList() {
-//     assertThat(service->getPlugins()).isEmpty();
-//   }
+    tearDown();
+}
 
-//   @Test
-//   public void getPlugins_whenTwoPluginsRegistered_shouldHaveTwoPlugins() {
-//     service->registerPlugin(pluginFactory);
-//     service->registerPlugin(poolPluginFactory);
-//     assertThat(service->getPlugins()).hasSize(2);
-//     assertThat(service->getPluginNames()).contains(PLUGIN_NAME);
-//     assertThat(service->getPluginNames()).contains(POOL_PLUGIN_NAME);
-//   }
+TEST(SmartCardServiceAdapterTest,
+     getPlugin_fromPluginName_whenPluginIsRegistered_shouldReturnPluginInstance)
+{
+    setUp();
+
+    service->registerPlugin(pluginFactory);
+    ASSERT_NE(service->getPlugin(PLUGIN_NAME), nullptr);
+
+    tearDown();
+}
+
+TEST(SmartCardServiceAdapterTest,
+     getPlugin_fromCardReader_whenPluginIsNotRegistered_shouldReturnNull)
+{
+    setUp();
+
+    ASSERT_EQ(service->getPlugin(std::make_shared<CardReaderMock>()), nullptr);
+
+    tearDown();
+}
+
+TEST(SmartCardServiceAdapterTest, getPlugin_fromCardReader_whenReaderIsNotFound_shouldReturnNull)
+{
+    setUp();
+
+    service->registerPlugin(pluginFactory);
+
+    ASSERT_EQ(service->getPlugin(std::make_shared<CardReaderMock>()), nullptr);
+
+    tearDown();
+}
+
+TEST(SmartCardServiceAdapterTest,
+     getPlugin_fromCardReader_whenPluginIsRegistered_shouldReturnPluginInstance)
+{
+    setUp();
+
+    const std::vector<std::shared_ptr<ReaderSpi>> readers = {_reader};
+    EXPECT_CALL(*plugin, searchAvailableReaders()).WillOnce(Return(readers));
+
+    auto p = service->registerPlugin(pluginFactory);
+    auto cardReader = service->getPlugin(PLUGIN_NAME)->getReaders()[0];
+
+    ASSERT_EQ(service->getPlugin(cardReader), p);
+
+    tearDown();
+}
+
+TEST(SmartCardServiceAdapterTest, getReader_whenReaderDoesNotExist_shouldReturnNull)
+{
+    setUp();
+
+    ASSERT_EQ(service->getReader(READER_NAME), nullptr);
+
+    tearDown();
+}
+
+TEST(SmartCardServiceAdapterTest, getReader_whenReaderExists_shouldReturnReaderInstance)
+{
+    setUp();
+
+    const std::vector<std::shared_ptr<ReaderSpi>> readers = {_reader};
+    EXPECT_CALL(*plugin, searchAvailableReaders()).WillOnce(Return(readers));
+
+    auto p = service->registerPlugin(pluginFactory);
+    auto cardReader = service->getPlugin(PLUGIN_NAME)->getReaders()[0];
+
+    ASSERT_EQ(service->getReader(READER_NAME), cardReader);
+
+    tearDown();
+}
+
+TEST(SmartCardServiceAdapterTest, getPlugins_whenNoPluginRegistered_shouldReturnEmptyList)
+{
+    setUp();
+
+    ASSERT_EQ(service->getPlugins().size(), 0);
+
+    tearDown();
+}
+
+TEST(SmartCardServiceAdapterTest, getPlugins_whenTwoPluginsRegistered_shouldHaveTwoPlugins)
+{
+    setUp();
+
+    service->registerPlugin(pluginFactory);
+    service->registerPlugin(poolPluginFactory);
+
+    ASSERT_EQ(service->getPlugins().size(), 2);
+    ASSERT_TRUE(Arrays::contains(service->getPluginNames(), PLUGIN_NAME));
+    ASSERT_TRUE(Arrays::contains(service->getPluginNames(), POOL_PLUGIN_NAME));
+
+    tearDown();
+}
 
 /* Check card extension APIs */
 
@@ -660,9 +746,9 @@ TEST(SmartCardServiceAdapterTest, checkCardExtension_whenCommonsApiDiffers_shoul
 
     const std::string version = "2.1";
     EXPECT_CALL(*cardExtension.get(), getCommonApiVersion()).WillRepeatedly(ReturnRef(version));
-    
+
     service->checkCardExtension(cardExtension);
-    
+
     // verify(logger).warn(anyString(), eq("2.1"), eq(COMMON_API_VERSION));
 
     tearDown();
@@ -671,12 +757,12 @@ TEST(SmartCardServiceAdapterTest, checkCardExtension_whenCommonsApiDiffers_shoul
 TEST(SmartCardServiceAdapterTest, checkCardExtension_whenReaderApiDiffers_shouldLogWarn)
 {
     setUp();
-    
+
     const std::string version = "2.1";
     EXPECT_CALL(*cardExtension.get(), getReaderApiVersion()).WillRepeatedly(ReturnRef(version));
-    
+
     service->checkCardExtension(cardExtension);
-    
+
     // verify(logger).warn(anyString(), eq("2.1"), eq(READER_API_VERSION));
 
     tearDown();
@@ -685,12 +771,12 @@ TEST(SmartCardServiceAdapterTest, checkCardExtension_whenReaderApiDiffers_should
 TEST(SmartCardServiceAdapterTest, checkCardExtension_whenCardApiDiffers_shouldLogWarn)
 {
     setUp();
-    
+
     const std::string version = "2.1";
     EXPECT_CALL(*cardExtension.get(), getCardApiVersion()).WillRepeatedly(ReturnRef(version));
-    
+
     service->checkCardExtension(cardExtension);
-    
+
     // verify(logger).warn(anyString(), eq("2.1"), eq(CARD_API_VERSION));
 
     tearDown();

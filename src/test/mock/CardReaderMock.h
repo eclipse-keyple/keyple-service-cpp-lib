@@ -15,26 +15,16 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-/* Keyple Core Service */
-#include "KeypleReaderExtension.h"
-
-/* Keyple Core Plugin */
-#include "ReaderSpi.h"
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
 
 using namespace testing;
 
-using namespace keyple::core::plugin::spi::reader;
-using namespace keyple::core::service;
+using namespace calypsonet::terminal::reader;
 
-class ReaderMock final : public KeypleReaderExtension, public ReaderSpi {
+class CardReaderMock final : public CardReader {
 public:
-    MOCK_METHOD((const std::string&), getName, (), (const, override, final));
-    MOCK_METHOD(bool, isContactless, (), (override, final));
-    MOCK_METHOD(void, openPhysicalChannel, (), (override));
-    MOCK_METHOD(void, closePhysicalChannel, (), (override));
-    MOCK_METHOD(bool, isPhysicalChannelOpen, (), (const, override));
-    MOCK_METHOD(bool, checkCardPresence, (), (override));
-    MOCK_METHOD((const std::string), getPowerOnData, (), (const, override));
-    MOCK_METHOD(void, onUnregister, (), (override));
-    MOCK_METHOD((const std::vector<uint8_t>), transmitApdu, (const std::vector<uint8_t>& apduIn), (override));
+    MOCK_METHOD(const std::string&, getName, (), (const, override));
+    MOCK_METHOD(bool, isContactless,(), (override));
+    MOCK_METHOD(bool, isCardPresent,(), (override));
 };

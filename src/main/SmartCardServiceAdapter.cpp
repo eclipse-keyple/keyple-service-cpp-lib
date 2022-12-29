@@ -211,7 +211,40 @@ const std::vector<std::shared_ptr<Plugin>> SmartCardServiceAdapter::getPlugins()
 
 std::shared_ptr<Plugin> SmartCardServiceAdapter::getPlugin(const std::string& pluginName) const
 {
-    return mPlugins.at(pluginName);
+    auto it = mPlugins.find(pluginName);
+    if (it != mPlugins.end()) {
+        return it->second;
+    }
+
+    return nullptr;
+}
+
+std::shared_ptr<Plugin> SmartCardServiceAdapter::getPlugin(
+    const std::shared_ptr<CardReader> cardReader)
+    const
+{
+    for (const auto& plugin : mPlugins) {
+        for (const auto& reader : plugin.second->getReaders()) {
+            if (reader == cardReader) {
+                return plugin.second;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+std::shared_ptr<CardReader> SmartCardServiceAdapter::getReader(const std::string& readerName) const
+{
+    for (const auto& plugin : mPlugins) {
+        for (const auto& reader : plugin.second->getReaders()) {
+            if (reader->getName() == readerName) {
+                return reader;
+            }
+        }
+    }
+
+    return nullptr;
 }
 
 void SmartCardServiceAdapter::checkCardExtension(
