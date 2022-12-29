@@ -619,6 +619,12 @@ std::vector<std::shared_ptr<CardSelectionResponseApi>>
 void LocalReaderAdapter::doUnregister()
 {
     try {
+        mReaderSpi->closePhysicalChannel();
+    } catch (const Exception& e) {
+        mLogger->error("Error during the closing physical channel on reader '%'\n", getName(), e);
+    }
+
+    try {
         mReaderSpi->onUnregister();
     } catch (const Exception& e) {
         mLogger->error("Error during the unregistration of the extension of reader '%' (%)\n",
