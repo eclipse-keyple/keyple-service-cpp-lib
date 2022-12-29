@@ -16,12 +16,17 @@
 #include <string>
 #include <vector>
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+
 /* Keyple Core Service */
 #include "Plugin.h"
 
 namespace keyple {
 namespace core {
 namespace service {
+
+using namespace calypsonet::terminal::reader;
 
 /**
  * Plugin able to handle the access to an undefined number of CardReader.
@@ -47,8 +52,8 @@ public:
     virtual const std::vector<std::string> getReaderGroupReferences() const = 0;
 
     /**
-     * Gets a CardReader and makes it exclusive to the caller until the releaseReader(Reader) method
-     * is invoked.
+     * Gets a CardReader and makes it exclusive to the caller until the releaseReader(CardReader)
+     * method is invoked.
      *
      * <p>The allocated reader belongs to the group targeted with provided reference.
      *
@@ -69,7 +74,7 @@ public:
      * @param reader The Reader to be released.
      * @since 2.0.0
      */
-    virtual void releaseReader(const std::shared_ptr<Reader> reader) = 0;
+    virtual void releaseReader(const std::shared_ptr<CardReader> reader) = 0;
 };
 
 }

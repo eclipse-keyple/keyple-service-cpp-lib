@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -97,7 +97,7 @@ std::shared_ptr<Reader> LocalPoolPluginAdapter::allocateReader(
     return localReaderAdapter;
 }
 
-void LocalPoolPluginAdapter::releaseReader(std::shared_ptr<Reader> reader)
+void LocalPoolPluginAdapter::releaseReader(std::shared_ptr<CardReader> reader)
 {
     checkStatus();
 
