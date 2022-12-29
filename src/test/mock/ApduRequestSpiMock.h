@@ -22,7 +22,7 @@ using namespace testing;
 
 using namespace calypsonet::terminal::card::spi;
 
-class ApduRequestSpiMock : public ApduRequestSpi {
+class ApduRequestSpiMock final : public ApduRequestSpi {
 public:
     MOCK_METHOD(const std::vector<uint8_t>&, getApdu, (), (const, override));
     MOCK_METHOD(const std::vector<int>&, getSuccessfulStatusWords, (), (const, override));

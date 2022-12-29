@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -137,13 +137,13 @@ TEST(CardSelectionResultAdapterTest, getSmartCards_whenNotNullSmartCard_shouldRe
     tearDown();
 }
 
-TEST(CardSelectionResultAdapterTest, getActiveSmartCard_whenNoSmartCard_shouldISE)
+TEST(CardSelectionResultAdapterTest, getActiveSmartCard_whenNoSmartCard_shouldReturnNull)
 {
     setUp();
 
     CardSelectionResultAdapter cardSelectionResult;
 
-    EXPECT_THROW(cardSelectionResult.getActiveSmartCard(), IllegalStateException);
+    ASSERT_EQ(cardSelectionResult.getActiveSmartCard(), nullptr);
 
     tearDown();
 }

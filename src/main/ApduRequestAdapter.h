@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -68,7 +68,7 @@ public:
     ApduRequestAdapter& setInfo(const std::string& info);
 
     /**
-     * 
+     *
      */
     virtual ~ApduRequestAdapter() = default;
 

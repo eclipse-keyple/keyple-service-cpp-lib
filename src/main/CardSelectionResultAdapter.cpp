@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -40,11 +40,8 @@ const std::map<int, std::shared_ptr<SmartCard>>& CardSelectionResultAdapter::get
 const std::shared_ptr<SmartCard> CardSelectionResultAdapter::getActiveSmartCard() const
 {
     const auto& it = mSmartCardMap.find(mActiveSelectionIndex);
-    if (it == mSmartCardMap.end()) {
-        throw IllegalStateException("No active matching card is available");
-    }
 
-    return it->second;
+    return (it != mSmartCardMap.end()) ? it->second : nullptr;
 }
 
 int CardSelectionResultAdapter::getActiveSelectionIndex() const
