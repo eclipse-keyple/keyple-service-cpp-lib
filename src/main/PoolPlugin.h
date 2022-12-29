@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -24,7 +24,7 @@ namespace core {
 namespace service {
 
 /**
- * Plugin able to handle the access to an undefined number of {@link Reader}.
+ * Plugin able to handle the access to an undefined number of CardReader.
  *
  * <p>It is typically used to define a plugin built on top of an HSM interface that can allocate a
  * large number of virtual reader slots.
@@ -47,8 +47,8 @@ public:
     virtual const std::vector<std::string> getReaderGroupReferences() const = 0;
 
     /**
-     * Gets a {@link Reader} and makes it exclusive to the caller until the {@link
-     * #releaseReader(Reader)} method is invoked.
+     * Gets a CardReader and makes it exclusive to the caller until the releaseReader(Reader) method
+     * is invoked.
      *
      * <p>The allocated reader belongs to the group targeted with provided reference.
      *

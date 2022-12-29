@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -34,6 +34,7 @@ using namespace keyple::core::common;
  * Drives the underlying hardware to configure the search and check for the presence of cards.
  *
  * @since 2.0.0
+ * @deprecated Use {@link CardReader} instead
  */
 class Reader : virtual public CardReader {
 public:
@@ -52,6 +53,7 @@ public:
      * @return A {@link KeypleReaderExtension}.
      * @throws IllegalStateException If reader is no longer registered.
      * @since 2.0.0
+     * @deprecated Use Plugin::getReaderExtension(Class, String) instead.
      */
     virtual std::shared_ptr<KeypleReaderExtension> getExtension(
         const std::type_info& readerExtensionClass) const = 0;

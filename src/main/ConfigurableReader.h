@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -28,11 +28,12 @@ using namespace calypsonet::terminal::reader;
  * Drives the underlying hardware to configure the protocol to use.
  *
  * @since 2.0.0
+ * @deprecated Use ConfigurableCardReader instead.
  */
 class ConfigurableReader : virtual public Reader, virtual public ConfigurableCardReader {
 public:
     /**
-     * 
+     *
      */
     virtual ~ConfigurableReader() = default;
 };

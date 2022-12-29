@@ -181,8 +181,8 @@ public:
      *
      * @since 2.0.0
      */
-    virtual std::shared_ptr<KeypleReaderExtension> getExtension(
-        const std::type_info& readerExtensionClass) const override final;
+    std::shared_ptr<KeypleReaderExtension> getExtension(
+        const std::type_info& readerExtensionClass) const final;
 
     /**
      * {@inheritDoc}

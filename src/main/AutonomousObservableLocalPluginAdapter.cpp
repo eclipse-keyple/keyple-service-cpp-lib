@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -11,6 +11,9 @@
  **************************************************************************************************/
 
 #include "AutonomousObservableLocalPluginAdapter.h"
+
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
 
 /* Keyple Core Util */
 #include "KeypleAssert.h"
@@ -26,6 +29,7 @@ namespace keyple {
 namespace core {
 namespace service {
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::core::plugin;
 using namespace keyple::core::plugin::spi::reader::observable;
 using namespace keyple::core::util::cpp;
@@ -62,7 +66,7 @@ void AutonomousObservableLocalPluginAdapter::onReaderDisconnected(
     std::vector<std::string> notifyReaders;
 
     for (const auto& readerName : readerNames) {
-        const std::shared_ptr<Reader> reader = getReader(readerName);
+        const std::shared_ptr<CardReader> reader = getReader(readerName);
         if (reader == nullptr) {
             mLogger->warn("[%] ObservableLocalPlugin => Impossible to remove reader, reader not " \
                           "found with name : %\n",

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -13,6 +13,9 @@
 #pragma once
 
 #include <memory>
+
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
 
 /* Keyple Core Service */
 #include "ExecutorService.h"
@@ -28,9 +31,9 @@ using namespace keyple::core::service::cpp;
 using namespace keyple::core::service::spi;
 
 /**
- * Plugin able to observe the connection/disconnection of {@link Reader}.
+ * Plugin able to observe the connection/disconnection of CardReader.
  *
- * <p>Allows registered observers to receive a {@link PluginEvent} when a reader is
+ * <p>Allows registered observers to receive a PluginEvent when a reader is
  * connected/disconnected.
  *
  * @since 2.0.0

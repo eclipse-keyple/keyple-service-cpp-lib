@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -32,7 +32,7 @@ using namespace keyple::core::util::cpp;
 
 /**
  * (package-private)<br>
- * This monitoring job polls the Reader#isCardPresent() method to detect a card insertion or
+ * This monitoring job polls the CardReader::isCardPresent() method to detect a card insertion or
  * a card removal.
  *
  * <p>All runtime exceptions that may occur during the monitoring process are caught and notified at
