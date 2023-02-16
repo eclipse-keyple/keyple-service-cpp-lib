@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -56,7 +56,7 @@ const std::vector<std::string> LocalPoolPluginAdapter::getReaderGroupReferences(
     try {
         return mPoolPluginSpi->getReaderGroupReferences();
     } catch (const PluginIOException& e) {
-        throw KeyplePluginException("The pool plugin " +
+        throw KeyplePluginException("Pool plugin " +
                                     getName() +
                                     " is unable to get reader group references : " +
                                     e.getMessage(),
@@ -69,7 +69,7 @@ std::shared_ptr<Reader> LocalPoolPluginAdapter::allocateReader(
 {
     checkStatus();
 
-    mLogger->debug("The pool plugin '%' is allocating a reader of the group reference '%'\n",
+    mLogger->debug("Pool plugin '%' allocates a reader of the group reference '%'\n",
                    getName(),
                    readerGroupReference);
 
@@ -80,7 +80,7 @@ std::shared_ptr<Reader> LocalPoolPluginAdapter::allocateReader(
     try {
         readerSpi = mPoolPluginSpi->allocateReader(readerGroupReference);
     } catch (const PluginIOException& e) {
-        throw KeyplePluginException("The pool plugin '" +
+        throw KeyplePluginException("Pool plugin '" +
                                     getName() +
                                     "' is unable to allocate a reader of the reader group " +
                                     "reference " +
@@ -101,7 +101,7 @@ void LocalPoolPluginAdapter::releaseReader(std::shared_ptr<CardReader> reader)
 {
     checkStatus();
 
-    mLogger->debug("The pool plugin '%' is releasing the reader '%'\n",
+    mLogger->debug("Pool plugin '%' releases the reader '%'\n",
                    getName(),
                    reader != nullptr ? reader->getName() : "null");
 
@@ -119,7 +119,7 @@ void LocalPoolPluginAdapter::releaseReader(std::shared_ptr<CardReader> reader)
         getReadersMap().erase(reader->getName());
         std::dynamic_pointer_cast<LocalReaderAdapter>(reader)->doUnregister();
 
-        throw KeyplePluginException("The pool plugin '" +
+        throw KeyplePluginException("Pool plugin '" +
                                     getName() +
                                     "' is unable to release the reader '" +
                                     reader->getName() +

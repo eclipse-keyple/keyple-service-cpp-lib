@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -58,7 +58,7 @@ std::shared_ptr<ObservationManagerAdapter<PluginObserverSpi, PluginObservationEx
 
 void AbstractObservableLocalPluginAdapter::notifyObservers(const std::shared_ptr<PluginEvent> event)
 {
-    mLogger->debug("The plugin '%' is notifying the plugin event '%' to % observers\n",
+    mLogger->debug("Plugin '%' notifies the plugin event '%' to % observer(s)\n",
                    getName(),
                    event->getType(),
                    countObservers());

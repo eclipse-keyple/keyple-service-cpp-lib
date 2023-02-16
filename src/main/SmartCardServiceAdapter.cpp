@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -185,7 +185,7 @@ void SmartCardServiceAdapter::unregisterPlugin(const std::string& pluginName)
         std::dynamic_pointer_cast<AbstractPluginAdapter>(removedPlugin)->doUnregister();
         mPlugins.erase(i);
     } else {
-        mLogger->warn("The plugin '%' is not registered\n", pluginName);
+        mLogger->warn("Plugin '%' is not registered\n", pluginName);
     }
 }
 
@@ -311,7 +311,7 @@ void SmartCardServiceAdapter::checkPluginRegistration(const std::string& pluginN
 
     const auto it = mPlugins.find(pluginName);
     if (it != mPlugins.end()) {
-        throw IllegalStateException("The plugin '" +
+        throw IllegalStateException("Plugin '" +
                                     pluginName +
                                     "' has already been registered to the service.");
         }
@@ -326,7 +326,7 @@ std::shared_ptr<AbstractPluginAdapter> SmartCardServiceAdapter::createLocalPlugi
     std::shared_ptr<PluginSpi> pluginSpi = pluginFactorySpi->getPlugin();
 
     if (pluginSpi->getName() != pluginFactorySpi->getPluginName()) {
-        throw IllegalArgumentException("The plugin name '" +
+        throw IllegalArgumentException("Plugin name '" +
                                        pluginSpi->getName() +
                                        "' mismatches the expected name '" +
                                        pluginFactorySpi->getPluginName() +
@@ -360,7 +360,7 @@ std::shared_ptr<AbstractPluginAdapter> SmartCardServiceAdapter::createLocalPoolP
     std::shared_ptr<PoolPluginSpi> poolPluginSpi = poolPluginFactorySpi->getPoolPlugin();
 
     if (poolPluginSpi->getName() != poolPluginFactorySpi->getPoolPluginName()) {
-        throw IllegalArgumentException("The pool plugin name '" +
+        throw IllegalArgumentException("Pool plugin name '" +
                                        poolPluginSpi->getName() +
                                        "' mismatches the expected name '" +
                                        poolPluginFactorySpi->getPoolPluginName() +

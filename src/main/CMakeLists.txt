@@ -1,5 +1,5 @@
 #/*************************************************************************************************
-# * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                       *
+# * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                       *
 # *                                                                                               *
 # * See the NOTICE file(s) distributed with this work for additional information regarding        *
 # * copyright ownership.                                                                          *
@@ -26,7 +26,6 @@ ADD_LIBRARY(
     ${CMAKE_CURRENT_SOURCE_DIR}/AbstractReaderAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/AbstractObservableLocalPluginAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/AbstractObservableStateAdapter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ApduRequestAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ApduResponseAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/AutonomousObservableLocalPluginAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CardInsertionActiveMonitoringJobAdapter.cpp

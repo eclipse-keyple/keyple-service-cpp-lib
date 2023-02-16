@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -39,7 +39,6 @@
 #include "ReaderIOException.h"
 
 /* Keyple Core Service */
-#include "ApduRequestAdapter.h"
 #include "ApduResponseAdapter.h"
 #include "CardResponseAdapter.h"
 #include "CardSelectionResponseAdapter.h"
@@ -58,9 +57,8 @@ using namespace keyple::core::util::cpp::exception;
 
 /* LOCAL READER ADAPTER ------------------------------------------------------------------------- */
 
-const int LocalReaderAdapter::SW_9000 = 0x9000;
-
 const int LocalReaderAdapter::SW_6100 = 0x6100;
+
 const int LocalReaderAdapter::SW_6C00 = 0x6C00;
 
 const int LocalReaderAdapter::SW1_MASK = 0xFF00;
@@ -186,7 +184,7 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::processExplicitAidSelec
     System::arraycopy(aid, 0, selectApplicationCommand, 5, static_cast<int>(aid.size()));
     selectApplicationCommand[5 + aid.size()] = 0x00; /* Le */
 
-    auto apduRequest = std::make_shared<ApduRequestAdapter>(selectApplicationCommand);
+    auto apduRequest = std::shared_ptr<ApduRequest>(new ApduRequest(selectApplicationCommand));
     apduRequest->setInfo("Internal Select Application");
 
     return processApduRequest(apduRequest);
@@ -380,7 +378,7 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::processApduRequest(
             const std::vector<uint8_t> getResponseApdu = {0x00, 0xC0, 0x00, 0x00, le};
 
             /* Execute APDU */
-            auto adapter = std::make_shared<ApduRequestAdapter>(getResponseApdu);
+            auto adapter = std::make_shared<ApduRequest>(getResponseApdu);
             adapter->setInfo("Internal Get Response");
             apduResponse = processApduRequest(adapter);
 
@@ -407,7 +405,7 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::processApduRequest(
             const std::vector<uint8_t> getResponseApdu = {0x00, 0xC0, 0x00, 0x00, le};
 
             /* Execute GetResponse APDU */
-            auto adapter = std::make_shared<ApduRequestAdapter>(getResponseApdu);
+            auto adapter = std::make_shared<ApduRequest>(getResponseApdu);
             adapter->setInfo("Internal Get Response");
             apduResponse = processApduRequest(adapter);
         }
@@ -671,6 +669,58 @@ LocalReaderAdapter::SelectionStatus::SelectionStatus(
 : mPowerOnData(powerOnData),
   mSelectApplicationResponse(selectApplicationResponse),
   mHasMatched(hasMatched) {}
+
+/* APDU REQUEST --------------------------------------------------------------------------------- */
+
+const int LocalReaderAdapter::ApduRequest::DEFAULT_SUCCESSFUL_CODE = 0x9000;
+
+LocalReaderAdapter::ApduRequest::ApduRequest(const std::vector<uint8_t>& apdu)
+: mApdu(apdu), mSuccessfulStatusWords({DEFAULT_SUCCESSFUL_CODE}) {}
+
+LocalReaderAdapter::ApduRequest& LocalReaderAdapter::ApduRequest::setInfo(const std::string& info)
+{
+    mInfo = info;
+
+    return *this;
+}
+
+std::vector<uint8_t>& LocalReaderAdapter::ApduRequest::getApdu()
+{
+    return mApdu;
+}
+
+const std::vector<int>& LocalReaderAdapter::ApduRequest::getSuccessfulStatusWords() const
+{
+    return mSuccessfulStatusWords;
+}
+
+const std::string& LocalReaderAdapter::ApduRequest::getInfo() const
+{
+    return mInfo;
+}
+
+std::ostream& operator<<(std::ostream& os, LocalReaderAdapter::ApduRequest& ar)
+{
+    os << "APDU_REQUEST: {"
+       << "APDU: " << ar.getApdu() << ", "
+       << "SUCCESSFUL_STATUS_WORDS: " << ar.getSuccessfulStatusWords() << ", "
+       << "INFO: " << ar.getInfo()
+       << "}";
+
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os,
+                         const std::shared_ptr<LocalReaderAdapter::ApduRequest> ar)
+{
+    if (ar == nullptr) {
+        os << "APDU_REQUEST: null";
+    } else {
+        os << *ar;
+    }
+
+    return os;
+}
 
 }
 }

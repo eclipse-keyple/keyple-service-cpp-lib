@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -264,7 +264,7 @@ void ObservableLocalReaderAdapter::switchState(const MonitoringState stateId)
 
 void ObservableLocalReaderAdapter::notifyObservers(const std::shared_ptr<ReaderEvent> event)
 {
-    mLogger->debug("The reader '%' is notifying the reader event '%' to % observers\n",
+    mLogger->debug("Reader '%' notifies the reader event '%' to % observer(s)\n",
                    getName(),
                    event->getType(),
                    countObservers());
@@ -371,8 +371,7 @@ void ObservableLocalReaderAdapter::startCardDetection(const DetectionMode detect
     /* RL-DET-REMCTRL.1 */
     checkStatus();
 
-    mLogger->debug("The reader '%' of plugin '%' is starting the card detection with polling mode" \
-                   " '%'\n",
+    mLogger->debug("Reader '%' of plugin '%' starts the card detection with polling mode '%'\n",
                    getName(),
                    getPluginName(),
                    detectionMode);
@@ -384,7 +383,7 @@ void ObservableLocalReaderAdapter::startCardDetection(const DetectionMode detect
 void ObservableLocalReaderAdapter::stopCardDetection()
 {
     /* RL-DET-REMCTRL.1 */
-    mLogger->debug("The reader '%' of plugin '%' is stopping the card detection\n",
+    mLogger->debug("Reader '%' of plugin '%' stops the card detection\n",
                    getName(),
                    getPluginName());
 
@@ -393,7 +392,7 @@ void ObservableLocalReaderAdapter::stopCardDetection()
 
 void ObservableLocalReaderAdapter::finalizeCardProcessing()
 {
-    mLogger->debug("The reader '%' of plugin '%' is starting the removal sequence of the card\n",
+    mLogger->debug("Reader '%' of plugin '%' starts the removal sequence of the card\n",
                    getName(),
                    getPluginName());
 

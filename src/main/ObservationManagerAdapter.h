@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -53,8 +53,8 @@ public:
      */
     ObservationManagerAdapter(const std::string& pluginName, const std::string& readerName)
     : mOwnerComponent(readerName == "" ?
-                      "The plugin '" + pluginName + "'" :
-                      "The reader '" + readerName + "' of plugin '" + pluginName + "'") {}
+                      "Plugin '" + pluginName + "'" :
+                      "Reader '" + readerName + "' of plugin '" + pluginName + "'") {}
 
     /**
      * (package-private)<br>

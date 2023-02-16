@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <typeinfo>
 #include <vector>
@@ -178,9 +179,8 @@ private:
     /**
      * Predefined ISO values
      */
-    static const int SW_9000;
-
     static const int SW_6100;
+
     static const int SW_6C00;
 
     static const int SW1_MASK;
@@ -251,6 +251,61 @@ private:
          *
          */
         const bool mHasMatched;
+    };
+
+    /**
+     * (private)<br>
+     * Local POJO of type ApduRequestSpi.
+     */
+    class ApduRequest : public ApduRequestSpi {
+    public:
+        friend class LocalReaderAdapter;
+
+        /**
+         *
+         */
+        std::vector<uint8_t>& getApdu() override;
+
+        /**
+         *
+         */
+        const std::vector<int>& getSuccessfulStatusWords() const override;
+
+        /**
+         *
+         */
+        const std::string& getInfo() const override;
+
+    private:
+        /**
+         *
+         */
+        static const int DEFAULT_SUCCESSFUL_CODE;
+
+        /**
+         *
+         */
+        std::vector<uint8_t> mApdu;
+
+        /**
+         *
+         */
+        const std::vector<int> mSuccessfulStatusWords;
+
+        /**
+         *
+         */
+        std::string mInfo;
+
+        /**
+         *
+         */
+        ApduRequest(const std::vector<uint8_t>& apdu);
+
+        /**
+         *
+         */
+        ApduRequest& setInfo(const std::string& info);
     };
 
     /**
@@ -393,6 +448,16 @@ private:
      */
     std::shared_ptr<CardResponseAdapter> processCardRequest(
         const std::shared_ptr<CardRequestSpi> cardRequest);
+
+    /**
+     *
+     */
+    friend std::ostream& operator<<(std::ostream& os, ApduRequest& ar);
+
+    /**
+     *
+     */
+    friend std::ostream& operator<<(std::ostream& os, const std::shared_ptr<ApduRequest> ar);
 };
 
 }

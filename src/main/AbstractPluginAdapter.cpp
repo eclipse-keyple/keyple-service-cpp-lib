@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -57,9 +57,7 @@ std::shared_ptr<LocalReaderAdapter> AbstractPluginAdapter::buildLocalReaderAdapt
 void AbstractPluginAdapter::checkStatus() const
 {
     if (!mIsRegistered) {
-        throw IllegalStateException("The plugin " +
-                                    mPluginName +
-                                    " is not or no longer registered.");
+        throw IllegalStateException("Plugin " + mPluginName + " is not or no longer registered.");
     }
 }
 
