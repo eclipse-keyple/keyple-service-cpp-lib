@@ -97,14 +97,6 @@ public:
     /**
      * {@inheritDoc}
      *
-     * @since 2.1.1
-     */
-    void scheduleCardSelectionScenario(std::shared_ptr<ObservableCardReader> observableCardReader)
-        ; // should be, wait for a few updated ... //override;
-
-    /**
-     * {@inheritDoc}
-     *
      * @since 2.0.0
      */
     const std::shared_ptr<CardSelectionResult> parseScheduledCardSelectionsResponse(
@@ -135,8 +127,6 @@ private:
     /**
      *
      */
-    static const std::string DETECTION_MODE;
-    static const std::string NOTIFICATION_MODE;
     static const std::string MULTI_SELECTION_PROCESSING;
     static const std::string CHANNEL_CONTROL;
     static const std::string CARD_SELECTIONS_TYPES;
@@ -162,16 +152,6 @@ private:
      *
      */
     ChannelControl mChannelControl = ChannelControl::KEEP_OPEN;
-
-    /**
-     *
-     */
-    DetectionMode mDetectionMode = DetectionMode::REPEATING;
-
-    /**
-     *
-     */
-    NotificationMode mNotificationMode = NotificationMode::ALWAYS;
 
     /**
      * (private)<br>

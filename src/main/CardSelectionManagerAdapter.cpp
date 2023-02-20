@@ -43,8 +43,6 @@ using namespace calypsonet::terminal::reader;
 using namespace calypsonet::terminal::reader::selection;
 using namespace keyple::core::util;
 
-const std::string CardSelectionManagerAdapter::DETECTION_MODE = "detectionMode";
-const std::string CardSelectionManagerAdapter::NOTIFICATION_MODE = "notificationMode";
 const std::string CardSelectionManagerAdapter::MULTI_SELECTION_PROCESSING =
     "multiSelectionProcessing";
 const std::string CardSelectionManagerAdapter::CHANNEL_CONTROL = "channelControl";
@@ -133,12 +131,6 @@ void CardSelectionManagerAdapter::scheduleCardSelectionScenario(
     } else {
         throw IllegalArgumentException("Not a Keyple reader implementation.");
     }
-}
-
-void CardSelectionManagerAdapter::scheduleCardSelectionScenario(
-    std::shared_ptr<ObservableCardReader> observableCardReader)
-{
-    scheduleCardSelectionScenario(observableCardReader, mDetectionMode, mNotificationMode);
 }
 
 const std::shared_ptr<CardSelectionResult>
