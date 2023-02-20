@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -23,6 +23,9 @@
 /* Keple Core Service */
 #include "MultiSelectionProcessing.h"
 
+/* Keyple Core Util */
+#include "LoggerFactory.h"
+
 namespace keyple {
 namespace core {
 namespace service {
@@ -30,6 +33,7 @@ namespace service {
 using namespace calypsonet::terminal::card;
 using namespace calypsonet::terminal::card::spi;
 using namespace calypsonet::terminal::reader::selection;
+using namespace keyple::core::util::cpp;
 
 using DetectionMode = ObservableCardReader::DetectionMode;
 using NotificationMode = ObservableCardReader::NotificationMode;
@@ -56,50 +60,89 @@ public:
      *
      * @since 2.0.0
      */
-    virtual void setMultipleSelectionMode() override final;
+    void setMultipleSelectionMode() override;
 
     /**
      * {@inheritDoc}
      *
      * @since 2.0.0
      */
-    virtual int prepareSelection(const std::shared_ptr<CardSelection> cardSelection) override final;
+    int prepareSelection(const std::shared_ptr<CardSelection> cardSelection) override;
 
     /**
      * {@inheritDoc}
      *
      * @since 2.0.0
      */
-    virtual void prepareReleaseChannel() override final;
+    void prepareReleaseChannel() override;
 
     /**
      * {@inheritDoc}
      *
      * @since 2.0.0
      */
-    virtual const std::shared_ptr<CardSelectionResult> processCardSelectionScenario(
-        std::shared_ptr<CardReader> reader) override final;
+    const std::shared_ptr<CardSelectionResult> processCardSelectionScenario(
+        std::shared_ptr<CardReader> reader) override;
 
     /**
      * {@inheritDoc}
      *
      * @since 2.0.0
      */
-    virtual void scheduleCardSelectionScenario(
+    void scheduleCardSelectionScenario(
         std::shared_ptr<ObservableCardReader> observableCardReader,
         const DetectionMode detectionMode,
-        const NotificationMode notificationMode) override final;
+        const NotificationMode notificationMode) override;
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.1.1
+     */
+    void scheduleCardSelectionScenario(std::shared_ptr<ObservableCardReader> observableCardReader)
+        ; // should be, wait for a few updated ... //override;
 
     /**
      * {@inheritDoc}
      *
      * @since 2.0.0
      */
-    virtual const std::shared_ptr<CardSelectionResult> parseScheduledCardSelectionsResponse(
-        const std::shared_ptr<ScheduledCardSelectionsResponse> scheduledCardSelectionsResponse) 
-            const override final;
+    const std::shared_ptr<CardSelectionResult> parseScheduledCardSelectionsResponse(
+        const std::shared_ptr<ScheduledCardSelectionsResponse> scheduledCardSelectionsResponse)
+            const final;
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.1.1
+     */
+    const std::string exportCardSelectionScenario() const override;
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.1.1
+     */
+    int importCardSelectionScenario(const std::string& cardSelectionScenario) override;
 
 private:
+    /**
+     *
+     */
+    const std::unique_ptr<Logger> mLogger =
+        LoggerFactory::getLogger(typeid(CardSelectionManagerAdapter));
+
+    /**
+     *
+     */
+    static const std::string DETECTION_MODE;
+    static const std::string NOTIFICATION_MODE;
+    static const std::string MULTI_SELECTION_PROCESSING;
+    static const std::string CHANNEL_CONTROL;
+    static const std::string CARD_SELECTIONS_TYPES;
+    static const std::string CARD_SELECTIONS;
+    static const std::string DEFAULT_CARD_SELECTIONS;
+
     /**
      *
      */
@@ -109,16 +152,26 @@ private:
      *
      */
     std::vector<std::shared_ptr<CardSelectionRequestSpi>> mCardSelectionRequests;
-    
+
     /**
-     * 
+     *
      */
     MultiSelectionProcessing mMultiSelectionProcessing;
-    
+
     /**
-     * 
+     *
      */
-    ChannelControl mChannelControl;
+    ChannelControl mChannelControl = ChannelControl::KEEP_OPEN;
+
+    /**
+     *
+     */
+    DetectionMode mDetectionMode = DetectionMode::REPEATING;
+
+    /**
+     *
+     */
+    NotificationMode mNotificationMode = NotificationMode::ALWAYS;
 
     /**
      * (private)<br>

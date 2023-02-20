@@ -255,7 +255,7 @@ private:
 
     /**
      * (private)<br>
-     * Local POJO of type ApduRequestSpi.
+     * Local implementation of ApduRequestSpi.
      */
     class ApduRequest : public ApduRequestSpi {
     public:

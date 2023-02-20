@@ -378,7 +378,7 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::processApduRequest(
             const std::vector<uint8_t> getResponseApdu = {0x00, 0xC0, 0x00, 0x00, le};
 
             /* Execute APDU */
-            auto adapter = std::make_shared<ApduRequest>(getResponseApdu);
+            auto adapter = std::shared_ptr<ApduRequest>(new ApduRequest(getResponseApdu));
             adapter->setInfo("Internal Get Response");
             apduResponse = processApduRequest(adapter);
 
@@ -405,7 +405,7 @@ std::shared_ptr<ApduResponseAdapter> LocalReaderAdapter::processApduRequest(
             const std::vector<uint8_t> getResponseApdu = {0x00, 0xC0, 0x00, 0x00, le};
 
             /* Execute GetResponse APDU */
-            auto adapter = std::make_shared<ApduRequest>(getResponseApdu);
+            auto adapter = std::shared_ptr<ApduRequest>(new ApduRequest(getResponseApdu));
             adapter->setInfo("Internal Get Response");
             apduResponse = processApduRequest(adapter);
         }

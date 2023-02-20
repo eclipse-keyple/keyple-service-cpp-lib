@@ -70,7 +70,7 @@ static const std::string COMMON_API_VERSION = "2.0";
 static const std::string PLUGIN_API_VERSION = "2.0";
 static const std::string DISTRIBUTED_REMOTE_API_VERSION = "2.0";
 static const std::string DISTRIBUTED_LOCAL_API_VERSION = "2.0";
-static const std::string READER_API_VERSION = "1.0";
+static const std::string READER_API_VERSION = "1.1";
 static const std::string CARD_API_VERSION = "1.0";
 
 // class SCSAT_PluginFactoryMock final : public KeyplePluginExtensionFactory, public PluginFactorySpi {};

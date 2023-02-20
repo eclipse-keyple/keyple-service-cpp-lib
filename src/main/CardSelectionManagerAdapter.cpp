@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -42,6 +42,15 @@ using namespace calypsonet::terminal::card::spi;
 using namespace calypsonet::terminal::reader;
 using namespace calypsonet::terminal::reader::selection;
 using namespace keyple::core::util;
+
+const std::string CardSelectionManagerAdapter::DETECTION_MODE = "detectionMode";
+const std::string CardSelectionManagerAdapter::NOTIFICATION_MODE = "notificationMode";
+const std::string CardSelectionManagerAdapter::MULTI_SELECTION_PROCESSING =
+    "multiSelectionProcessing";
+const std::string CardSelectionManagerAdapter::CHANNEL_CONTROL = "channelControl";
+const std::string CardSelectionManagerAdapter::CARD_SELECTIONS_TYPES = "cardSelectionsTypes";
+const std::string CardSelectionManagerAdapter::CARD_SELECTIONS = "cardSelections";
+const std::string CardSelectionManagerAdapter::DEFAULT_CARD_SELECTIONS = "defaultCardSelections";
 
 CardSelectionManagerAdapter::CardSelectionManagerAdapter()
 : mMultiSelectionProcessing(MultiSelectionProcessing::FIRST_MATCH),
@@ -98,10 +107,10 @@ const std::shared_ptr<CardSelectionResult>
         return processCardSelectionResponses(cardSelectionResponses);
     }
 
-    void CardSelectionManagerAdapter::scheduleCardSelectionScenario(
-        std::shared_ptr<ObservableCardReader> observableCardReader,
-        const DetectionMode detectionMode,
-        const NotificationMode notificationMode)
+void CardSelectionManagerAdapter::scheduleCardSelectionScenario(
+    std::shared_ptr<ObservableCardReader> observableCardReader,
+    const DetectionMode detectionMode,
+    const NotificationMode notificationMode)
 {
 
     Assert::getInstance().notNull(observableCardReader, "observableCardReader");
@@ -124,6 +133,12 @@ const std::shared_ptr<CardSelectionResult>
     } else {
         throw IllegalArgumentException("Not a Keyple reader implementation.");
     }
+}
+
+void CardSelectionManagerAdapter::scheduleCardSelectionScenario(
+    std::shared_ptr<ObservableCardReader> observableCardReader)
+{
+    scheduleCardSelectionScenario(observableCardReader, mDetectionMode, mNotificationMode);
 }
 
 const std::shared_ptr<CardSelectionResult>
@@ -171,6 +186,23 @@ const std::shared_ptr<CardSelectionResult>
     }
 
     return cardSelectionsResult;
+}
+
+const std::string CardSelectionManagerAdapter::exportCardSelectionScenario() const
+{
+    /* TODO: necessary when implementing distributed mode */
+
+    return "";
+}
+
+int CardSelectionManagerAdapter::importCardSelectionScenario(
+    const std::string& cardSelectionScenario)
+{
+    /* TODO: necessary when implementing distributed mode */
+
+    (void)cardSelectionScenario;
+
+    return 0;
 }
 
 }

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -11,6 +11,8 @@
  **************************************************************************************************/
 
 #pragma once
+
+#include <ostream>
 
 namespace keyple {
 namespace core {
@@ -38,6 +40,24 @@ enum class MultiSelectionProcessing {
      */
     PROCESS_ALL
 };
+
+static inline std::ostream& operator<<(std::ostream& os, const MultiSelectionProcessing msp)
+{
+    os << "MULTI_SELECTION_PROCESSING: ";
+    switch(msp) {
+    case MultiSelectionProcessing::FIRST_MATCH:
+        os << "FIRST_MATCH";
+        break;
+    case MultiSelectionProcessing::PROCESS_ALL:
+        os << "PROCESS_ALL";
+        break;
+    default:
+        os << "UNKNOWN";
+        break;
+    }
+
+    return os;
+}
 
 }
 }
