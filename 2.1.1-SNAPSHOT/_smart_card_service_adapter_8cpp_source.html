@@ -72,7 +72,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <a href="_smart_card_service_adapter_8cpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/**************************************************************************************************</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment"> * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment"> *                                                                                                *</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> * See the NOTICE file(s) distributed with this work for additional information regarding         *</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment"> * copyright ownership.                                                                           *</span></div>
@@ -258,7 +258,7 @@ $(function() {
 <div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>        std::dynamic_pointer_cast&lt;AbstractPluginAdapter&gt;(removedPlugin)-&gt;doUnregister();</div>
 <div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>        mPlugins.erase(i);</div>
 <div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>        mLogger-&gt;warn(<span class="stringliteral">&quot;The plugin &#39;%&#39; is not registered\n&quot;</span>, pluginName);</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>        mLogger-&gt;warn(<span class="stringliteral">&quot;Plugin &#39;%&#39; is not registered\n&quot;</span>, pluginName);</div>
 <div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>    }</div>
 <div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>}</div>
 <div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span> </div>
@@ -384,7 +384,7 @@ $(function() {
 <div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span> </div>
 <div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>    <span class="keyword">const</span> <span class="keyword">auto</span> it = mPlugins.find(pluginName);</div>
 <div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>    <span class="keywordflow">if</span> (it != mPlugins.end()) {</div>
-<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>        <span class="keywordflow">throw</span> IllegalStateException(<span class="stringliteral">&quot;The plugin &#39;&quot;</span> +</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>        <span class="keywordflow">throw</span> IllegalStateException(<span class="stringliteral">&quot;Plugin &#39;&quot;</span> +</div>
 <div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>                                    pluginName +</div>
 <div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>                                    <span class="stringliteral">&quot;&#39; has already been registered to the service.&quot;</span>);</div>
 <div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>        }</div>
@@ -399,7 +399,7 @@ $(function() {
 <div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>    std::shared_ptr&lt;PluginSpi&gt; pluginSpi = pluginFactorySpi-&gt;getPlugin();</div>
 <div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span> </div>
 <div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span>    <span class="keywordflow">if</span> (pluginSpi-&gt;getName() != pluginFactorySpi-&gt;getPluginName()) {</div>
-<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>        <span class="keywordflow">throw</span> IllegalArgumentException(<span class="stringliteral">&quot;The plugin name &#39;&quot;</span> +</div>
+<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>        <span class="keywordflow">throw</span> IllegalArgumentException(<span class="stringliteral">&quot;Plugin name &#39;&quot;</span> +</div>
 <div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span>                                       pluginSpi-&gt;getName() +</div>
 <div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span>                                       <span class="stringliteral">&quot;&#39; mismatches the expected name &#39;&quot;</span> +</div>
 <div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>                                       pluginFactorySpi-&gt;getPluginName() +</div>
@@ -433,7 +433,7 @@ $(function() {
 <div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span>    std::shared_ptr&lt;PoolPluginSpi&gt; poolPluginSpi = poolPluginFactorySpi-&gt;getPoolPlugin();</div>
 <div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span> </div>
 <div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span>    <span class="keywordflow">if</span> (poolPluginSpi-&gt;getName() != poolPluginFactorySpi-&gt;getPoolPluginName()) {</div>
-<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>        <span class="keywordflow">throw</span> IllegalArgumentException(<span class="stringliteral">&quot;The pool plugin name &#39;&quot;</span> +</div>
+<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>        <span class="keywordflow">throw</span> IllegalArgumentException(<span class="stringliteral">&quot;Pool plugin name &#39;&quot;</span> +</div>
 <div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span>                                       poolPluginSpi-&gt;getName() +</div>
 <div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span>                                       <span class="stringliteral">&quot;&#39; mismatches the expected name &#39;&quot;</span> +</div>
 <div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>                                       poolPluginFactorySpi-&gt;getPoolPluginName() +</div>

@@ -10,10 +10,8 @@ var searchData=
   ['abstractpluginadapter_2eh_7',['AbstractPluginAdapter.h',['../_abstract_plugin_adapter_8h.html',1,'']]],
   ['abstractreaderadapter_2ecpp_8',['AbstractReaderAdapter.cpp',['../_abstract_reader_adapter_8cpp.html',1,'']]],
   ['abstractreaderadapter_2eh_9',['AbstractReaderAdapter.h',['../_abstract_reader_adapter_8h.html',1,'']]],
-  ['apdurequestadapter_2ecpp_10',['ApduRequestAdapter.cpp',['../_apdu_request_adapter_8cpp.html',1,'']]],
-  ['apdurequestadapter_2eh_11',['ApduRequestAdapter.h',['../_apdu_request_adapter_8h.html',1,'']]],
-  ['apduresponseadapter_2ecpp_12',['ApduResponseAdapter.cpp',['../_apdu_response_adapter_8cpp.html',1,'']]],
-  ['apduresponseadapter_2eh_13',['ApduResponseAdapter.h',['../_apdu_response_adapter_8h.html',1,'']]],
-  ['autonomousobservablelocalpluginadapter_2ecpp_14',['AutonomousObservableLocalPluginAdapter.cpp',['../_autonomous_observable_local_plugin_adapter_8cpp.html',1,'']]],
-  ['autonomousobservablelocalpluginadapter_2eh_15',['AutonomousObservableLocalPluginAdapter.h',['../_autonomous_observable_local_plugin_adapter_8h.html',1,'']]]
+  ['apduresponseadapter_2ecpp_10',['ApduResponseAdapter.cpp',['../_apdu_response_adapter_8cpp.html',1,'']]],
+  ['apduresponseadapter_2eh_11',['ApduResponseAdapter.h',['../_apdu_response_adapter_8h.html',1,'']]],
+  ['autonomousobservablelocalpluginadapter_2ecpp_12',['AutonomousObservableLocalPluginAdapter.cpp',['../_autonomous_observable_local_plugin_adapter_8cpp.html',1,'']]],
+  ['autonomousobservablelocalpluginadapter_2eh_13',['AutonomousObservableLocalPluginAdapter.h',['../_autonomous_observable_local_plugin_adapter_8h.html',1,'']]]
 ];
