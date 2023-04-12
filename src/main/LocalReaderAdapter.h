@@ -264,6 +264,11 @@ private:
         /**
          *
          */
+        virtual ~ApduRequest() = default;
+
+        /**
+         *
+         */
         std::vector<uint8_t>& getApdu() override;
 
         /**
