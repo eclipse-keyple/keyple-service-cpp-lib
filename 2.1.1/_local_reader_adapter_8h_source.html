@@ -191,61 +191,63 @@ $(function() {
 <div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>    <span class="keyword">public</span>:</div>
 <div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>        <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_class" href="classkeyple_1_1core_1_1service_1_1_local_reader_adapter.html">LocalReaderAdapter</a>;</div>
 <div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span> </div>
-<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>        std::vector&lt;uint8_t&gt;&amp; getApdu() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>        <span class="keyword">virtual</span> ~ApduRequest() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span> </div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>        <span class="keyword">const</span> std::vector&lt;int&gt;&amp; getSuccessfulStatusWords() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>        std::vector&lt;uint8_t&gt;&amp; getApdu() <span class="keyword">override</span>;</div>
 <div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span> </div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>        <span class="keyword">const</span> std::string&amp; getInfo() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>        <span class="keyword">const</span> std::vector&lt;int&gt;&amp; getSuccessfulStatusWords() <span class="keyword">const override</span>;</div>
 <div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span> </div>
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>    <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>        <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> DEFAULT_SUCCESSFUL_CODE;</div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span> </div>
-<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>        std::vector&lt;uint8_t&gt; mApdu;</div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>        <span class="keyword">const</span> std::string&amp; getInfo() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span> </div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>        <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> DEFAULT_SUCCESSFUL_CODE;</div>
 <div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span> </div>
-<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>        <span class="keyword">const</span> std::vector&lt;int&gt; mSuccessfulStatusWords;</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>        std::vector&lt;uint8_t&gt; mApdu;</div>
 <div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span> </div>
-<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>        std::string mInfo;</div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>        <span class="keyword">const</span> std::vector&lt;int&gt; mSuccessfulStatusWords;</div>
 <div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span> </div>
-<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>        ApduRequest(<span class="keyword">const</span> std::vector&lt;uint8_t&gt;&amp; apdu);</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>        std::string mInfo;</div>
 <div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span> </div>
-<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>        ApduRequest&amp; setInfo(<span class="keyword">const</span> std::string&amp; info);</div>
-<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>    };</div>
-<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span> </div>
-<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span>    <span class="keywordtype">void</span> computeCurrentProtocol();</div>
-<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span> </div>
-<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span>    <span class="keywordtype">void</span> closeLogicalChannel();</div>
-<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span> </div>
-<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>    uint8_t computeSelectApplicationP2(<span class="keyword">const</span> <a class="code hl_typedef" href="namespacekeyple_1_1core_1_1service.html#a441f00aaed1047886535cedd3745edf7">FileOccurrence</a> fileOccurrence,</div>
-<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span>                                       <span class="keyword">const</span> <a class="code hl_typedef" href="namespacekeyple_1_1core_1_1service.html#a9fad40f8f0bc9ca39674a1e192442e22">FileControlInformation</a> fileControlInformation);</div>
-<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span> </div>
-<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span>    std::shared_ptr&lt;ApduResponseAdapter&gt; processExplicitAidSelection(</div>
-<div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span>        std::shared_ptr&lt;CardSelectorSpi&gt; cardSelector);</div>
-<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span> </div>
-<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span>    std::shared_ptr&lt;ApduResponseAdapter&gt; selectByAid(std::shared_ptr&lt;CardSelectorSpi&gt; cardSelector);</div>
-<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span> </div>
-<div class="line"><a id="l00386" name="l00386"></a><span class="lineno">  386</span>    <span class="keywordtype">bool</span> checkPowerOnData(<span class="keyword">const</span> std::string&amp; powerOnData,</div>
-<div class="line"><a id="l00387" name="l00387"></a><span class="lineno">  387</span>                          std::shared_ptr&lt;CardSelectorSpi&gt; cardSelector);</div>
-<div class="line"><a id="l00388" name="l00388"></a><span class="lineno">  388</span> </div>
-<div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>    std::shared_ptr&lt;SelectionStatus&gt; processSelection(</div>
-<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span>        std::shared_ptr&lt;CardSelectorSpi&gt; cardSelector);</div>
-<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span> </div>
-<div class="line"><a id="l00420" name="l00420"></a><span class="lineno">  420</span>    std::shared_ptr&lt;CardSelectionResponseApi&gt; processCardSelectionRequest(</div>
-<div class="line"><a id="l00421" name="l00421"></a><span class="lineno">  421</span>        std::shared_ptr&lt;CardSelectionRequestSpi&gt; cardSelectionRequest);</div>
-<div class="line"><a id="l00422" name="l00422"></a><span class="lineno">  422</span> </div>
-<div class="line"><a id="l00435" name="l00435"></a><span class="lineno">  435</span>    std::shared_ptr&lt;ApduResponseAdapter&gt; processApduRequest(</div>
-<div class="line"><a id="l00436" name="l00436"></a><span class="lineno">  436</span>        <span class="keyword">const</span> std::shared_ptr&lt;ApduRequestSpi&gt; apduRequest);</div>
-<div class="line"><a id="l00437" name="l00437"></a><span class="lineno">  437</span> </div>
-<div class="line"><a id="l00449" name="l00449"></a><span class="lineno">  449</span>    std::shared_ptr&lt;CardResponseAdapter&gt; processCardRequest(</div>
-<div class="line"><a id="l00450" name="l00450"></a><span class="lineno">  450</span>        <span class="keyword">const</span> std::shared_ptr&lt;CardRequestSpi&gt; cardRequest);</div>
-<div class="line"><a id="l00451" name="l00451"></a><span class="lineno">  451</span> </div>
-<div class="line"><a id="l00455" name="l00455"></a><span class="lineno">  455</span>    <span class="keyword">friend</span> std::ostream&amp; <a class="code hl_function" href="namespacekeyple_1_1core_1_1service.html#a60ea097af55b39bbfbe95dd40047d620">operator&lt;&lt;</a>(std::ostream&amp; os, ApduRequest&amp; ar);</div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>        ApduRequest(<span class="keyword">const</span> std::vector&lt;uint8_t&gt;&amp; apdu);</div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span> </div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>        ApduRequest&amp; setInfo(<span class="keyword">const</span> std::string&amp; info);</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>    };</div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span> </div>
+<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>    <span class="keywordtype">void</span> computeCurrentProtocol();</div>
+<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span> </div>
+<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>    <span class="keywordtype">void</span> closeLogicalChannel();</div>
+<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span> </div>
+<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span>    uint8_t computeSelectApplicationP2(<span class="keyword">const</span> <a class="code hl_typedef" href="namespacekeyple_1_1core_1_1service.html#a441f00aaed1047886535cedd3745edf7">FileOccurrence</a> fileOccurrence,</div>
+<div class="line"><a id="l00353" name="l00353"></a><span class="lineno">  353</span>                                       <span class="keyword">const</span> <a class="code hl_typedef" href="namespacekeyple_1_1core_1_1service.html#a9fad40f8f0bc9ca39674a1e192442e22">FileControlInformation</a> fileControlInformation);</div>
+<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span> </div>
+<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span>    std::shared_ptr&lt;ApduResponseAdapter&gt; processExplicitAidSelection(</div>
+<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>        std::shared_ptr&lt;CardSelectorSpi&gt; cardSelector);</div>
+<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span> </div>
+<div class="line"><a id="l00376" name="l00376"></a><span class="lineno">  376</span>    std::shared_ptr&lt;ApduResponseAdapter&gt; selectByAid(std::shared_ptr&lt;CardSelectorSpi&gt; cardSelector);</div>
+<div class="line"><a id="l00377" name="l00377"></a><span class="lineno">  377</span> </div>
+<div class="line"><a id="l00391" name="l00391"></a><span class="lineno">  391</span>    <span class="keywordtype">bool</span> checkPowerOnData(<span class="keyword">const</span> std::string&amp; powerOnData,</div>
+<div class="line"><a id="l00392" name="l00392"></a><span class="lineno">  392</span>                          std::shared_ptr&lt;CardSelectorSpi&gt; cardSelector);</div>
+<div class="line"><a id="l00393" name="l00393"></a><span class="lineno">  393</span> </div>
+<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span>    std::shared_ptr&lt;SelectionStatus&gt; processSelection(</div>
+<div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span>        std::shared_ptr&lt;CardSelectorSpi&gt; cardSelector);</div>
+<div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span> </div>
+<div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span>    std::shared_ptr&lt;CardSelectionResponseApi&gt; processCardSelectionRequest(</div>
+<div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span>        std::shared_ptr&lt;CardSelectionRequestSpi&gt; cardSelectionRequest);</div>
+<div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span> </div>
+<div class="line"><a id="l00440" name="l00440"></a><span class="lineno">  440</span>    std::shared_ptr&lt;ApduResponseAdapter&gt; processApduRequest(</div>
+<div class="line"><a id="l00441" name="l00441"></a><span class="lineno">  441</span>        <span class="keyword">const</span> std::shared_ptr&lt;ApduRequestSpi&gt; apduRequest);</div>
+<div class="line"><a id="l00442" name="l00442"></a><span class="lineno">  442</span> </div>
+<div class="line"><a id="l00454" name="l00454"></a><span class="lineno">  454</span>    std::shared_ptr&lt;CardResponseAdapter&gt; processCardRequest(</div>
+<div class="line"><a id="l00455" name="l00455"></a><span class="lineno">  455</span>        <span class="keyword">const</span> std::shared_ptr&lt;CardRequestSpi&gt; cardRequest);</div>
 <div class="line"><a id="l00456" name="l00456"></a><span class="lineno">  456</span> </div>
-<div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span>    <span class="keyword">friend</span> std::ostream&amp; <a class="code hl_function" href="namespacekeyple_1_1core_1_1service.html#a60ea097af55b39bbfbe95dd40047d620">operator&lt;&lt;</a>(std::ostream&amp; os, <span class="keyword">const</span> std::shared_ptr&lt;ApduRequest&gt; ar);</div>
-<div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span>};</div>
-<div class="line"><a id="l00462" name="l00462"></a><span class="lineno">  462</span> </div>
-<div class="line"><a id="l00463" name="l00463"></a><span class="lineno">  463</span>}</div>
-<div class="line"><a id="l00464" name="l00464"></a><span class="lineno">  464</span>}</div>
-<div class="line"><a id="l00465" name="l00465"></a><span class="lineno">  465</span>}</div>
+<div class="line"><a id="l00460" name="l00460"></a><span class="lineno">  460</span>    <span class="keyword">friend</span> std::ostream&amp; <a class="code hl_function" href="namespacekeyple_1_1core_1_1service.html#a60ea097af55b39bbfbe95dd40047d620">operator&lt;&lt;</a>(std::ostream&amp; os, ApduRequest&amp; ar);</div>
+<div class="line"><a id="l00461" name="l00461"></a><span class="lineno">  461</span> </div>
+<div class="line"><a id="l00465" name="l00465"></a><span class="lineno">  465</span>    <span class="keyword">friend</span> std::ostream&amp; <a class="code hl_function" href="namespacekeyple_1_1core_1_1service.html#a60ea097af55b39bbfbe95dd40047d620">operator&lt;&lt;</a>(std::ostream&amp; os, <span class="keyword">const</span> std::shared_ptr&lt;ApduRequest&gt; ar);</div>
+<div class="line"><a id="l00466" name="l00466"></a><span class="lineno">  466</span>};</div>
+<div class="line"><a id="l00467" name="l00467"></a><span class="lineno">  467</span> </div>
+<div class="line"><a id="l00468" name="l00468"></a><span class="lineno">  468</span>}</div>
+<div class="line"><a id="l00469" name="l00469"></a><span class="lineno">  469</span>}</div>
+<div class="line"><a id="l00470" name="l00470"></a><span class="lineno">  470</span>}</div>
 <div class="ttc" id="a_abstract_reader_adapter_8h_html"><div class="ttname"><a href="_abstract_reader_adapter_8h.html">AbstractReaderAdapter.h</a></div></div>
 <div class="ttc" id="a_apdu_response_adapter_8h_html"><div class="ttname"><a href="_apdu_response_adapter_8h.html">ApduResponseAdapter.h</a></div></div>
 <div class="ttc" id="a_card_response_adapter_8h_html"><div class="ttname"><a href="_card_response_adapter_8h.html">CardResponseAdapter.h</a></div></div>
