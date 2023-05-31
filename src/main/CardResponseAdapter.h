@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association                                                *
+ * Copyright (c) 2023 Calypso Networks Association                                                *
  * https://www.calypsonet-asso.org/                                                               *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
@@ -20,6 +20,7 @@
 /* Keyple Core Service */
 #include "ApduResponseAdapter.h"
 #include "CardResponseAdapter.h"
+#include "KeypleServiceExport.h"
 
 /* Calypsonet Terminal Card */
 #include "CardResponseApi.h"
@@ -38,7 +39,7 @@ using namespace calypsonet::terminal::card;
  * @see calypsonet::terminal::card::spi::CardRequestSpi
  * @since 2.0.0
  */
-class CardResponseAdapter final : public CardResponseApi {
+class KEYPLESERVICE_API CardResponseAdapter final : public CardResponseApi {
 public:
     /**
      * (package-private)<br>
