@@ -42,5 +42,12 @@ ENDIF()
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Dependencies
+INCLUDE(cmake/calypsonet-terminal-card-cpp-api.cmake)
+INCLUDE(cmake/calypsonet-terminal-reader-cpp-api.cmake)
+INCLUDE(cmake/keyple-common-cpp-api.cmake)
+INCLUDE(cmake/keyple-plugin-cpp-api.cmake)
+INCLUDE(cmake/keyple-util-cpp-lib.cmake)
+
 # Add projects
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/src)
