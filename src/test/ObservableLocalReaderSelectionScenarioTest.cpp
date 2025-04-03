@@ -1,76 +1,85 @@
-/**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Public License 2.0 which is available at              *
+ * http://www.eclipse.org/legal/epl-2.0                                       *
+ *                                                                            *
+ * SPDX-License-Identifier: EPL-2.0                                           *
+ ******************************************************************************/
+
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-/* Keyple Core Util */
-#include "LoggerFactory.h"
-
-/* Keyple Core Service */
-#include "ObservableLocalReaderAdapter.h"
-#include "ScheduledCardSelectionsResponseAdapter.h"
+#include "keyple/core/service/CardSelectionScenarioAdapter.hpp"
+#include "keyple/core/service/ObservableLocalReaderAdapter.hpp"
+#include "keyple/core/service/ScheduledCardSelectionsResponseAdapter.hpp"
+#include "keyple/core/util/cpp/LoggerFactory.hpp"
+#include "keypop/card/CardBrokenCommunicationException.hpp"
+#include "keypop/card/ReaderBrokenCommunicationException.hpp"
+#include "keypop/reader/cpp/CardSelectorBase.hpp"
 
 /* Mock */
-#include "CardReaderObservationExceptionHandlerSpiMock.h"
-#include "CardResponseApiMock.h"
-#include "CardSelectionRequestSpiMock.h"
-#include "CardSelectionResponseApiMock.h"
-#include "ObservableLocalReaderAdapterMock.h"
-#include "ObservableReaderAutonomousSpiMock.h"
-#include "ReaderObserverSpiMock.h"
+#include "mock/CardReaderObservationExceptionHandlerSpiMock.hpp"
+#include "mock/CardResponseApiMock.hpp"
+#include "mock/CardSelectionRequestSpiMock.hpp"
+#include "mock/CardSelectionResponseApiMock.hpp"
+#include "mock/ObservableLocalReaderAdapterMock.hpp"
+#include "mock/ObservableReaderAsynchronousSpiMock.hpp"
+#include "mock/ReaderObserverSpiMock.hpp"
 
 /* Util */
-#include "ObservableLocalReaderSuite.h"
-#include "ReaderAdapterTestUtils.h"
+#include "util/ObservableLocalReaderSuite.hpp"
+#include "util/ReaderAdapterTestUtils.hpp"
 
-/* Calypsonet Terminal Card */
-#include "CardBrokenCommunicationException.h"
-#include "ReaderBrokenCommunicationException.h"
+using keyple::core::service::CardSelectionScenarioAdapter;
+using keyple::core::service::ScheduledCardSelectionsResponseAdapter;
+using keyple::core::util::cpp::LoggerFactory;
+using keypop::card::CardBrokenCommunicationException;
+using keypop::card::ReaderBrokenCommunicationException;
+using keypop::reader::cpp::CardSelectorBase;
 
-
-using namespace testing;
-
-using namespace calypsonet::terminal::card;
-using namespace keyple::core::service;
-using namespace keyple::core::util::cpp;
+using testing::_;
+using testing::Return;
+using testing::ReturnRef;
+using testing::Throw;
 
 static const std::string PLUGIN_NAME = "plugin";
 
-class ObservableLocalReaderSelectionScenarioTest {};
-static const std::shared_ptr<Logger> logger =
-    LoggerFactory::getLogger(typeid(ObservableLocalReaderSelectionScenarioTest));
+class ObservableLocalReaderSelectionScenarioTest { };
+static const std::shared_ptr<Logger> logger = LoggerFactory::getLogger(
+    typeid(ObservableLocalReaderSelectionScenarioTest));
 
 static std::shared_ptr<ObservableLocalReaderAdapterMock> readerSpy;
-static std::shared_ptr<ObservableReaderAutonomousSpiMock> readerSpi;
+static std::shared_ptr<ObservableReaderAsynchronousSpiMock> readerSpi;
 static std::shared_ptr<ReaderObserverSpiMock> observer;
 static std::shared_ptr<CardReaderObservationExceptionHandlerSpiMock> handler;
 static std::shared_ptr<ObservableLocalReaderSuite> testSuite;
 
+static std::shared_ptr<CardSelectorBase> cardSelector;
 static std::shared_ptr<CardSelectionRequestSpi> cardSelectionRequestSpi;
 static std::shared_ptr<CardSelectionResponseApi> cardSelectionResponseApi;
 static std::shared_ptr<CardResponseApi> cardResponseApi;
-static std::shared_ptr<ReaderEvent> event;
+static std::shared_ptr<CardReaderEvent> event;
 
-/*
- *  With ObservableReaderAutonomousSpi
- */
-static void setUp()
+static void
+setUp()
 {
-    readerSpi = std::make_shared<ObservableReaderAutonomousSpiMock>(READER_NAME);
+    readerSpi
+        = std::make_shared<ObservableReaderAsynchronousSpiMock>(READER_NAME);
     handler = std::make_shared<CardReaderObservationExceptionHandlerSpiMock>();
-    readerSpy = std::make_shared<ObservableLocalReaderAdapterMock>(readerSpi, PLUGIN_NAME);
+    readerSpy = std::make_shared<ObservableLocalReaderAdapterMock>(
+        readerSpi, PLUGIN_NAME);
     observer = std::make_shared<ReaderObserverSpiMock>(nullptr);
-    testSuite = std::make_shared<ObservableLocalReaderSuite>(readerSpy, readerSpi, observer, handler, logger);
+    testSuite = std::make_shared<ObservableLocalReaderSuite>(
+        readerSpy, readerSpi, observer, handler, logger);
     cardSelectionRequestSpi = std::make_shared<CardSelectionRequestSpiMock>();
     cardSelectionResponseApi = std::make_shared<CardSelectionResponseApiMock>();
     cardResponseApi = std::make_shared<CardResponseApiMock>();
@@ -80,7 +89,8 @@ static void setUp()
     readerSpy->setReaderObservationExceptionHandler(handler);
 }
 
-static void tearDown()
+static void
+tearDown()
 {
     cardResponseApi.reset();
     cardSelectionResponseApi.reset();
@@ -100,22 +110,27 @@ static void tearDown()
  * @param notificationMode
  * @throws Exception
  */
-static void mockReaderWithSelectionResponses(
-    const std::vector<std::shared_ptr<CardSelectionResponseApi>>& cardSelectionResponse,
+static void
+mockReaderWithSelectionResponses(
+    const std::vector<std::shared_ptr<CardSelectionResponseApi>>&
+        cardSelectionResponse,
     const ObservableCardReader::NotificationMode notificationMode)
 {
-    EXPECT_CALL(*readerSpy.get(), transmitCardSelectionRequests(_,_,_))
+    EXPECT_CALL(*readerSpy.get(), transmitCardSelectionRequests(_, _, _, _))
         .WillRepeatedly(Return(cardSelectionResponse));
 
-    const std::vector<std::shared_ptr<CardSelectionRequestSpi>> requests = {
-        cardSelectionRequestSpi};
-    
+    const std::vector<std::shared_ptr<CardSelectorBase>> selector
+        = {cardSelector};
+    const std::vector<std::shared_ptr<CardSelectionRequestSpi>> requests
+        = {cardSelectionRequestSpi};
+
     readerSpy->scheduleCardSelectionScenario(
-        std::make_shared<CardSelectionScenarioAdapter>(requests,
-                                                       MultiSelectionProcessing::PROCESS_ALL,
-                                                       ChannelControl::KEEP_OPEN),
-        notificationMode,
-        ObservableCardReader::DetectionMode::SINGLESHOT);
+        std::make_shared<CardSelectionScenarioAdapter>(
+            selector,
+            requests,
+            MultiSelectionProcessing::PROCESS_ALL,
+            ChannelControl::KEEP_OPEN),
+        notificationMode);
 }
 
 /**
@@ -123,15 +138,17 @@ static void mockReaderWithSelectionResponses(
  *
  * @param type
  */
-static void assertEventIs(const CardReaderEvent::Type type)
+static void
+assertEventIs(const CardReaderEvent::Type type)
 {
     ASSERT_NE(event, nullptr);
     ASSERT_EQ(event->getType(), type);
     ASSERT_EQ(event->getReaderName(), READER_NAME);
-    ASSERT_EQ(event->getPluginName(), PLUGIN_NAME);
 }
 
-TEST(ObservableLocalReaderSelectionScenarioTest, process_card_with_no_scenario_return_cardInserted)
+TEST(
+    ObservableLocalReaderSelectionScenarioTest,
+    process_card_with_no_scenario_return_cardInserted)
 {
     setUp();
 
@@ -145,17 +162,18 @@ TEST(ObservableLocalReaderSelectionScenarioTest, process_card_with_no_scenario_r
     tearDown();
 }
 
-TEST(ObservableLocalReaderSelectionScenarioTest, 
-     process_card_with_matching_selections_return_cardMatched)
+TEST(
+    ObservableLocalReaderSelectionScenarioTest,
+    process_card_with_matching_selections_return_cardMatched)
 {
     /* Scenario : selection match */
 
     setUp();
 
     ReaderAdapterTestUtils utils;
-    
-    mockReaderWithSelectionResponses(utils.MATCHING_RESPONSES, 
-                                     ObservableCardReader::MATCHED_ONLY);
+
+    mockReaderWithSelectionResponses(
+        utils.MATCHING_RESPONSES, ObservableCardReader::MATCHED_ONLY);
 
     event = readerSpy->processCardInserted();
 
@@ -164,12 +182,13 @@ TEST(ObservableLocalReaderSelectionScenarioTest,
     ASSERT_NE(event->getScheduledCardSelectionsResponse(), nullptr);
 
     utils.reset();
-    
+
     tearDown();
 }
 
-TEST(ObservableLocalReaderSelectionScenarioTest,
-     process_card_with_no_matching_selections_with_Always_return_CardInserted)
+TEST(
+    ObservableLocalReaderSelectionScenarioTest,
+    process_card_with_no_matching_selections_with_Always_return_CardInserted)
 {
     /* Scenario : selection no match */
 
@@ -177,19 +196,21 @@ TEST(ObservableLocalReaderSelectionScenarioTest,
 
     ReaderAdapterTestUtils utils;
 
-    mockReaderWithSelectionResponses(utils.NOT_MATCHING_RESPONSES, ObservableCardReader::ALWAYS);
+    mockReaderWithSelectionResponses(
+        utils.NOT_MATCHING_RESPONSES, ObservableCardReader::ALWAYS);
 
     event = readerSpy->processCardInserted();
 
     assertEventIs(CardReaderEvent::Type::CARD_INSERTED);
 
     utils.reset();
-    
+
     tearDown();
 }
 
-TEST(ObservableLocalReaderSelectionScenarioTest,
-     process_card_with_no_matching_selections_with_MatchedOnly_return_null)
+TEST(
+    ObservableLocalReaderSelectionScenarioTest,
+    process_card_with_no_matching_selections_with_MatchedOnly_return_null)
 {
     /* Scenario : selection no match */
 
@@ -197,20 +218,21 @@ TEST(ObservableLocalReaderSelectionScenarioTest,
 
     ReaderAdapterTestUtils utils;
 
-    mockReaderWithSelectionResponses(utils.NOT_MATCHING_RESPONSES, 
-                                     ObservableCardReader::MATCHED_ONLY);
+    mockReaderWithSelectionResponses(
+        utils.NOT_MATCHING_RESPONSES, ObservableCardReader::MATCHED_ONLY);
 
     event = readerSpy->processCardInserted();
 
     ASSERT_EQ(event, nullptr);
 
     utils.reset();
-    
+
     tearDown();
 }
 
-TEST(ObservableLocalReaderSelectionScenarioTest,
-     process_card_with_multi_matching_selections_return_CardMatched)
+TEST(
+    ObservableLocalReaderSelectionScenarioTest,
+    process_card_with_multi_matching_selections_return_CardMatched)
 {
     /* Scenario : first no match, second match, third match */
 
@@ -218,8 +240,8 @@ TEST(ObservableLocalReaderSelectionScenarioTest,
 
     ReaderAdapterTestUtils utils;
 
-    mockReaderWithSelectionResponses(utils.MULTI_MATCHING_RESPONSES, 
-                                     ObservableCardReader::MATCHED_ONLY);
+    mockReaderWithSelectionResponses(
+        utils.MULTI_MATCHING_RESPONSES, ObservableCardReader::MATCHED_ONLY);
 
     event = readerSpy->processCardInserted();
 
@@ -227,19 +249,25 @@ TEST(ObservableLocalReaderSelectionScenarioTest,
     ASSERT_NE(event->getScheduledCardSelectionsResponse(), nullptr);
 
     auto response = event->getScheduledCardSelectionsResponse();
-    ASSERT_NE(std::dynamic_pointer_cast<ScheduledCardSelectionsResponseAdapter>(response), nullptr);
-    
-    auto adapter = std::dynamic_pointer_cast<ScheduledCardSelectionsResponseAdapter>(response);
+    ASSERT_NE(
+        std::dynamic_pointer_cast<ScheduledCardSelectionsResponseAdapter>(
+            response),
+        nullptr);
+
+    auto adapter
+        = std::dynamic_pointer_cast<ScheduledCardSelectionsResponseAdapter>(
+            response);
     auto responses = adapter->getCardSelectionResponses();
     ASSERT_EQ(static_cast<int>(responses.size()), 3);
 
     utils.reset();
-    
+
     tearDown();
 }
 
-TEST(ObservableLocalReaderSelectionScenarioTest,
-     process_card_with_multi_not_matching_selections_with_matchedOnly_return_null)
+TEST(
+    ObservableLocalReaderSelectionScenarioTest,
+    process_card_with_multi_not_matching_selections_with_matchedOnly_return_null)  // NOLINT
 {
     /* Scenario : first no match, second no match */
 
@@ -247,40 +275,42 @@ TEST(ObservableLocalReaderSelectionScenarioTest,
 
     ReaderAdapterTestUtils utils;
 
-    mockReaderWithSelectionResponses(utils.MULTI_NOT_MATCHING_RESPONSES, 
-                                     ObservableCardReader::MATCHED_ONLY);
+    mockReaderWithSelectionResponses(
+        utils.MULTI_NOT_MATCHING_RESPONSES, ObservableCardReader::MATCHED_ONLY);
 
     event = readerSpy->processCardInserted();
 
     ASSERT_EQ(event, nullptr);
 
     utils.reset();
-    
+
     tearDown();
 }
 
-TEST(ObservableLocalReaderSelectionScenarioTest,
-     process_card_with_throw_reader_exception_scenario_return_null) 
+TEST(
+    ObservableLocalReaderSelectionScenarioTest,
+    process_card_with_throw_reader_exception_scenario_return_null)
 {
     setUp();
 
-    EXPECT_CALL(*handler.get(), onReaderObservationError(_,_,_)).WillRepeatedly(Return());
-    EXPECT_CALL(*readerSpy.get(), transmitCardSelectionRequests(_,_,_))
+    EXPECT_CALL(*handler.get(), onReaderObservationError(_, _, _))
+        .WillRepeatedly(Return());
+    EXPECT_CALL(*readerSpy.get(), transmitCardSelectionRequests(_, _, _, _))
         .WillRepeatedly(Throw(ReaderBrokenCommunicationException(
-                                  nullptr, 
-                                  true, 
-                                  "",
-                                  std::make_shared<RuntimeException>())));
+            nullptr, true, "", std::make_shared<RuntimeException>())));
 
-    const std::vector<std::shared_ptr<CardSelectionRequestSpi>> req = {cardSelectionRequestSpi};
+    const std::vector<std::shared_ptr<CardSelectionRequestSpi>> req
+        = {cardSelectionRequestSpi};
+    const std::vector<std::shared_ptr<CardSelectorBase>> selector
+        = {cardSelector};
     auto adapter = std::make_shared<CardSelectionScenarioAdapter>(
-                       req,
-                       MultiSelectionProcessing::PROCESS_ALL,
-                       ChannelControl::KEEP_OPEN);
-    
-    readerSpy->scheduleCardSelectionScenario(adapter,
-                                             ObservableCardReader::MATCHED_ONLY,
-                                             ObservableCardReader::DetectionMode::SINGLESHOT);
+        selector,
+        req,
+        MultiSelectionProcessing::PROCESS_ALL,
+        ChannelControl::KEEP_OPEN);
+
+    readerSpy->scheduleCardSelectionScenario(
+        adapter, ObservableCardReader::MATCHED_ONLY);
 
     event = readerSpy->processCardInserted();
 
@@ -289,28 +319,30 @@ TEST(ObservableLocalReaderSelectionScenarioTest,
     tearDown();
 }
 
-TEST(ObservableLocalReaderSelectionScenarioTest,
-     process_card_with_throw_card_exception_scenario_return_null)
+TEST(
+    ObservableLocalReaderSelectionScenarioTest,
+    process_card_with_throw_card_exception_scenario_return_null)
 {
     setUp();
 
-    EXPECT_CALL(*handler.get(), onReaderObservationError(_,_,_)).WillRepeatedly(Return());
-    EXPECT_CALL(*readerSpy.get(), transmitCardSelectionRequests(_,_,_))
+    EXPECT_CALL(*handler.get(), onReaderObservationError(_, _, _))
+        .WillRepeatedly(Return());
+    EXPECT_CALL(*readerSpy.get(), transmitCardSelectionRequests(_, _, _, _))
         .WillRepeatedly(Throw(CardBrokenCommunicationException(
-                                  nullptr, 
-                                  true, 
-                                  "",
-                                  std::make_shared<RuntimeException>())));
+            nullptr, true, "", std::make_shared<RuntimeException>())));
 
-    const std::vector<std::shared_ptr<CardSelectionRequestSpi>> req = {cardSelectionRequestSpi};
+    const std::vector<std::shared_ptr<CardSelectionRequestSpi>> req
+        = {cardSelectionRequestSpi};
+    const std::vector<std::shared_ptr<CardSelectorBase>> selector
+        = {cardSelector};
     auto adapter = std::make_shared<CardSelectionScenarioAdapter>(
-                       req,
-                       MultiSelectionProcessing::PROCESS_ALL,
-                       ChannelControl::KEEP_OPEN);
-    
-    readerSpy->scheduleCardSelectionScenario(adapter,
-                                             ObservableCardReader::MATCHED_ONLY,
-                                             ObservableCardReader::DetectionMode::SINGLESHOT);
+        selector,
+        req,
+        MultiSelectionProcessing::PROCESS_ALL,
+        ChannelControl::KEEP_OPEN);
+
+    readerSpy->scheduleCardSelectionScenario(
+        adapter, ObservableCardReader::MATCHED_ONLY);
 
     event = readerSpy->processCardInserted();
 

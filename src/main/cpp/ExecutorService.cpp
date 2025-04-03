@@ -1,33 +1,34 @@
-/**************************************************************************************************
- * Copyright (c) 2020 Calypso Networks Association                                                *
- * https://www.calypsonet-asso.org/                                                               *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Public License 2.0 which is available at              *
+ * http://www.eclipse.org/legal/epl-2.0                                       *
+ *                                                                            *
+ * SPDX-License-Identifier: EPL-2.0                                           *
+ ******************************************************************************/
 
-#include "ExecutorService.h"
+#include "keyple/core/service/cpp/ExecutorService.hpp"
 
-/* Keyple Core Service */
-#include "AbstractObservableStateAdapter.h"
+#include <memory>
 
-/* Keyple Core Util */
-#include "Thread.h"
+#include "keyple/core/service/AbstractObservableStateAdapter.hpp"
+#include "keyple/core/util/cpp/Thread.hpp"
 
 namespace keyple {
 namespace core {
 namespace service {
 namespace cpp {
 
-using namespace keyple::core::service;
-using namespace keyple::core::util::cpp;
+using keyple::core::service::AbstractObservableStateAdapter;
+using keyple::core::util::cpp::Thread;
 
-ExecutorService::ExecutorService() : mRunning(true), mTerminated(false)
+ExecutorService::ExecutorService()
+: mRunning(true)
+, mTerminated(false)
 {
     mThread = new std::thread(&ExecutorService::run, this);
 }
@@ -41,7 +42,8 @@ ExecutorService::~ExecutorService()
     }
 }
 
-void ExecutorService::run()
+void
+ExecutorService::run()
 {
     /* Emulates a SingleThreadExecutor (e.g. only one thread at a time) */
 
@@ -61,19 +63,22 @@ void ExecutorService::run()
     mTerminated = true;
 }
 
-void ExecutorService::execute(std::shared_ptr<Job> job)
+void
+ExecutorService::execute(std::shared_ptr<Job> job)
 {
     mPool.push_back(job);
 }
 
-std::shared_ptr<Job> ExecutorService::submit(std::shared_ptr<Job> job)
+std::shared_ptr<Job>
+ExecutorService::submit(std::shared_ptr<Job> job)
 {
     mPool.push_back(job);
 
     return mPool.back();
 }
 
-void ExecutorService::shutdown()
+void
+ExecutorService::shutdown()
 {
     mRunning = false;
 
@@ -82,7 +87,7 @@ void ExecutorService::shutdown()
     }
 }
 
-}
-}
-}
-}
+} /* namespace cpp */
+} /* namespace service */
+} /* namespace core */
+} /* namespace keyple */

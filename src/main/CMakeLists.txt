@@ -1,14 +1,16 @@
-#/*************************************************************************************************
-# * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                       *
-# *                                                                                               *
-# * See the NOTICE file(s) distributed with this work for additional information regarding        *
-# * copyright ownership.                                                                          *
-# *                                                                                               *
-# * This program and the accompanying materials are made available under the terms of the Eclipse *
-# * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                 *
-# *                                                                                               *
-# * SPDX-License-Identifier: EPL-2.0                                                              *
-# *************************************************************************************************/
+#******************************************************************************
+#* Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+#*                                                                            *
+#* See the NOTICE file(s) distributed with this work for additional           *
+#* information regarding copyright ownership.                                 *
+#*                                                                            *
+#* This program and the accompanying materials are made available under the   *
+#* terms of the Eclipse Public License 2.0 which is available at              *
+#* http://www.eclipse.org/legal/epl-2.0                                       *
+#*                                                                            *
+#* SPDX-License-Identifier: EPL-2.0                                           *
+#******************************************************************************/
+
 
 SET(LIBRARY_NAME keypleservicecpplib)
 
@@ -16,7 +18,15 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DKEYPLESERVICE_EXPORT")
 
 FIND_PACKAGE(Threads REQUIRED)
 
+# Include deps
+INCLUDE("CMakeLists.txt.keyple-common")
+INCLUDE("CMakeLists.txt.keyple-plugin")
+INCLUDE("CMakeLists.txt.keyple-util")
+INCLUDE("CMakeLists.txt.keypop-card")
+INCLUDE("CMakeLists.txt.keypop-reader")
+
 ADD_LIBRARY(
+
     ${LIBRARY_NAME}
 
     ${LIBRARY_TYPE}
@@ -28,6 +38,7 @@ ADD_LIBRARY(
     ${CMAKE_CURRENT_SOURCE_DIR}/AbstractObservableStateAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ApduResponseAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/AutonomousObservableLocalPluginAdapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/BasicCardSelectorAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CardInsertionActiveMonitoringJobAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CardInsertionPassiveMonitoringJobAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CardRemovalActiveMonitoringJobAdapter.cpp
@@ -37,6 +48,7 @@ ADD_LIBRARY(
     ${CMAKE_CURRENT_SOURCE_DIR}/CardSelectionResponseAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CardSelectionResultAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CardSelectionScenarioAdapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/IsoCardSelectorAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/LocalConfigurableReaderAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/LocalPluginAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/LocalPoolPluginAdapter.cpp
@@ -47,6 +59,7 @@ ADD_LIBRARY(
     ${CMAKE_CURRENT_SOURCE_DIR}/ObservableLocalReaderAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ObservableReaderStateServiceAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/PluginEventAdapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ReaderApiFactoryAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ReaderEventAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ScheduledCardSelectionsResponseAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/SmartCardServiceAdapter.cpp
@@ -60,26 +73,32 @@ ADD_LIBRARY(
 )
 
 TARGET_INCLUDE_DIRECTORIES(
+
     ${LIBRARY_NAME}
 
     PUBLIC
 
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/spi
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 )
 
 TARGET_LINK_LIBRARIES(
+
     ${LIBRARY_NAME}
 
     PUBLIC
 
-    CalypsoNet::TerminalCard
-    CalypsoNet::TerminalReader
-    Keyple::CommonApi
-    Keyple::PluginApi
+    Keyple::Common
+    Keyple::Plugin
     Keyple::Util
-    Threads::Threads
+    Keypop::Card
+    Keypop::Reader
 )
 
-ADD_LIBRARY(Keyple::Service ALIAS ${LIBRARY_NAME})
+ADD_LIBRARY(
+
+    Keyple::Service
+
+    ALIAS
+
+    ${LIBRARY_NAME}
+)

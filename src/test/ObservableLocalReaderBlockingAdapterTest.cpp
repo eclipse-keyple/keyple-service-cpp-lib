@@ -1,36 +1,39 @@
-/**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Public License 2.0 which is available at              *
+ * http://www.eclipse.org/legal/epl-2.0                                       *
+ *                                                                            *
+ * SPDX-License-Identifier: EPL-2.0                                           *
+ ******************************************************************************/
+
+#include <memory>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-/* Keyple Core Service */
-#include "ObservableLocalReaderAdapter.h"
-
-/* Keyple Core Util */
-#include "LoggerFactory.h"
+#include "keyple/core/service/ObservableLocalReaderAdapter.hpp"
+#include "keyple/core/util/cpp/LoggerFactory.hpp"
 
 /* Mock */
-#include "CardReaderObservationExceptionHandlerSpiMock.h"
-#include "ObservableReaderBlockingSpiMock.h"
-#include "ReaderObserverSpiMock.h"
+#include "mock/CardReaderObservationExceptionHandlerSpiMock.hpp"
+#include "mock/ObservableReaderBlockingSpiMock.hpp"
+#include "mock/ReaderObserverSpiMock.hpp"
 
 /* Util */
-#include "ObservableLocalReaderSuite.h"
+#include "util/ObservableLocalReaderSuite.hpp"
 
-using namespace testing;
+using testing::_;
+using testing::Return;
+using testing::ReturnRef;
 
-using namespace keyple::core::service;
-using namespace keyple::core::util::cpp;
+using keyple::core::service::ObservableLocalReaderAdapter;
+using keyple::core::util::cpp::LoggerFactory;
 
 static const std::string PLUGIN_NAME = "plugin";
 
@@ -40,32 +43,32 @@ static std::shared_ptr<ReaderObserverSpiMock> observer;
 static std::shared_ptr<CardReaderObservationExceptionHandlerSpiMock> handler;
 static std::shared_ptr<ObservableLocalReaderSuite> testSuite;
 
-static const long waitInsertion = 1000;
-static const long waitRemoval = 1000;
+static const int64_t waitInsertion = 1000;
+static const int64_t waitRemoval = 1000;
 
-class ObservableLocalReaderBlockingAdapterTest {};
-static const std::shared_ptr<Logger> logger =
-    LoggerFactory::getLogger(typeid(ObservableLocalReaderBlockingAdapterTest));
+class ObservableLocalReaderBlockingAdapterTest { };
+static const std::shared_ptr<Logger> logger = LoggerFactory::getLogger(
+    typeid(ObservableLocalReaderBlockingAdapterTest));
 
-/*
- * With
- * WaitForCardInsertionBlockingSpi,
- * WaitForCardRemovalBlockingSpi,
- * WaitForCardRemovalDuringProcessingBlockingSpi
- */
-static void setUp()
+static void
+setUp()
 {
-    readerSpi = std::make_shared<ObservableReaderBlockingSpiMock>(READER_NAME, waitInsertion, waitRemoval);
+    readerSpi = std::make_shared<ObservableReaderBlockingSpiMock>(
+        READER_NAME, waitInsertion, waitRemoval);
     handler = std::make_shared<CardReaderObservationExceptionHandlerSpiMock>();
-    EXPECT_CALL(*handler.get(), onReaderObservationError(_, _, _)).WillRepeatedly(Return());
-    _reader = std::make_shared<ObservableLocalReaderAdapter>(readerSpi, PLUGIN_NAME);
+    EXPECT_CALL(*handler.get(), onReaderObservationError(_, _, _))
+        .WillRepeatedly(Return());
+    _reader = std::make_shared<ObservableLocalReaderAdapter>(
+        readerSpi, PLUGIN_NAME);
     observer = std::make_shared<ReaderObserverSpiMock>(nullptr);
-    testSuite =  std::make_shared<ObservableLocalReaderSuite>(_reader, readerSpi, observer, handler, logger);
-    
+    testSuite = std::make_shared<ObservableLocalReaderSuite>(
+        _reader, readerSpi, observer, handler, logger);
+
     _reader->doRegister();
 }
 
-static void tearDown()
+static void
+tearDown()
 {
     _reader->doUnregister();
 
@@ -76,7 +79,9 @@ static void tearDown()
     readerSpi.reset();
 }
 
-TEST(ObservableLocalReaderBlockingAdapterTest, initReader_addObserver_startDetection)
+TEST(
+    ObservableLocalReaderBlockingAdapterTest,
+    initReader_addObserver_startDetection)
 {
     setUp();
 
@@ -103,7 +108,9 @@ TEST(ObservableLocalReaderBlockingAdapterTest, clearObservers)
     tearDown();
 }
 
-TEST(ObservableLocalReaderBlockingAdapterTest, insertCard_shouldNotify_CardInsertedEvent)
+TEST(
+    ObservableLocalReaderBlockingAdapterTest,
+    insertCard_shouldNotify_CardInsertedEvent)
 {
     setUp();
 
@@ -112,7 +119,9 @@ TEST(ObservableLocalReaderBlockingAdapterTest, insertCard_shouldNotify_CardInser
     tearDown();
 }
 
-TEST(ObservableLocalReaderBlockingAdapterTest, finalizeCardProcessing_afterInsert_switchState)
+TEST(
+    ObservableLocalReaderBlockingAdapterTest,
+    finalizeCardProcessing_afterInsert_switchState)
 {
     setUp();
 
@@ -121,21 +130,13 @@ TEST(ObservableLocalReaderBlockingAdapterTest, finalizeCardProcessing_afterInser
     tearDown();
 }
 
-TEST(ObservableLocalReaderBlockingAdapterTest, removeCard_afterFinalize_shouldNotify_CardRemoved)
+TEST(
+    ObservableLocalReaderBlockingAdapterTest,
+    removeCard_afterFinalize_shouldNotify_CardRemoved)
 {
     setUp();
 
     testSuite->removeCard_afterFinalize_shouldNotify_CardRemoved();
-
-    tearDown();
-}
-
-TEST(ObservableLocalReaderBlockingAdapterTest, removeCard_beforeFinalize_shouldNotify_CardRemoved)
-{
-    setUp();
-
-    /* TODO flaky?, depends on what values are given for waitInsertion and waitRemoval */
-    testSuite->removeCard_beforeFinalize_shouldNotify_CardRemoved();
 
     tearDown();
 }

@@ -1,50 +1,66 @@
-/**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Public License 2.0 which is available at              *
+ * http://www.eclipse.org/legal/epl-2.0                                       *
+ *                                                                            *
+ * SPDX-License-Identifier: EPL-2.0                                           *
+ ******************************************************************************/
+
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-/* Keyple Core Common */
-#include "KeyplePluginExtension.h"
-
-/* Keyple Core Plugin */
-#include "DontWaitForCardRemovalDuringProcessingSpi.h"
-#include "ObservableReaderSpi.h"
-#include "PluginIOException.h"
-#include "PluginSpi.h"
-#include "WaitForCardInsertionBlockingSpi.h"
-#include "WaitForCardRemovalBlockingSpi.h"
-
-/* Keyple Core Service */
-#include "LocalPluginAdapter.h"
-#include "LocalReaderAdapter.h"
-#include "ObservableReader.h"
-#include "ObservableLocalReaderAdapter.h"
+#include "keyple/core/common/KeyplePluginExtension.hpp"
+#include "keyple/core/plugin/PluginIOException.hpp"
+#include "keyple/core/plugin/spi/PluginSpi.hpp"
+#include "keyple/core/plugin/spi/reader/ReaderSpi.hpp"
+#include "keyple/core/plugin/spi/reader/observable/ObservableReaderSpi.hpp"
+#include "keyple/core/plugin/spi/reader/observable/state/insertion/WaitForCardInsertionBlockingSpi.hpp"
+#include "keyple/core/plugin/spi/reader/observable/state/processing/DontWaitForCardRemovalDuringProcessingSpi.hpp"
+#include "keyple/core/plugin/spi/reader/observable/state/removal/WaitForCardRemovalBlockingSpi.hpp"
+#include "keyple/core/service/LocalPluginAdapter.hpp"
+#include "keyple/core/service/LocalReaderAdapter.hpp"
+#include "keyple/core/service/ObservableLocalReaderAdapter.hpp"
+#include "keyple/core/util/cpp/exception/IllegalArgumentException.hpp"
+#include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keypop/reader/CardReader.hpp"
+#include "keypop/reader/ObservableCardReader.hpp"
 
 /* Mock */
-#include "ObservableReaderSpiMock.h"
-#include "PluginSpiMock.h"
-#include "ReaderSpiMock.h"
+#include "mock/ObservableReaderSpiMock.hpp"
+#include "mock/PluginSpiMock.hpp"
+#include "mock/ReaderSpiMock.hpp"
 
-using namespace testing;
+using keyple::core::common::KeyplePluginExtension;
+using keyple::core::plugin::PluginIOException;
+using keyple::core::plugin::spi::PluginSpi;
+using keyple::core::plugin::spi::reader::ReaderSpi;
+using keyple::core::plugin::spi::reader::observable::ObservableReaderSpi;
+using keyple::core::plugin::spi::reader::observable::state::insertion::
+    WaitForCardInsertionBlockingSpi;
+using keyple::core::plugin::spi::reader::observable::state::processing::
+    DontWaitForCardRemovalDuringProcessingSpi;
+using keyple::core::plugin::spi::reader::observable::state::removal::
+    WaitForCardRemovalBlockingSpi;
+using keyple::core::service::LocalPluginAdapter;
+using keyple::core::service::LocalReaderAdapter;
+using keyple::core::service::ObservableLocalReaderAdapter;
+using keyple::core::util::cpp::exception::IllegalArgumentException;
+using keyple::core::util::cpp::exception::IllegalStateException;
+using keypop::reader::CardReader;
+using keypop::reader::ObservableCardReader;
 
-using namespace keyple::core::common;
-using namespace keyple::core::plugin;
-using namespace keyple::core::plugin::spi;
-using namespace keyple::core::plugin::spi::reader::observable;
-using namespace keyple::core::plugin::spi::reader::observable::state::insertion;
-using namespace keyple::core::plugin::spi::reader::observable::state::processing;
-using namespace keyple::core::plugin::spi::reader::observable::state::removal;
-using namespace keyple::core::service;
+using testing::Return;
+using testing::ReturnRef;
+using testing::Throw;
 
 static const std::string PLUGIN_NAME = "plugin";
 static const std::string READER_NAME_1 = "reader1";
@@ -56,23 +72,34 @@ static std::shared_ptr<ReaderSpiMock> readerSpi1;
 static std::shared_ptr<ReaderSpiMock> readerSpi2;
 static std::shared_ptr<ObservableReaderSpiMock> observableReader;
 
-static void setUp()
+static void
+setUp()
 {
     pluginSpi = std::make_shared<PluginSpiMock>();
-    EXPECT_CALL(*pluginSpi.get(), getName()).WillRepeatedly(ReturnRef(PLUGIN_NAME));
+    EXPECT_CALL(*pluginSpi.get(), getName())
+        .WillRepeatedly(ReturnRef(PLUGIN_NAME));
     EXPECT_CALL(*pluginSpi.get(), onUnregister()).WillRepeatedly(Return());
 
     readerSpi1 = std::make_shared<ReaderSpiMock>(READER_NAME_1);
     EXPECT_CALL(*readerSpi1.get(), onUnregister()).WillRepeatedly(Return());
+    EXPECT_CALL(*readerSpi1.get(), closePhysicalChannel())
+        .WillRepeatedly(Return());
 
     readerSpi2 = std::make_shared<ReaderSpiMock>(READER_NAME_2);
     EXPECT_CALL(*readerSpi2.get(), onUnregister()).WillRepeatedly(Return());
+    EXPECT_CALL(*readerSpi2.get(), closePhysicalChannel())
+        .WillRepeatedly(Return());
 
-    observableReader = std::make_shared<ObservableReaderSpiMock>(OBSERVABLE_READER_NAME);
-    EXPECT_CALL(*observableReader.get(), onUnregister()).WillRepeatedly(Return());
+    observableReader
+        = std::make_shared<ObservableReaderSpiMock>(OBSERVABLE_READER_NAME);
+    EXPECT_CALL(*observableReader.get(), onUnregister())
+        .WillRepeatedly(Return());
+    EXPECT_CALL(*observableReader.get(), closePhysicalChannel())
+        .WillRepeatedly(Return());
 }
 
-static void tearDown()
+static void
+tearDown()
 {
     pluginSpi.reset();
     readerSpi1.reset();
@@ -95,7 +122,9 @@ TEST(LocalPluginAdapterTest, register_whenSearchReaderFails_shouldPIO)
     tearDown();
 }
 
-TEST(LocalPluginAdapterTest, register_whenSearchReaderReturnsReader_shouldRegisterReader)
+TEST(
+    LocalPluginAdapterTest,
+    register_whenSearchReaderReturnsReader_shouldRegisterReader)
 {
     setUp();
 
@@ -103,7 +132,8 @@ TEST(LocalPluginAdapterTest, register_whenSearchReaderReturnsReader_shouldRegist
     readerSpis.push_back(readerSpi1);
     readerSpis.push_back(readerSpi2);
 
-    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders()).WillRepeatedly(Return(readerSpis));
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders())
+        .WillRepeatedly(Return(readerSpis));
 
     LocalPluginAdapter localPluginAdapter(pluginSpi);
     ASSERT_EQ(localPluginAdapter.getName(), PLUGIN_NAME);
@@ -111,31 +141,39 @@ TEST(LocalPluginAdapterTest, register_whenSearchReaderReturnsReader_shouldRegist
     localPluginAdapter.doRegister();
     localPluginAdapter.checkStatus();
 
-    const std::vector<std::string> readerNames = localPluginAdapter.getReaderNames();
+    const std::vector<std::string> readerNames
+        = localPluginAdapter.getReaderNames();
     auto it = std::find(readerNames.begin(), readerNames.end(), READER_NAME_1);
     ASSERT_NE(it, readerNames.end());
     it = std::find(readerNames.begin(), readerNames.end(), READER_NAME_2);
     ASSERT_NE(it, readerNames.end());
 
-    const std::vector<std::shared_ptr<Reader>> readers = localPluginAdapter.getReaders();
+    const std::vector<std::shared_ptr<CardReader>> readers
+        = localPluginAdapter.getReaders();
     ASSERT_EQ(readers.size(), 2);
-    auto itt = std::find(readers.begin(),
-                         readers.end(),
-                         localPluginAdapter.getReader(READER_NAME_1));
+    auto itt = std::find(
+        readers.begin(),
+        readers.end(),
+        localPluginAdapter.getReader(READER_NAME_1));
     ASSERT_NE(itt, readers.end());
-    itt = std::find(readers.begin(), readers.end(), localPluginAdapter.getReader(READER_NAME_2));
+    itt = std::find(
+        readers.begin(),
+        readers.end(),
+        localPluginAdapter.getReader(READER_NAME_2));
     ASSERT_NE(itt, readers.end());
 
     const auto& reader1 = localPluginAdapter.getReader(READER_NAME_1);
-    const auto reader1Class = std::dynamic_pointer_cast<Reader>(reader1);
+    const auto reader1Class = std::dynamic_pointer_cast<CardReader>(reader1);
     ASSERT_NE(reader1Class, nullptr);
-    const auto localReader1Class = std::dynamic_pointer_cast<LocalReaderAdapter>(reader1);
+    const auto localReader1Class
+        = std::dynamic_pointer_cast<LocalReaderAdapter>(reader1);
     ASSERT_NE(localReader1Class, nullptr);
 
     const auto& reader2 = localPluginAdapter.getReader(READER_NAME_2);
-    const auto reader2Class = std::dynamic_pointer_cast<Reader>(reader2);
+    const auto reader2Class = std::dynamic_pointer_cast<CardReader>(reader2);
     ASSERT_NE(reader2Class, nullptr);
-    const auto localReader2Class = std::dynamic_pointer_cast<LocalReaderAdapter>(reader2);
+    const auto localReader2Class
+        = std::dynamic_pointer_cast<LocalReaderAdapter>(reader2);
     ASSERT_NE(localReader2Class, nullptr);
 
     ASSERT_NE(reader1, reader2);
@@ -143,31 +181,41 @@ TEST(LocalPluginAdapterTest, register_whenSearchReaderReturnsReader_shouldRegist
     tearDown();
 }
 
-TEST(LocalPluginAdapterTest,
-     register_whenSearchReaderReturnsObservableReader_shouldRegisterObservableReader)
+TEST(
+    LocalPluginAdapterTest,
+    register_whenSearchReaderReturnsObservableReader_shouldRegisterObservableReader)  // NOLINT
 {
     setUp();
 
     std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
-    readerSpis.push_back(observableReader);
+    readerSpis.push_back(
+        std::dynamic_pointer_cast<ReaderSpi>(observableReader));
 
-    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders()).WillRepeatedly(Return(readerSpis));
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders())
+        .WillRepeatedly(Return(readerSpis));
+    EXPECT_CALL(*observableReader.get(), onStopDetection())
+        .WillRepeatedly(Return());
 
     LocalPluginAdapter localPluginAdapter(pluginSpi);
     localPluginAdapter.doRegister();
     localPluginAdapter.checkStatus();
 
-    const std::vector<std::string> readerNames = localPluginAdapter.getReaderNames();
-    auto it = std::find(readerNames.begin(), readerNames.end(), OBSERVABLE_READER_NAME);
+    const std::vector<std::string> readerNames
+        = localPluginAdapter.getReaderNames();
+    auto it = std::find(
+        readerNames.begin(), readerNames.end(), OBSERVABLE_READER_NAME);
     ASSERT_NE(it, readerNames.end());
 
-    const std::vector<std::shared_ptr<Reader>> readers = localPluginAdapter.getReaders();
+    const std::vector<std::shared_ptr<CardReader>> readers
+        = localPluginAdapter.getReaders();
     ASSERT_EQ(readers.size(), 1);
 
     const auto& reader = localPluginAdapter.getReader(OBSERVABLE_READER_NAME);
-    const auto readerClass = std::dynamic_pointer_cast<ObservableReader>(reader);
+    const auto readerClass
+        = std::dynamic_pointer_cast<ObservableCardReader>(reader);
     ASSERT_NE(readerClass, nullptr);
-    const auto localReaderClass = std::dynamic_pointer_cast<ObservableLocalReaderAdapter>(reader);
+    const auto localReaderClass
+        = std::dynamic_pointer_cast<ObservableLocalReaderAdapter>(reader);
     ASSERT_NE(localReaderClass, nullptr);
 
     tearDown();
@@ -190,7 +238,85 @@ TEST(LocalPluginAdapterTest, getReader_whenNotRegistered_shouldISE)
 
     LocalPluginAdapter localPluginAdapter(pluginSpi);
 
-    EXPECT_THROW(localPluginAdapter.getReader(READER_NAME_1), IllegalStateException);
+    EXPECT_THROW(
+        localPluginAdapter.getReader(READER_NAME_1), IllegalStateException);
+
+    tearDown();
+}
+
+TEST(
+    LocalPluginAdapterTest,
+    findReader_whenReaderNameRegexMatches_returnsExistingReader)
+{
+    setUp();
+
+    const std::string readerNameRegex = ".*1";
+
+    std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
+    readerSpis.push_back(readerSpi1);
+    readerSpis.push_back(readerSpi2);
+
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders())
+        .Times(1)
+        .WillOnce(Return(readerSpis));
+
+    LocalPluginAdapter localPluginAdapter(pluginSpi);
+    localPluginAdapter.doRegister();
+
+    auto foundedReader = localPluginAdapter.findReader(readerNameRegex);
+
+    ASSERT_NE(foundedReader, nullptr);
+    ASSERT_EQ(foundedReader->getName(), READER_NAME_1);
+
+    tearDown();
+}
+
+TEST(LocalPluginAdapterTest, findReader_whenNoReaderNameMatches_returnsNull)
+{
+    setUp();
+
+    const std::string readerNameRegex = ".*3";
+
+    std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
+    readerSpis.push_back(readerSpi1);
+    readerSpis.push_back(readerSpi2);
+
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders())
+        .Times(1)
+        .WillOnce(Return(readerSpis));
+
+    LocalPluginAdapter localPluginAdapter(pluginSpi);
+    localPluginAdapter.doRegister();
+
+    auto foundedReader = localPluginAdapter.findReader(readerNameRegex);
+
+    ASSERT_EQ(foundedReader, nullptr);
+
+    tearDown();
+}
+
+TEST(
+    LocalPluginAdapterTest,
+    findReader_whenReaderNameRegexIsNotAValidPattern_throwsIllegalArgumentsException)  // NOLINT
+{
+    setUp();
+
+    const std::string invalidReaderNameRegex = "[";
+
+    std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
+    readerSpis.push_back(readerSpi1);
+    readerSpis.push_back(readerSpi2);
+
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders())
+        .Times(1)
+        .WillOnce(Return(readerSpis));
+
+    LocalPluginAdapter localPluginAdapter(pluginSpi);
+    localPluginAdapter.doRegister();
+
+    EXPECT_THROW(
+        localPluginAdapter.findReader(invalidReaderNameRegex),
+        IllegalArgumentException);
 
     tearDown();
 }
@@ -213,7 +339,8 @@ TEST(LocalPluginAdapterTest, unregister_shouldDisableMethodsWithISE)
     std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
     readerSpis.push_back(readerSpi1);
 
-    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders()).WillRepeatedly(Return(readerSpis));
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders())
+        .WillRepeatedly(Return(readerSpis));
 
     LocalPluginAdapter localPluginAdapter(pluginSpi);
     localPluginAdapter.doRegister();
@@ -230,8 +357,9 @@ TEST(LocalPluginAdapterTest, getExtension_whenNotRegistered_shouldISE)
 
     LocalPluginAdapter localPluginAdapter(pluginSpi);
 
-    EXPECT_THROW(localPluginAdapter.getExtension(typeid(PluginSpiMock)),
-                 IllegalStateException);
+    EXPECT_THROW(
+        localPluginAdapter.getExtension(typeid(PluginSpiMock)),
+        IllegalStateException);
 
     tearDown();
 }
@@ -241,66 +369,79 @@ TEST(LocalPluginAdapterTest, getExtension_whenRegistered_shouldReturnExtension)
     setUp();
 
     std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
-    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders()).WillRepeatedly(Return(readerSpis));
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders())
+        .WillRepeatedly(Return(readerSpis));
 
     LocalPluginAdapter localPluginAdapter(pluginSpi);
     localPluginAdapter.doRegister();
 
-    const auto extension = localPluginAdapter.getExtension(typeid(PluginSpiMock));
+    const auto extension
+        = localPluginAdapter.getExtension(typeid(PluginSpiMock));
     const auto pluginMock = std::static_pointer_cast<PluginSpiMock>(extension);
     ASSERT_NE(pluginMock, nullptr);
 
     tearDown();
 }
 
-TEST(LocalPluginAdapterTest, getReaderExtension_whenReaderIsRegistered_shouldReturnExtension)
+TEST(
+    LocalPluginAdapterTest,
+    getReaderExtension_whenReaderIsRegistered_shouldReturnExtension)
 {
     setUp();
 
     std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
     readerSpis.push_back(readerSpi1);
-    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders()).WillRepeatedly(Return(readerSpis));
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders())
+        .WillRepeatedly(Return(readerSpis));
 
     LocalPluginAdapter localPluginAdapter(pluginSpi);
     localPluginAdapter.doRegister();
-    const auto extension = localPluginAdapter.getReaderExtension(typeid(PluginSpiMock),
-                                                                 READER_NAME_1);
+    const auto extension = localPluginAdapter.getReaderExtension(
+        typeid(PluginSpiMock), READER_NAME_1);
 
     ASSERT_EQ(extension, readerSpi1);
 
     tearDown();
 }
 
-TEST(LocalPluginAdapterTest, getReaderExtension_whenReaderNameIsUnknown_shouldReturnIAE)
+TEST(
+    LocalPluginAdapterTest,
+    getReaderExtension_whenReaderNameIsUnknown_shouldReturnIAE)
 {
     setUp();
 
     std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
     readerSpis.push_back(readerSpi1);
-    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders()).WillRepeatedly(Return(readerSpis));
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders())
+        .WillRepeatedly(Return(readerSpis));
 
     LocalPluginAdapter localPluginAdapter(pluginSpi);
     localPluginAdapter.doRegister();
 
-
-    EXPECT_THROW(localPluginAdapter.getReaderExtension(typeid(PluginSpiMock), "UNKNOWN"),
-                 IllegalArgumentException);
+    EXPECT_THROW(
+        localPluginAdapter.getReaderExtension(typeid(PluginSpiMock), "UNKNOWN"),
+        IllegalArgumentException);
 
     tearDown();
 }
 
-TEST(LocalPluginAdapterTest, getReaderExtension_whenPluginIsNotRegistered_shouldISE)
+TEST(
+    LocalPluginAdapterTest,
+    getReaderExtension_whenPluginIsNotRegistered_shouldISE)
 {
     setUp();
 
     std::vector<std::shared_ptr<ReaderSpi>> readerSpis;
     readerSpis.push_back(readerSpi1);
-    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders()).WillRepeatedly(Return(readerSpis));
+    EXPECT_CALL(*pluginSpi.get(), searchAvailableReaders())
+        .WillRepeatedly(Return(readerSpis));
 
     LocalPluginAdapter localPluginAdapter(pluginSpi);
 
-    EXPECT_THROW(localPluginAdapter.getReaderExtension(typeid(PluginSpiMock), READER_NAME_1),
-                 IllegalStateException);
+    EXPECT_THROW(
+        localPluginAdapter.getReaderExtension(
+            typeid(PluginSpiMock), READER_NAME_1),
+        IllegalStateException);
 
     tearDown();
 }

@@ -1,61 +1,66 @@
-/**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Public License 2.0 which is available at              *
+ * http://www.eclipse.org/legal/epl-2.0                                       *
+ *                                                                            *
+ * SPDX-License-Identifier: EPL-2.0                                           *
+ ******************************************************************************/
+
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-/* Keyple Core Plugin */
-#include "ReaderSpi.h"
-
-/* Keyple Core Service */
-#include "ObservableLocalPluginAdapter.h"
-
-/* Keyple Core Util */
-#include "IllegalArgumentException.h"
-#include "IllegalStateException.h"
-#include "RuntimeException.h"
+#include "keyple/core/service/ObservableLocalPluginAdapter.hpp"
+#include "keyple/core/util/cpp/exception/IllegalArgumentException.hpp"
+#include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
 
 /* Mock */
-#include "ObservableLocalPluginSpiMock.h"
-#include "PluginObservationExceptionHandlerSpiMock.h"
-#include "PluginObserverSpiMock.h"
-#include "ReaderSpiMock.h"
+#include "mock/ObservableLocalPluginSpiMock.hpp"
+#include "mock/PluginObservationExceptionHandlerSpiMock.hpp"
+#include "mock/PluginObserverSpiMock.hpp"
+#include "mock/ReaderSpiMock.hpp"
 
-using namespace testing;
+using keyple::core::service::ObservableLocalPluginAdapter;
+using keyple::core::util::cpp::exception::IllegalArgumentException;
+using keyple::core::util::cpp::exception::IllegalStateException;
 
-using namespace keyple::core::plugin;
-using namespace keyple::core::plugin::spi;
-using namespace keyple::core::plugin::spi::reader;
-using namespace keyple::core::service;
-using namespace keyple::core::util::cpp::exception;
+using testing::_;
+using testing::Return;
+using testing::ReturnRef;
+using testing::Throw;
 
 static const std::string PLUGIN_NAME = "plugin";
 static const std::string READER_NAME_1 = "reader1";
 
 static std::shared_ptr<ObservableLocalPluginSpiMock> observablePluginMock;
 static std::shared_ptr<ObservableLocalPluginAdapter> pluginAdapter;
-static std::shared_ptr<PluginObservationExceptionHandlerSpiMock> exceptionHandlerMock;
+static std::shared_ptr<PluginObservationExceptionHandlerSpiMock>
+    exceptionHandlerMock;
 static std::shared_ptr<PluginObserverSpiMock> observerMock;
 
-static void setUp()
+static void
+setUp()
 {
-    observablePluginMock = std::make_shared<ObservableLocalPluginSpiMock>(PLUGIN_NAME, nullptr);
+    observablePluginMock
+        = std::make_shared<ObservableLocalPluginSpiMock>(PLUGIN_NAME, nullptr);
     observerMock = std::make_shared<PluginObserverSpiMock>(nullptr);
-    
-    exceptionHandlerMock = std::make_shared<PluginObservationExceptionHandlerSpiMock>(nullptr);
-    pluginAdapter = std::make_shared<ObservableLocalPluginAdapter>(observablePluginMock);
+
+    exceptionHandlerMock
+        = std::make_shared<PluginObservationExceptionHandlerSpiMock>(nullptr);
+    pluginAdapter
+        = std::make_shared<ObservableLocalPluginAdapter>(observablePluginMock);
 }
 
-static void tearDown()
+static void
+tearDown()
 {
     if (pluginAdapter->isMonitoring()) {
         pluginAdapter->doUnregister();
@@ -68,11 +73,13 @@ static void tearDown()
     observablePluginMock.reset();
 }
 
-TEST(ObservableLocalPluginAdapterTest, addObserver_onUnregisteredPlugin_throwISE)
+TEST(
+    ObservableLocalPluginAdapterTest, addObserver_onUnregisteredPlugin_throwISE)
 {
     setUp();
 
-    EXPECT_THROW(pluginAdapter->addObserver(observerMock), IllegalStateException);
+    EXPECT_THROW(
+        pluginAdapter->addObserver(observerMock), IllegalStateException);
 
     tearDown();
 }
@@ -88,24 +95,31 @@ TEST(ObservableLocalPluginAdapterTest, addObserver_withNullObserver_throwIAE)
     tearDown();
 }
 
-TEST(ObservableLocalPluginAdapterTest, addObserver_withoutExceptionHandler_throwISE)
+TEST(
+    ObservableLocalPluginAdapterTest,
+    addObserver_withoutExceptionHandler_throwISE)
 {
     setUp();
 
     pluginAdapter->doRegister();
 
-    EXPECT_THROW(pluginAdapter->addObserver(observerMock), IllegalStateException);
+    EXPECT_THROW(
+        pluginAdapter->addObserver(observerMock), IllegalStateException);
 
     tearDown();
 }
 
-TEST(ObservableLocalPluginAdapterTest, notifyObserver_throwException_isPassedTo_exceptionHandler)
+TEST(
+    ObservableLocalPluginAdapterTest,
+    notifyObserver_throwException_isPassedTo_exceptionHandler)
 {
     setUp();
 
-    std::shared_ptr<RuntimeException> exception = std::make_shared<RuntimeException>();
-    exceptionHandlerMock = std::make_shared<PluginObservationExceptionHandlerSpiMock>(
-                               std::make_shared<RuntimeException>()); // Not used
+    std::shared_ptr<RuntimeException> exception
+        = std::make_shared<RuntimeException>();
+    exceptionHandlerMock
+        = std::make_shared<PluginObservationExceptionHandlerSpiMock>(
+            std::make_shared<RuntimeException>());  // Not used
     observerMock = std::make_shared<PluginObserverSpiMock>(exception);
 
     /* Start plugin */
@@ -127,7 +141,8 @@ TEST(ObservableLocalPluginAdapterTest, notifyObserver_throwException_isPassedTo_
     tearDown();
 }
 
-static inline void addFirstObserver_shouldStartEventThread()
+static inline void
+addFirstObserver_shouldStartEventThread()
 {
     pluginAdapter->doRegister();
     pluginAdapter->setPluginObservationExceptionHandler(exceptionHandlerMock);
@@ -184,7 +199,8 @@ TEST(ObservableLocalPluginAdapterTest, clearObserver_shouldStopEventThread)
     tearDown();
 }
 
-static inline void whileMonitoring_readerNames_appears_shouldNotify_andCreateReaders()
+static inline void
+whileMonitoring_readerNames_appears_shouldNotify_andCreateReaders()
 {
     /* Start plugin */
     addFirstObserver_shouldStartEventThread();
@@ -193,23 +209,27 @@ static inline void whileMonitoring_readerNames_appears_shouldNotify_andCreateRea
     observablePluginMock->addReaderName({READER_NAME_1});
 
     /* Wait until READER_CONNECTED event, should not take longer than 1 sec */
-     std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     /* Check event is well formed */
-    const std::shared_ptr<PluginEvent> event =
-        observerMock->getLastEventOfType(PluginEvent::Type::READER_CONNECTED);
+    const std::shared_ptr<PluginEvent> event
+        = observerMock->getLastEventOfType(PluginEvent::Type::READER_CONNECTED);
     const std::vector<std::string>& readerNames = event->getReaderNames();
     ASSERT_EQ(readerNames.size(), 1);
-    ASSERT_TRUE(std::count(readerNames.begin(), readerNames.end(), READER_NAME_1));
+    ASSERT_TRUE(
+        std::count(readerNames.begin(), readerNames.end(), READER_NAME_1));
     ASSERT_EQ(event->getPluginName(), PLUGIN_NAME);
 
     /* Check reader is created */
-    const std::vector<std::string>& pluginReaderNames = pluginAdapter->getReaderNames();
-    ASSERT_TRUE(std::count(pluginReaderNames.begin(), pluginReaderNames.end(), READER_NAME_1));
+    const std::vector<std::string>& pluginReaderNames
+        = pluginAdapter->getReaderNames();
+    ASSERT_TRUE(std::count(
+        pluginReaderNames.begin(), pluginReaderNames.end(), READER_NAME_1));
 }
 
-TEST(ObservableLocalPluginAdapterTest,
-     whileMonitoring_readerNames_appears_shouldNotify_andCreateReaders)
+TEST(
+    ObservableLocalPluginAdapterTest,
+    whileMonitoring_readerNames_appears_shouldNotify_andCreateReaders)
 {
     setUp();
 
@@ -218,8 +238,9 @@ TEST(ObservableLocalPluginAdapterTest,
     tearDown();
 }
 
-TEST(ObservableLocalPluginAdapterTest,
-     whileMonitoring_readerNames_disappears_shouldNotify_andRemoveReaders)
+TEST(
+    ObservableLocalPluginAdapterTest,
+    whileMonitoring_readerNames_disappears_shouldNotify_andRemoveReaders)
 {
     setUp();
 
@@ -228,22 +249,25 @@ TEST(ObservableLocalPluginAdapterTest,
     /* Remove reader name */
     observablePluginMock->removeReaderName({READER_NAME_1});
 
-    /* Wait until READER_DISCONNECTED event, should not take longer than 1 sec */
+    /* Wait until READER_DISCONNECTED event, should not take longer than 1 sec
+     */
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     /* Check event is well formed */
-    const std::shared_ptr<PluginEvent> event =
-        observerMock->getLastEventOfType(PluginEvent::Type::READER_DISCONNECTED);
+    const std::shared_ptr<PluginEvent> event = observerMock->getLastEventOfType(
+        PluginEvent::Type::READER_DISCONNECTED);
     const std::vector<std::string>& readerNames = event->getReaderNames();
     ASSERT_EQ(readerNames.size(), 1);
-    ASSERT_TRUE(std::count(readerNames.begin(), readerNames.end(), READER_NAME_1));
+    ASSERT_TRUE(
+        std::count(readerNames.begin(), readerNames.end(), READER_NAME_1));
     ASSERT_EQ(event->getPluginName(), PLUGIN_NAME);
 
     tearDown();
 }
 
-TEST(ObservableLocalPluginAdapterTest,
-     whileMonitoring_observerThrowException_isPassedTo_exceptionHandler)
+TEST(
+    ObservableLocalPluginAdapterTest,
+    whileMonitoring_observerThrowException_isPassedTo_exceptionHandler)
 {
     setUp();
 
@@ -266,14 +290,17 @@ TEST(ObservableLocalPluginAdapterTest,
     tearDown();
 }
 
-TEST(ObservableLocalPluginAdapterTest,
-     whileMonitoring_pluginThrowException_isPassedTo_exceptionHandler)
+TEST(
+    ObservableLocalPluginAdapterTest,
+    whileMonitoring_pluginThrowException_isPassedTo_exceptionHandler)
 {
     setUp();
 
     const auto exception = std::make_shared<PluginIOException>("error");
-    observablePluginMock = std::make_shared<ObservableLocalPluginSpiMock>(PLUGIN_NAME, exception);
-    pluginAdapter = std::make_shared<ObservableLocalPluginAdapter>(observablePluginMock);
+    observablePluginMock = std::make_shared<ObservableLocalPluginSpiMock>(
+        PLUGIN_NAME, exception);
+    pluginAdapter
+        = std::make_shared<ObservableLocalPluginAdapter>(observablePluginMock);
 
     /* Start plugin */
     pluginAdapter->doRegister();
@@ -285,7 +312,8 @@ TEST(ObservableLocalPluginAdapterTest,
 
     /* Check if exception has been thrown */
     ASSERT_EQ(exceptionHandlerMock->getPluginName(), PLUGIN_NAME);
-    ASSERT_EQ(*exceptionHandlerMock->getE()->getCause().get(), *exception.get());
+    ASSERT_EQ(
+        *exceptionHandlerMock->getE()->getCause().get(), *exception.get());
 
     tearDown();
 }
