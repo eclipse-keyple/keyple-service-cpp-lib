@@ -24,10 +24,10 @@ WaitForCardInsertionStateAdapter::WaitForCardInsertionStateAdapter(
     std::shared_ptr<AbstractMonitoringJobAdapter> monitoringJob,
     std::shared_ptr<ExecutorService> executorService)
 : AbstractObservableStateAdapter(
-    MonitoringState::WAIT_FOR_CARD_INSERTION,
-    reader,
-    monitoringJob,
-    executorService)
+      MonitoringState::WAIT_FOR_CARD_INSERTION,
+      reader,
+      monitoringJob,
+      executorService)
 {
 }
 
@@ -72,16 +72,6 @@ WaitForCardInsertionStateAdapter::onEvent(const InternalEvent event)
     case InternalEvent::STOP_DETECT:
         switchState(MonitoringState::WAIT_FOR_START_DETECTION);
         break;
-
-    case InternalEvent::CARD_REMOVED:
-        /* The card has been removed during default selection */
-        if (getReader()->getDetectionMode() == DetectionMode::REPEATING) {
-            switchState(MonitoringState::WAIT_FOR_CARD_INSERTION);
-        } else {
-            switchState(MonitoringState::WAIT_FOR_START_DETECTION);
-        }
-        break;
-
     default:
         mLogger->trace("Event ignored\n");
         break;

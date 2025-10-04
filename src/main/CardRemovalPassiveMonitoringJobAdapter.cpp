@@ -59,6 +59,8 @@ void
 CardRemovalPassiveMonitoringJobAdapter::CardRemovalPassiveMonitoringJob::
     execute()
 {
+    bool isTaskCanceled = false;
+
     auto cardRemovalWaiterBlockingSpi
         = std::dynamic_pointer_cast<CardRemovalWaiterBlockingSpi>(
             mParent->mReaderSpi);
@@ -92,6 +94,7 @@ CardRemovalPassiveMonitoringJobAdapter::CardRemovalPassiveMonitoringJob::
             mParent->getReader()->getName(),
             e.getMessage());
     } catch (const TaskCanceledException& e) {
+        isTaskCanceled = true;
         mParent->mLogger->warn(
             "Monitoring job process cancelled: %\n", e.getMessage());
     } catch (const RuntimeException& e) {
@@ -104,7 +107,9 @@ CardRemovalPassiveMonitoringJobAdapter::CardRemovalPassiveMonitoringJob::
     }
 
     /* Finally */
-    mMonitoringState->onEvent(InternalEvent::CARD_REMOVED);
+    if (!isTaskCanceled) {
+        mMonitoringState->onEvent(InternalEvent::CARD_REMOVED);
+    }
 }
 
 /* CARD REMOVAL PASSIVE MONITORING JOB ADAPTER

@@ -53,6 +53,15 @@ AbstractReaderAdapter::getPluginName() const
     return mPluginName;
 }
 
+std::shared_ptr<KeypleReaderExtension>
+AbstractReaderAdapter::getExtension(
+    const std::type_info& /*readerExtensionClass*/) const
+{
+    checkStatus();
+
+    return mReaderExtension;
+}
+
 const std::vector<std::shared_ptr<CardSelectionResponseApi>>
 AbstractReaderAdapter::transmitCardSelectionRequests(
     const std::vector<std::shared_ptr<CardSelectorBase>>& cardSelectors,
@@ -128,17 +137,6 @@ const std::string&
 AbstractReaderAdapter::getName() const
 {
     return mReaderName;
-}
-
-std::shared_ptr<KeypleReaderExtension>
-AbstractReaderAdapter::getExtension(
-    const std::type_info& readerExtensionClass) const
-{
-    (void)readerExtensionClass;
-
-    checkStatus();
-
-    return mReaderExtension;
 }
 
 const std::shared_ptr<CardResponseApi>
