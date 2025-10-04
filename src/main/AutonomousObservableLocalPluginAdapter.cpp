@@ -1,47 +1,51 @@
-/**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Public License 2.0 which is available at              *
+ * http://www.eclipse.org/legal/epl-2.0                                       *
+ *                                                                            *
+ * SPDX-License-Identifier: EPL-2.0                                           *
+ ******************************************************************************/
 
-#include "AutonomousObservableLocalPluginAdapter.h"
+#include "keyple/core/service/AutonomousObservableLocalPluginAdapter.hpp"
 
-/* Calypsonet Terminal Reader */
-#include "CardReader.h"
+#include <memory>
+#include <string>
+#include <vector>
 
-/* Keyple Core Util */
-#include "KeypleAssert.h"
-
-/* Keyple Core Plugin */
-#include "PluginEventAdapter.h"
-
-/* Keyple Core Service */
-#include "LocalReaderAdapter.h"
-#include "ObservableLocalReaderAdapter.h"
+#include "keyple/core/service/PluginEventAdapter.hpp"
+#include "keyple/core/util/KeypleAssert.hpp"
+#include "keyple/core/util/cpp/exception/Exception.hpp"
+#include "keypop/reader/CardReader.hpp"
 
 namespace keyple {
 namespace core {
 namespace service {
 
-using namespace calypsonet::terminal::reader;
-using namespace keyple::core::plugin;
-using namespace keyple::core::plugin::spi::reader::observable;
-using namespace keyple::core::util::cpp;
+using keyple::core::util::cpp::exception::Exception;
+using keypop::reader::CardReader;
 
 AutonomousObservableLocalPluginAdapter::AutonomousObservableLocalPluginAdapter(
-  std::shared_ptr<AutonomousObservablePluginSpi> autonomousObservablePluginSpi)
+    std::shared_ptr<AutonomousObservablePluginSpi>
+        autonomousObservablePluginSpi)
 : AbstractObservableLocalPluginAdapter(autonomousObservablePluginSpi)
 {
-    autonomousObservablePluginSpi->connect(this);
+    try {
+        autonomousObservablePluginSpi->setCallback(this);
+    } catch (const Exception& e) {
+        mLogger->trace(
+            "Method 'setCallback(...)' unavailable for legacy plugin: %\n",
+            e.getMessage());
+        autonomousObservablePluginSpi->connect(this);
+    }
 }
 
-void AutonomousObservableLocalPluginAdapter::onReaderConnected(
+void
+AutonomousObservableLocalPluginAdapter::onReaderConnected(
     const std::vector<std::shared_ptr<ReaderSpi>>& readers)
 {
     Assert::getInstance().notEmpty(readers, "readers");
@@ -53,13 +57,12 @@ void AutonomousObservableLocalPluginAdapter::onReaderConnected(
         notifyReaders.push_back(readerSpi->getName());
     }
 
-    notifyObservers(
-        std::make_shared<PluginEventAdapter>(getName(),
-                                             notifyReaders,
-                                             PluginEvent::Type::READER_CONNECTED));
+    notifyObservers(std::make_shared<PluginEventAdapter>(
+        getName(), notifyReaders, PluginEvent::Type::READER_CONNECTED));
 }
 
-void AutonomousObservableLocalPluginAdapter::onReaderDisconnected(
+void
+AutonomousObservableLocalPluginAdapter::onReaderDisconnected(
     const std::vector<std::string>& readerNames)
 {
     Assert::getInstance().notEmpty(readerNames, "readerNames");
@@ -68,39 +71,43 @@ void AutonomousObservableLocalPluginAdapter::onReaderDisconnected(
     for (const auto& readerName : readerNames) {
         const std::shared_ptr<CardReader> reader = getReader(readerName);
         if (reader == nullptr) {
-            mLogger->warn("[%] ObservableLocalPlugin => Impossible to remove reader, reader not " \
-                          "found with name : %\n",
-                          getName(),
-                          readerName);
+            mLogger->warn(
+                "Plugin [%] unable to remove unknown reader [%]\n",
+                getName(),
+                readerName);
         } else {
             /* Unregister and remove reader */
-            std::dynamic_pointer_cast<LocalReaderAdapter>(reader)->doUnregister();
+            std::dynamic_pointer_cast<LocalReaderAdapter>(reader)
+                ->doUnregister();
             getReadersMap().erase(reader->getName());
-            mLogger->trace("[%] ObservableLocalPlugin => Remove reader '%' from readers list\n",
-                           getName(),
-                           reader->getName());
+            mLogger->info(
+                "Plugin [%] removes reader [%] from readers list\n",
+                getName(),
+                reader->getName());
 
             notifyReaders.push_back(readerName);
         }
     }
 
-    notifyObservers(
-        std::make_shared<PluginEventAdapter>(getName(),
-                                             notifyReaders,
-                                             PluginEvent::Type::READER_DISCONNECTED));
+    notifyObservers(std::make_shared<PluginEventAdapter>(
+        getName(), notifyReaders, PluginEvent::Type::READER_DISCONNECTED));
 }
 
-void AutonomousObservableLocalPluginAdapter::addReader(std::shared_ptr<ReaderSpi> readerSpi)
+void
+AutonomousObservableLocalPluginAdapter::addReader(
+    std::shared_ptr<ReaderSpi> readerSpi)
 {
-    std::shared_ptr<LocalReaderAdapter> reader = buildLocalReaderAdapter(readerSpi);
+    std::shared_ptr<LocalReaderAdapter> reader
+        = buildLocalReaderAdapter(readerSpi);
     reader->doRegister();
     getReadersMap().insert({reader->getName(), reader});
 
-    mLogger->trace("[%] ObservableLocalPlugin => Add reader '%' to readers list\n",
-                   getName(),
-                   readerSpi->getName());
+    mLogger->info(
+        "Plugin [%] adds reader [%] to readers list\n",
+        getName(),
+        readerSpi->getName());
 }
 
-}
-}
-}
+} /* namespace service */
+} /* namespace core */
+} /* namespace keyple */

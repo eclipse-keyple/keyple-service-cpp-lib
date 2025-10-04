@@ -1,48 +1,55 @@
-/**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Public License 2.0 which is available at              *
+ * http://www.eclipse.org/legal/epl-2.0                                       *
+ *                                                                            *
+ * SPDX-License-Identifier: EPL-2.0                                           *
+ ******************************************************************************/
+
+#include <map>
+#include <memory>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-/* Keyple Core Service */
-#include "CardSelectionResultAdapter.h"
-
-/* Keyple Core Util */
-#include "IllegalStateException.h"
+#include "keyple/core/service/CardSelectionResultAdapter.hpp"
+#include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
 
 /* Mock */
-#include "SmartCardMock.h"
+#include "mock/SmartCardMock.hpp"
 
-using namespace testing;
+using keyple::core::service::CardSelectionResultAdapter;
+using keyple::core::util::cpp::exception::IllegalStateException;
 
-using namespace keyple::core::service;
-using namespace keyple::core::util::cpp::exception;
+using testing::ReturnRef;
 
 static const std::string POWER_ON_DATA = "12345678";
 
 static std::shared_ptr<SmartCardMock> smartCard;
 
-static void setUp()
+static void
+setUp()
 {
     smartCard = std::make_shared<SmartCardMock>();
-    EXPECT_CALL(*smartCard.get(), getPowerOnData()).WillRepeatedly(ReturnRef(POWER_ON_DATA));
+    EXPECT_CALL(*smartCard.get(), getPowerOnData())
+        .WillRepeatedly(ReturnRef(POWER_ON_DATA));
 }
 
-static void tearDown()
+static void
+tearDown()
 {
     smartCard.reset();
 }
 
-TEST(CardSelectionResultAdapterTest, getActiveSelectionIndex_whenNoSmartCard_shouldReturnMinusOne)
+TEST(
+    CardSelectionResultAdapterTest,
+    getActiveSelectionIndex_whenNoSmartCard_shouldReturnMinusOne)
 {
     setUp();
 
@@ -53,8 +60,9 @@ TEST(CardSelectionResultAdapterTest, getActiveSelectionIndex_whenNoSmartCard_sho
     tearDown();
 }
 
-TEST(CardSelectionResultAdapterTest,
-     getActiveSelectionIndex_whenNullSmartCardAndIsSelected_shouldReturnIndex)
+TEST(
+    CardSelectionResultAdapterTest,
+    getActiveSelectionIndex_whenNullSmartCardAndIsSelected_shouldReturnIndex)
 {
     setUp();
 
@@ -66,8 +74,9 @@ TEST(CardSelectionResultAdapterTest,
     tearDown();
 }
 
-TEST(CardSelectionResultAdapterTest,
-     getActiveSelectionIndex_whenNotNullSmartCardAndIsSelected_shouldReturnIndex)
+TEST(
+    CardSelectionResultAdapterTest,
+    getActiveSelectionIndex_whenNotNullSmartCardAndIsSelected_shouldReturnIndex)
 {
     setUp();
 
@@ -79,7 +88,9 @@ TEST(CardSelectionResultAdapterTest,
     tearDown();
 }
 
-TEST(CardSelectionResultAdapterTest, getSmartCards_whenNoSmartCard_shouldReturnEmptyMap)
+TEST(
+    CardSelectionResultAdapterTest,
+    getSmartCards_whenNoSmartCard_shouldReturnEmptyMap)
 {
     setUp();
 
@@ -90,7 +101,9 @@ TEST(CardSelectionResultAdapterTest, getSmartCards_whenNoSmartCard_shouldReturnE
     tearDown();
 }
 
-TEST(CardSelectionResultAdapterTest, getSmartCards_whenNotNullSmartCard_shouldReturnNotEmptyMap)
+TEST(
+    CardSelectionResultAdapterTest,
+    getSmartCards_whenNotNullSmartCard_shouldReturnNotEmptyMap)
 {
     setUp();
 
@@ -100,17 +113,19 @@ TEST(CardSelectionResultAdapterTest, getSmartCards_whenNotNullSmartCard_shouldRe
     auto smartCards = cardSelectionResult.getSmartCards();
     ASSERT_NE(smartCards.size(), 0);
 
-    std::map<int, std::shared_ptr<SmartCard>>::iterator it;
-    for (it = smartCards.begin(); it != smartCards.end(); it++) {
-        if (it->second == smartCard)
-            break;
-    }
+    auto it
+        = std::find_if(smartCards.begin(), smartCards.end(), [](const auto& s) {
+              return s.second == smartCard;
+          });
+
     ASSERT_NE(it, smartCards.end());
 
     tearDown();
 }
 
-TEST(CardSelectionResultAdapterTest, getSmartCards_whenNoSmartCard_shouldReturnNull)
+TEST(
+    CardSelectionResultAdapterTest,
+    getSmartCards_whenNoSmartCard_shouldReturnNull)
 {
     setUp();
 
@@ -122,7 +137,9 @@ TEST(CardSelectionResultAdapterTest, getSmartCards_whenNoSmartCard_shouldReturnN
     tearDown();
 }
 
-TEST(CardSelectionResultAdapterTest, getSmartCards_whenNotNullSmartCard_shouldReturnSmartCard)
+TEST(
+    CardSelectionResultAdapterTest,
+    getSmartCards_whenNotNullSmartCard_shouldReturnSmartCard)
 {
     setUp();
 
@@ -137,7 +154,9 @@ TEST(CardSelectionResultAdapterTest, getSmartCards_whenNotNullSmartCard_shouldRe
     tearDown();
 }
 
-TEST(CardSelectionResultAdapterTest, getActiveSmartCard_whenNoSmartCard_shouldReturnNull)
+TEST(
+    CardSelectionResultAdapterTest,
+    getActiveSmartCard_whenNoSmartCard_shouldReturnNull)
 {
     setUp();
 
@@ -148,7 +167,9 @@ TEST(CardSelectionResultAdapterTest, getActiveSmartCard_whenNoSmartCard_shouldRe
     tearDown();
 }
 
-TEST(CardSelectionResultAdapterTest, getActiveSmartCard_whenNotSmartCard_shouldReturnSmartcard)
+TEST(
+    CardSelectionResultAdapterTest,
+    getActiveSmartCard_whenNotSmartCard_shouldReturnSmartcard)
 {
     setUp();
 

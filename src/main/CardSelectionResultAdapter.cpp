@@ -1,30 +1,37 @@
-/**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Public License 2.0 which is available at              *
+ * http://www.eclipse.org/legal/epl-2.0                                       *
+ *                                                                            *
+ * SPDX-License-Identifier: EPL-2.0                                           *
+ ******************************************************************************/
 
-#include "CardSelectionResultAdapter.h"
+#include "keyple/core/service/CardSelectionResultAdapter.hpp"
 
-/* Keyple Core Util */
-#include "IllegalStateException.h"
+#include <map>
+#include <memory>
+
+#include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
 
 namespace keyple {
 namespace core {
 namespace service {
 
-using namespace keyple::core::util::cpp::exception;
+using keyple::core::util::cpp::exception::IllegalStateException;
 
-CardSelectionResultAdapter::CardSelectionResultAdapter() : mActiveSelectionIndex(-1) {}
+CardSelectionResultAdapter::CardSelectionResultAdapter()
+: mActiveSelectionIndex(-1)
+{
+}
 
-void CardSelectionResultAdapter::addSmartCard(const int selectionIndex,
-                                              std::shared_ptr<SmartCard> smartCard)
+void
+CardSelectionResultAdapter::addSmartCard(
+    const int selectionIndex, std::shared_ptr<SmartCard> smartCard)
 {
     mSmartCardMap.insert({selectionIndex, smartCard});
 
@@ -32,23 +39,26 @@ void CardSelectionResultAdapter::addSmartCard(const int selectionIndex,
     mActiveSelectionIndex = selectionIndex;
 }
 
-const std::map<int, std::shared_ptr<SmartCard>>& CardSelectionResultAdapter::getSmartCards() const
+const std::map<int, std::shared_ptr<SmartCard>>&
+CardSelectionResultAdapter::getSmartCards() const
 {
     return mSmartCardMap;
 }
 
-const std::shared_ptr<SmartCard> CardSelectionResultAdapter::getActiveSmartCard() const
+std::shared_ptr<SmartCard>
+CardSelectionResultAdapter::getActiveSmartCard() const
 {
     const auto& it = mSmartCardMap.find(mActiveSelectionIndex);
 
     return (it != mSmartCardMap.end()) ? it->second : nullptr;
 }
 
-int CardSelectionResultAdapter::getActiveSelectionIndex() const
+int
+CardSelectionResultAdapter::getActiveSelectionIndex() const
 {
     return mActiveSelectionIndex;
 }
 
-}
-}
-}
+} /* namespace service */
+} /* namespace core */
+} /* namespace keyple */

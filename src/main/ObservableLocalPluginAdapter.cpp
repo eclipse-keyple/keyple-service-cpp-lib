@@ -1,79 +1,85 @@
-/**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/******************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Public License 2.0 which is available at              *
+ * http://www.eclipse.org/legal/epl-2.0                                       *
+ *                                                                            *
+ * SPDX-License-Identifier: EPL-2.0                                           *
+ ******************************************************************************/
 
-#include "ObservableLocalPluginAdapter.h"
+#include "keyple/core/service/ObservableLocalPluginAdapter.hpp"
 
-/* Keyple Core Service */
-#include "KeyplePluginException.h"
-#include "LocalReaderAdapter.h"
-#include "ObservableLocalReaderAdapter.h"
-#include "PluginEventAdapter.h"
-#include "Thread.h"
+#include <memory>
+#include <string>
+#include <vector>
 
-/* Keyple Core Util */
-#include "Arrays.h"
-#include "InterruptedException.h"
-#include "KeypleStd.h"
-
-/* Keyple Core Plugin */
-#include "PluginIOException.h"
+#include "keyple/core/plugin/PluginIOException.hpp"
+#include "keyple/core/service/KeyplePluginException.hpp"
+#include "keyple/core/service/PluginEventAdapter.hpp"
+#include "keyple/core/util/cpp/Arrays.hpp"
+#include "keyple/core/util/cpp/exception/InterruptedException.hpp"
 
 namespace keyple {
 namespace core {
 namespace service {
 
-using namespace keyple::core::plugin;
-using namespace keyple::core::plugin::spi::reader::observable;
-using namespace keyple::core::service::cpp;
-using namespace keyple::core::util::cpp;
-using namespace keyple::core::util::cpp::exception;
+using keyple::core::plugin::PluginIOException;
+using keyple::core::util::cpp::Arrays;
+using keyple::core::util::cpp::exception::InterruptedException;
 
-/* OBSERVABLE LOCAL PLUGIN ADAPTER JOB ---------------------------------------------------------- */
+/* OBSERVABLE LOCAL PLUGIN ADAPTER JOB
+ * ---------------------------------------------------------- */
 
-/* OBSERVABLE LOCAL PLUGIN ADAPTER -------------------------------------------------------------- */
+/* OBSERVABLE LOCAL PLUGIN ADAPTER
+ * -------------------------------------------------------------- */
 
 ObservableLocalPluginAdapter::ObservableLocalPluginAdapter(
-  std::shared_ptr<ObservablePluginSpi> observablePluginSpi)
-: AbstractObservableLocalPluginAdapter(observablePluginSpi),
-  mObservablePluginSpi(observablePluginSpi) {}
+    std::shared_ptr<ObservablePluginSpi> observablePluginSpi)
+: AbstractObservableLocalPluginAdapter(observablePluginSpi)
+, mObservablePluginSpi(observablePluginSpi)
+{
+}
 
 ObservableLocalPluginAdapter::~ObservableLocalPluginAdapter()
 {
     if (mThread) {
         mThread->end();
-        while (mThread->mRunning || !mThread->mTerminated);
+        while (mThread->mRunning || !mThread->mTerminated) {
+        }
     }
 }
 
-bool ObservableLocalPluginAdapter::isMonitoring() const
+bool
+ObservableLocalPluginAdapter::isMonitoring() const
 {
     return mThread != nullptr && mThread->isAlive() && mThread->isMonitoring();
 }
 
-void ObservableLocalPluginAdapter::addObserver(std::shared_ptr<PluginObserverSpi> observer)
+void
+ObservableLocalPluginAdapter::addObserver(
+    std::shared_ptr<PluginObserverSpi> observer)
 {
     AbstractObservableLocalPluginAdapter::addObserver(observer);
 
     if (countObservers() == 1) {
-        mLogger->debug("Start monitoring the plugin '%'\n", getName());
+        mLogger->info("Start monitoring the plugin [%]\n", getName());
         mThread = std::make_shared<EventThread>(getName(), this);
         mThread->setName("PluginEventMonitoringThread");
-        mThread->setUncaughtExceptionHandler(std::make_shared<UncaughtExceptionHandler>(this));
+        mThread->setUncaughtExceptionHandler(
+            std::make_shared<UncaughtExceptionHandler>(this));
         mThread->start();
-        while (!mThread->mStarted);
+        while (!mThread->mStarted) {
+        }
     }
 }
 
-void ObservableLocalPluginAdapter::removeObserver(const std::shared_ptr<PluginObserverSpi> observer)
+void
+ObservableLocalPluginAdapter::removeObserver(
+    const std::shared_ptr<PluginObserverSpi> observer)
 {
     Assert::getInstance().notNull(observer, "observer");
 
@@ -81,110 +87,137 @@ void ObservableLocalPluginAdapter::removeObserver(const std::shared_ptr<PluginOb
         AbstractObservableLocalPluginAdapter::removeObserver(observer);
 
         if (countObservers() == 0) {
-            mLogger->debug("Stop the plugin monitoring\n");
-
             if (mThread != nullptr) {
                 mThread->end();
+                mLogger->info("Plugin monitoring stopped\n");
             }
         }
     }
 }
 
-void ObservableLocalPluginAdapter::clearObservers()
+void
+ObservableLocalPluginAdapter::clearObservers()
 {
     AbstractObservableLocalPluginAdapter::clearObservers();
 
     if (mThread != nullptr) {
-        mLogger->debug("Stop the plugin monitoring\n");
         mThread->end();
+        mLogger->info("Plugin monitoring stopped\n");
     }
 }
 
-/* UNCAUGHT EXCEPTION HANDLER ------------------------------------------------------------------- */
+/* UNCAUGHT EXCEPTION HANDLER
+ * ------------------------------------------------------------------- */
 
-ObservableLocalPluginAdapter::UncaughtExceptionHandler::UncaughtExceptionHandler(
-    ObservableLocalPluginAdapter* parent)
-: mParent(parent) {}
+ObservableLocalPluginAdapter::UncaughtExceptionHandler::
+    UncaughtExceptionHandler(ObservableLocalPluginAdapter* parent)
+: mParent(parent)
+{
+}
 
-void ObservableLocalPluginAdapter::UncaughtExceptionHandler::uncaughtException(
+void
+ObservableLocalPluginAdapter::UncaughtExceptionHandler::uncaughtException(
     std::shared_ptr<Thread> t, std::shared_ptr<Exception> e)
 {
     (void)t;
 
-    mParent->getObservationManager()->getObservationExceptionHandler()
-                                    ->onPluginObservationError(mParent->mThread->mPluginName, e);
+    mParent->getObservationManager()
+        ->getObservationExceptionHandler()
+        ->onPluginObservationError(mParent->mThread->mPluginName, e);
 }
 
-/* EVENT THREAD --------------------------------------------------------------------------------- */
+/* EVENT THREAD
+ * ---------------------------------------------------------------------------------
+ */
 
-ObservableLocalPluginAdapter::EventThread::EventThread(const std::string& pluginName,
-                                                       ObservableLocalPluginAdapter* parent)
-: Thread("ObservableLocalPluginAdapter-" + pluginName),
-  mPluginName(pluginName),
-  mMonitoringCycleDuration(parent->mObservablePluginSpi->getMonitoringCycleDuration()),
-  mRunning(true),
-  mStarted(false),
-  mTerminated(false),
-  mParent(parent) {}
+ObservableLocalPluginAdapter::EventThread::EventThread(
+    const std::string& pluginName, ObservableLocalPluginAdapter* parent)
+: Thread("ObservableLocalPluginAdapter-" + pluginName)
+, mPluginName(pluginName)
+, mMonitoringCycleDuration(
+      parent->mObservablePluginSpi->getMonitoringCycleDuration())
+, mRunning(true)
+, mStarted(false)
+, mTerminated(false)
+, mParent(parent)
+{
+}
 
-void ObservableLocalPluginAdapter::EventThread::end()
+void
+ObservableLocalPluginAdapter::EventThread::end()
 {
     mRunning = false;
     interrupt();
 }
 
-bool ObservableLocalPluginAdapter::EventThread::isMonitoring() const
+bool
+ObservableLocalPluginAdapter::EventThread::isMonitoring() const
 {
     return mRunning;
 }
 
-void ObservableLocalPluginAdapter::EventThread::addReader(const std::string& readerName)
+void
+ObservableLocalPluginAdapter::EventThread::addReader(
+    const std::string& readerName)
 {
-    std::shared_ptr<ReaderSpi> readerSpi = mParent->mObservablePluginSpi->searchReader(readerName);
-    std::shared_ptr<LocalReaderAdapter> reader = mParent->buildLocalReaderAdapter(readerSpi);
+    std::shared_ptr<ReaderSpi> readerSpi
+        = mParent->mObservablePluginSpi->searchReader(readerName);
+    std::shared_ptr<LocalReaderAdapter> reader
+        = mParent->buildLocalReaderAdapter(readerSpi);
 
     reader->doRegister();
     mParent->getReadersMap().insert({reader->getName(), reader});
 
-    mParent->mLogger->trace("[%][%] Plugin thread => Add plugged reader to readers list\n",
-                            mPluginName,
-                            readerName);
+    mParent->mLogger->info(
+        "Plugin [%] adds plugged reader [%] to readers list\n",
+        mPluginName,
+        readerName);
 }
 
-void ObservableLocalPluginAdapter::EventThread::removeReader(
+void
+ObservableLocalPluginAdapter::EventThread::removeReader(
     const std::shared_ptr<CardReader> reader)
 {
     std::dynamic_pointer_cast<LocalReaderAdapter>(reader)->doUnregister();
     mParent->getReadersMap().erase(reader->getName());
 
-    mParent->mLogger->trace("[%][%] Plugin thread => Remove unplugged reader from readers list\n",
-                            mPluginName,
-                            reader->getName());
+    mParent->mLogger->info(
+        "Plugin [%] removes unplugged reader [%] from readers list\n",
+        mPluginName,
+        reader->getName());
 }
 
-void ObservableLocalPluginAdapter::EventThread::notifyChanges(
-    const PluginEvent::Type type, const std::vector<std::string>& changedReaderNames)
+void
+ObservableLocalPluginAdapter::EventThread::notifyChanges(
+    const PluginEvent::Type type,
+    const std::vector<std::string>& changedReaderNames)
 {
     /* Grouped notification */
-    mParent->mLogger->trace("Notifying %(s): %\n",
-                   type == PluginEvent::Type::READER_CONNECTED ? "connection" : "disconnection",
-                   changedReaderNames);
+    mParent->mLogger->trace(
+        "Notify reader %(s): %\n",
+        type == PluginEvent::Type::READER_CONNECTED ? "connection"
+                                                    : "disconnection",
+        changedReaderNames);
 
-    mParent->notifyObservers(
-        std::make_shared<PluginEventAdapter>(mPluginName, changedReaderNames, type));
+    mParent->notifyObservers(std::make_shared<PluginEventAdapter>(
+        mPluginName, changedReaderNames, type));
 }
 
-void ObservableLocalPluginAdapter::EventThread::processChanges(
+void
+ObservableLocalPluginAdapter::EventThread::processChanges(
     const std::vector<std::string>& actualNativeReaderNames)
 {
     std::vector<std::string> changedReaderNames;
 
-    /* Parse the current readers list, notify for disappeared readers, update readers list */
-    const std::vector<std::shared_ptr<Reader>> readers = mParent->getReaders();
+    /* Parse the current readers list, notify for disappeared readers, update
+     * readers list */
+    const std::vector<std::shared_ptr<CardReader>> readers
+        = mParent->getReaders();
     for (const auto& reader : readers) {
-        if (!std::count(actualNativeReaderNames.begin(),
-                        actualNativeReaderNames.end(),
-                        reader->getName())) {
+        if (!std::count(
+                actualNativeReaderNames.begin(),
+                actualNativeReaderNames.end(),
+                reader->getName())) {
             changedReaderNames.push_back(reader->getName());
         }
     }
@@ -193,20 +226,23 @@ void ObservableLocalPluginAdapter::EventThread::processChanges(
     if (!changedReaderNames.empty()) {
         /* List update */
         for (const auto& reader : readers) {
-            if (!std::count(actualNativeReaderNames.begin(),
-                            actualNativeReaderNames.end(),
-                            reader->getName())) {
+            if (!std::count(
+                    actualNativeReaderNames.begin(),
+                    actualNativeReaderNames.end(),
+                    reader->getName())) {
                 removeReader(reader);
             }
         }
 
-        notifyChanges(PluginEvent::Type::READER_DISCONNECTED, changedReaderNames);
+        notifyChanges(
+            PluginEvent::Type::READER_DISCONNECTED, changedReaderNames);
 
         /* Clean the list for a possible connection notification */
         changedReaderNames.clear();
     }
 
-    /* Parse the new readers list, notify for readers appearance, update readers list */
+    /* Parse the new readers list, notify for readers appearance, update readers
+     * list */
     for (const auto& readerName : actualNativeReaderNames) {
         const std::vector<std::string>& readerNames = mParent->getReaderNames();
         if (!std::count(readerNames.begin(), readerNames.end(), readerName)) {
@@ -223,21 +259,25 @@ void ObservableLocalPluginAdapter::EventThread::processChanges(
     }
 }
 
-void ObservableLocalPluginAdapter::EventThread::execute()
+void
+ObservableLocalPluginAdapter::EventThread::execute()
 {
     mStarted = true;
 
     try {
         while (mRunning) {
             /* Retrieves the current readers names list */
-            const std::vector<std::string> actualNativeReaderNames =
-                mParent->mObservablePluginSpi->searchAvailableReaderNames();
+            const std::vector<std::string> actualNativeReaderNames
+                = mParent->mObservablePluginSpi->searchAvailableReaderNames();
 
-            /* Checks if it has changed this algorithm favors cases where nothing change */
-            const std::vector<std::string> currentlyRegisteredReaderNames =
-                mParent->getReaderNames();
-            if (!Arrays::containsAll(currentlyRegisteredReaderNames, actualNativeReaderNames) ||
-                !Arrays::containsAll(actualNativeReaderNames, currentlyRegisteredReaderNames)) {
+            /* Checks if it has changed this algorithm favors cases where
+             * nothing change */
+            const std::vector<std::string> currentlyRegisteredReaderNames
+                = mParent->getReaderNames();
+            if (!Arrays::containsAll(
+                    currentlyRegisteredReaderNames, actualNativeReaderNames)
+                || !Arrays::containsAll(
+                    actualNativeReaderNames, currentlyRegisteredReaderNames)) {
                 processChanges(actualNativeReaderNames);
             }
 
@@ -246,23 +286,24 @@ void ObservableLocalPluginAdapter::EventThread::execute()
         }
     } catch (const InterruptedException& e) {
         (void)e;
-        mParent->mLogger->info("[%] The observation of this plugin is stopped, possibly because " \
-                               "there is no more registered observer\n",
-                               mPluginName);
+        mParent->mLogger->info(
+            "Plugin monitoring stopped, possibly because there is no more "
+            "registered observer");
 
         /* Restore interrupted state... */
         interrupt();
     } catch (const PluginIOException& e) {
         const auto pioe = std::make_shared<PluginIOException>(e);
         const auto kpe = std::make_shared<KeyplePluginException>(
-                             "An error occurred while monitoring the readers.", pioe);
-        mParent->getObservationManager()->getObservationExceptionHandler()
-                                        ->onPluginObservationError(mPluginName, kpe);
+            "An error occurred while monitoring the readers", pioe);
+        mParent->getObservationManager()
+            ->getObservationExceptionHandler()
+            ->onPluginObservationError(mPluginName, kpe);
     }
 
     mTerminated = true;
 }
 
-}
-}
-}
+} /* namespace service */
+} /* namespace core */
+} /* namespace keyple */
