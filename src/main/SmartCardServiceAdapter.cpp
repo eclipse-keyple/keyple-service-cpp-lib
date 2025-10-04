@@ -292,16 +292,10 @@ std::shared_ptr<CardReader>
 SmartCardServiceAdapter::findReader(const std::string& readerNameRegex) const
 {
     for (const auto& plugin : mPlugins) {
-        for (const auto& reader : plugin.second->getReaders()) {
-            try {
-                if (StringUtils::matches(reader->getName(), readerNameRegex)) {
-                    return reader;
-                }
-            } catch (const PatternSyntaxException& e) {
-                throw IllegalArgumentException(
-                    "readerNameRegex is invalid: " + e.getMessage(),
-                    std::make_shared<Exception>(e));
-            }
+        std::shared_ptr<CardReader> reader(
+            plugin.second->findReader(readerNameRegex));
+        if (reader != nullptr) {
+            return reader;
         }
     }
 
