@@ -48,13 +48,26 @@ ExecutorService::run()
     /* Emulates a SingleThreadExecutor (e.g. only one thread at a time) */
 
     while (mRunning) {
-        if (mPool.size()) {
+        std::shared_ptr<Job> job;
+
+        {
+            std::lock_guard<std::mutex> lock(mMutex);
+            if (mPool.size() > 0) {
+                job = mPool[0];
+            }
+        }
+
+        if (job != nullptr) {
             /* Start first service and wait until completion */
-            std::shared_ptr<Job> job = mPool[0];
             job->run();
 
             /* Remove from vector */
-            mPool.erase(mPool.begin());
+            {
+                std::lock_guard<std::mutex> lock(mMutex);
+                mPool.erase(mPool.begin());
+            }
+
+            job = nullptr;
         }
 
         Thread::sleep(100);
@@ -66,12 +79,32 @@ ExecutorService::run()
 void
 ExecutorService::execute(std::shared_ptr<Job> job)
 {
+    std::lock_guard<std::mutex> lock(mMutex);
     mPool.push_back(job);
 }
 
 std::shared_ptr<Job>
 ExecutorService::submit(std::shared_ptr<Job> job)
 {
+    std::lock_guard<std::mutex> lock(mMutex);
+
+    /*
+     * Limit the queue to maximum 2 jobs:
+     * - 1 job currently executing (mPool[0])
+     * - 1 job waiting to be executed (mPool[1])
+     *
+     * When submitting a new job:
+     * - If pool is empty or has only 1 job → add the new job
+     * - If pool has 2+ jobs → replace all waiting jobs with the new one
+     *
+     * This prevents accumulation of obsolete jobs when state transitions
+     * happen faster than job execution.
+     */
+    if (mPool.size() >= 2) {
+        /* Remove all waiting jobs (keep only the running one at index 0) */
+        mPool.erase(mPool.begin() + 1, mPool.end());
+    }
+
     mPool.push_back(job);
 
     return mPool.back();
