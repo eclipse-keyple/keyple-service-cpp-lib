@@ -14,7 +14,6 @@
 #pragma once
 
 #include <memory>
-#include <mutex>
 #include <thread>
 #include <typeinfo>
 #include <vector>
@@ -71,11 +70,6 @@ private:
      *
      */
     std::vector<std::shared_ptr<Job>> mPool;
-
-    /**
-     *
-     */
-    std::mutex mMutex;
 
     /**
      *
