@@ -51,7 +51,10 @@ ExecutorService::run()
         if (mPool.size()) {
             /* Start first service and wait until completion */
             std::shared_ptr<Job> job = mPool[0];
-            job->run();
+
+            if(!job->isCancelled()) {
+              job->run();
+            }
 
             /* Remove from vector */
             mPool.erase(mPool.begin());
