@@ -26,32 +26,66 @@ InternalLegacyDto::InternalLegacyDto()
 {
 }
 
-const std::vector<std::shared_ptr<LegacyCardSelectionRequest>>
-InternalLegacyDto::mapToLegacyCardSelectionRequests(
+const std::vector<std::shared_ptr<LegacyCardSelectionRequestV0>>
+InternalLegacyDto::mapToLegacyCardSelectionRequestsV0(
     const std::vector<std::shared_ptr<CardSelector>>& cardSelectors,
     const std::vector<std::shared_ptr<CardSelectionRequestSpi>>&
         cardSelectionRequests)
 {
-    std::vector<std::shared_ptr<LegacyCardSelectionRequest>> result;
+    std::vector<std::shared_ptr<LegacyCardSelectionRequestV0>> result;
 
     for (int i = 0; i < cardSelectors.size(); i++) {
-        result.push_back(mapToLegacyCardSelectionRequest(
+        result.push_back(mapToLegacyCardSelectionRequestV0(
             cardSelectors[i], cardSelectionRequests[i]));
     }
 
     return result;
 }
 
-std::shared_ptr<LegacyCardSelectionRequest>
-InternalLegacyDto::mapToLegacyCardSelectionRequest(
+const std::vector<std::shared_ptr<LegacyCardSelectionRequestV1>>
+InternalLegacyDto::mapToLegacyCardSelectionRequestsV1(
+    const std::vector<std::shared_ptr<CardSelector>>& cardSelectors,
+    const std::vector<std::shared_ptr<CardSelectionRequestSpi>>&
+        cardSelectionRequests)
+{
+    std::vector<std::shared_ptr<LegacyCardSelectionRequestV1>> result;
+
+    for (int i = 0; i < cardSelectors.size(); i++) {
+        result.push_back(mapToLegacyCardSelectionRequestV1(
+            cardSelectors[i], cardSelectionRequests[i]));
+    }
+
+    return result;
+}
+
+std::shared_ptr<LegacyCardSelectionRequestV0>
+InternalLegacyDto::mapToLegacyCardSelectionRequestV0(
     std::shared_ptr<CardSelector> cardSelector,
     std::shared_ptr<CardSelectionRequestSpi> cardSelectionRequestSpi)
 {
-    auto result = std::make_shared<LegacyCardSelectionRequest>();
+    auto result = std::make_shared<LegacyCardSelectionRequestV0>();
 
     result->mCardRequest = cardSelectionRequestSpi->getCardRequest() != nullptr
-                               ? mapToLegacyCardRequest(
-                                   cardSelectionRequestSpi->getCardRequest())
+                               ? mapToLegacyCardRequestV0(
+                                     cardSelectionRequestSpi->getCardRequest())
+                               : nullptr;
+
+    result->mCardSelector
+        = mapToLegacyCardSelector(cardSelector, cardSelectionRequestSpi);
+
+    return result;
+}
+
+std::shared_ptr<LegacyCardSelectionRequestV1>
+InternalLegacyDto::mapToLegacyCardSelectionRequestV1(
+    std::shared_ptr<CardSelector> cardSelector,
+    std::shared_ptr<CardSelectionRequestSpi> cardSelectionRequestSpi)
+{
+    auto result = std::make_shared<LegacyCardSelectionRequestV1>();
+
+    result->mCardRequest = cardSelectionRequestSpi->getCardRequest() != nullptr
+                               ? mapToLegacyCardRequestV1(
+                                     cardSelectionRequestSpi->getCardRequest())
                                : nullptr;
 
     result->mCardSelector
@@ -92,10 +126,24 @@ InternalLegacyDto::mapToLegacyCardSelector(
 }
 
 std::shared_ptr<LegacyCardRequest>
-InternalLegacyDto::mapToLegacyCardRequest(
+InternalLegacyDto::mapToLegacyCardRequestV0(
     const std::shared_ptr<CardRequestSpi> cardRequest)
 {
-    auto result = std::make_shared<LegacyCardRequest>();
+    auto result = std::make_shared<LegacyCardRequestV0>();
+
+    result->mApduRequests
+        = mapToLegacyApduRequests(cardRequest->getApduRequests());
+    result->mIsStatusCodesVerificationEnabled
+        = cardRequest->stopOnUnsuccessfulStatusWord();
+
+    return result;
+}
+
+std::shared_ptr<LegacyCardRequest>
+InternalLegacyDto::mapToLegacyCardRequestV1(
+    const std::shared_ptr<CardRequestSpi> cardRequest)
+{
+    auto result = std::make_shared<LegacyCardRequestV1>();
 
     result->mApduRequests
         = mapToLegacyApduRequests(cardRequest->getApduRequests());

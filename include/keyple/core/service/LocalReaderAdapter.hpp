@@ -442,8 +442,10 @@ private:
      * @param cardSelector A not null CardSelector.
      * @param cardSelectionRequest A not null CardSelectionRequestSpi.
      * @return A not null {@link SelectionStatus}.
-     * @throw ReaderIOException if the communication with the reader has failed.
-     * @throw CardIOException if the communication with the card has failed.
+     * @throw ReaderBrokenCommunicationException If the communication with the
+     * reader has failed.
+     * @throw CardBrokenCommunicationException If the communication with the
+     * card has failed.
      */
     std::shared_ptr<SelectionStatus> processSelection(
         std::shared_ptr<CardSelectorBase> cardSelector,
@@ -453,6 +455,7 @@ private:
      * Attempts to select the card and executes the optional requests if any.
      *
      * @param cardSelectionRequest The CardSelectionRequestSpi to be processed.
+     * @param channelControl The channelControl.
      * @return A not null reference.
      * @throw ReaderBrokenCommunicationException If the communication with the
      * reader has failed.
@@ -463,7 +466,8 @@ private:
      */
     std::shared_ptr<CardSelectionResponseApi> processCardSelectionRequest(
         std::shared_ptr<CardSelectorBase> cardSelector,
-        std::shared_ptr<CardSelectionRequestSpi> cardSelectionRequest);
+        std::shared_ptr<CardSelectionRequestSpi> cardSelectionRequest,
+        const ChannelControl channelControl);
 
     /**
      * Transmits an ApduRequestSpi and receives the ApduResponseAdapter.
@@ -478,21 +482,6 @@ private:
      */
     std::shared_ptr<ApduResponseAdapter>
     processApduRequest(const std::shared_ptr<ApduRequestSpi> apduRequest);
-
-    /**
-     * Transmits a CardRequestSpi and returns a CardResponseAdapter.
-     *
-     * @param cardRequest The card request to transmit.
-     * @return A not null reference.
-     * @throw ReaderBrokenCommunicationException If the communication with the
-     * reader has failed.
-     * @throw CardBrokenCommunicationException If the communication with the
-     * card has failed.
-     * @throw UnexpectedStatusWordException If status word verification is
-     * enabled in the card request and the card returned an unexpected code.
-     */
-    std::shared_ptr<CardResponseAdapter>
-    processCardRequest(const std::shared_ptr<CardRequestSpi> cardRequest);
 
     /**
      *
