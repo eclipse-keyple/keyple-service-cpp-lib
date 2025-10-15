@@ -14,6 +14,9 @@
 #include "keyple/core/service/cpp/ExecutorService.hpp"
 
 #include <memory>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 #include "keyple/core/service/AbstractObservableStateAdapter.hpp"
 #include "keyple/core/util/cpp/Thread.hpp"
@@ -27,40 +30,43 @@ using keyple::core::service::AbstractObservableStateAdapter;
 using keyple::core::util::cpp::Thread;
 
 ExecutorService::ExecutorService()
-: mRunning(true)
+: mRunning(false)
 , mTerminated(false)
 {
-    mThread = new std::thread(&ExecutorService::run, this);
 }
 
 ExecutorService::~ExecutorService()
 {
-    mRunning = false;
-
-    while (!mTerminated) {
-        Thread::sleep(10);
-    }
+    shutdown();
 }
 
 void
 ExecutorService::run()
 {
-    /* Emulates a SingleThreadExecutor (e.g. only one thread at a time) */
+    while (true) {
+        std::unique_lock<std::mutex> lock(mMutex);
 
-    while (mRunning) {
-        if (mPool.size()) {
-            /* Start first service and wait until completion */
-            std::shared_ptr<Job> job = mPool[0];
+        // Wait until there's a job or the service is shutting down
+        mCondition.wait(lock, [this]{
+            return !mPool.empty() || !mRunning;
+        });
 
-            if(!job->isCancelled()) {
-              job->run();
-            }
-
-            /* Remove from vector */
-            mPool.erase(mPool.begin());
+        // Check if we should terminate
+        if (!mRunning && mPool.empty()) {
+            break;
         }
 
-        Thread::sleep(100);
+        // Get the job and remove it from the pool
+        std::shared_ptr<Job> job = mPool.front();
+        mPool.erase(mPool.begin());
+
+        // Unlock the mutex before running the job
+        // This allows other threads to submit new jobs while one is being processed
+        lock.unlock();
+
+        if (!job->isCancelled()) {
+            job->run();
+        }
     }
 
     mTerminated = true;
@@ -69,25 +75,44 @@ ExecutorService::run()
 void
 ExecutorService::execute(std::shared_ptr<Job> job)
 {
-    mPool.push_back(job);
+    {
+        std::lock_guard<std::mutex> lock(mMutex);
+        if (!mThread) {
+            mRunning = true;
+            mThread = std::unique_ptr<std::thread>(new std::thread(&ExecutorService::run, this));
+        }
+        mPool.push_back(job);
+    }
+    mCondition.notify_one();
 }
 
 std::shared_ptr<Job>
 ExecutorService::submit(std::shared_ptr<Job> job)
 {
-    mPool.push_back(job);
-
+    execute(job);
+    std::lock_guard<std::mutex> lock(mMutex);
     return mPool.back();
 }
 
 void
 ExecutorService::shutdown()
 {
-    mRunning = false;
-
-    while (!mTerminated) {
-        Thread::sleep(10);
+    {
+        std::lock_guard<std::mutex> lock(mMutex);
+        if (!mThread) {
+            return;
+        }
+        mRunning = false;
     }
+
+    mCondition.notify_one();
+
+    if (mThread->joinable()) {
+        mThread->join();
+    }
+
+    mThread.reset();
+    mTerminated = true;
 }
 
 } /* namespace cpp */
