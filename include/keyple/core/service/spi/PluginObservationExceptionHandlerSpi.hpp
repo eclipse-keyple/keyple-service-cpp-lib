@@ -44,8 +44,7 @@ public:
      * @since 2.0.0
      */
     virtual void onPluginObservationError(
-        const std::string& pluginName, const std::shared_ptr<Exception> e)
-        = 0;
+        const std::string& pluginName, std::unique_ptr<Exception> e) = 0;
 };
 
 } /* namespace spi */

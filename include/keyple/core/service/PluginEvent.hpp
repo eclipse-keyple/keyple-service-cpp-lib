@@ -93,20 +93,27 @@ public:
     virtual Type getType() const = 0;
 
     /**
+     * Operator << for PluginEvent::Type enum to enable readable logging.
      *
+     * @param os The output stream.
+     * @param t The event type.
+     * @return The output stream.
      */
     friend std::ostream&
     operator<<(std::ostream& os, const Type t)
     {
         switch (t) {
         case Type::READER_CONNECTED:
-            os << "TYPE = READER_CONNECTED";
+            os << "READER_CONNECTED";
             break;
         case Type::READER_DISCONNECTED:
-            os << "TYPE = READER_DISCONNECTED";
+            os << "READER_DISCONNECTED";
             break;
         case Type::UNAVAILABLE:
-            os << "TYPE = UNAVAILABLE";
+            os << "UNAVAILABLE";
+            break;
+        default:
+            os << "UNKNOWN_TYPE(" << static_cast<int>(t) << ")";
             break;
         }
 

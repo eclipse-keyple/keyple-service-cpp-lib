@@ -138,14 +138,12 @@ CardSelectionManagerAdapter::processCardSelectionScenario(
                       mCardSelectionRequests,
                       mMultiSelectionProcessing,
                       mChannelControl);
+
     } catch (const ReaderBrokenCommunicationException& e) {
-        throw ReaderCommunicationException(
-            e.getMessage(),
-            std::make_shared<ReaderBrokenCommunicationException>(e));
+        throw ReaderCommunicationException(e.getMessage(), e);
+
     } catch (const CardBrokenCommunicationException& e) {
-        throw CardCommunicationException(
-            e.getMessage(),
-            std::make_shared<CardBrokenCommunicationException>(e));
+        throw CardCommunicationException(e.getMessage(), e);
     }
 
     /* Analyze the received responses */
@@ -238,12 +236,13 @@ CardSelectionManagerAdapter::processCardSelectionResponses(
                 throw InvalidCardResponseException(
                     "Error occurred while parsing the card response: "
                         + e.getMessage(),
-                    std::make_shared<ParseException>(e));
+                    e);
 
             } catch (const UnsupportedOperationException&) {
-                mLogger->warn("Unable to parse card selection responses due to "
-                              "missing card "
-                              "extensions in runtime environment");
+                mLogger->warn(
+                    "Unable to parse card selection responses due to "
+                    "missing card "
+                    "extensions in runtime environment");
                 cardSelectionsResult
                     = std::make_shared<CardSelectionResultAdapter>();  // Empty
                                                                        // result

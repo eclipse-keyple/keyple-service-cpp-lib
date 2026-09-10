@@ -39,7 +39,13 @@ ApduResponseAdapter::getApdu() const
     return mApdu;
 }
 
-const std::vector<uint8_t>
+void
+ApduResponseAdapter::setApdu(const std::vector<std::uint8_t>& apdu)
+{
+    mApdu = apdu;
+}
+
+std::vector<uint8_t>
 ApduResponseAdapter::getDataOut() const
 {
     return Arrays::copyOfRange(mApdu, 0, static_cast<int>(mApdu.size()) - 2);

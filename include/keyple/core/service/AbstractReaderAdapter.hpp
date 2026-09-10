@@ -82,6 +82,22 @@ public:
     const std::string& getPluginName() const;
 
     /**
+     * Returns the {@link KeypleReaderExtension} that is reader-specific.
+     *
+     * <p>Note: the provided argument is used at compile time to check the type
+     * consistency.
+     *
+     * @param readerExtensionClass The specific class of the reader.
+     * @param <T> The type of the reader extension.
+     * @return A {@link KeypleReaderExtension}.
+     * @throw IllegalStateException If reader is no longer registered.
+     * @since 2.0.0
+     */
+    std::shared_ptr<KeypleReaderExtension>
+    getExtension(const std::type_info& readerExtensionClass) const;
+    // FIXME? should be final?
+
+    /**
      * Performs a selection scenario following a card detection.
      *
      * <p>Each scenario selection case consists in checking if the card matches
@@ -193,14 +209,6 @@ public:
      * @since 2.0.0
      */
     const std::string& getName() const final;
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 2.0.0
-     */
-    std::shared_ptr<KeypleReaderExtension>
-    getExtension(const std::type_info& readerExtensionClass) const;
 
     /**
      * {@inheritDoc}

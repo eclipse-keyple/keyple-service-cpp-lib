@@ -98,7 +98,7 @@ private:
          *
          */
         void uncaughtException(
-            std::shared_ptr<Thread> t, std::shared_ptr<Exception> e);
+            std::shared_ptr<Thread> t, std::unique_ptr<Exception> e);
 
     private:
         /**

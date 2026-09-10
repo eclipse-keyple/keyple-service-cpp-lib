@@ -144,7 +144,7 @@ setUp()
     EXPECT_CALL(*apduRequestSpi.get(), getInfo())
         .WillRepeatedly(ReturnRef(info));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu())
-        .WillRepeatedly(Return(ok_rapdu));
+        .WillRepeatedly(ReturnRef(ok_rapdu));
     apduRequests.push_back(apduRequestSpi);
 
     cardRequestSpi = std::make_shared<CardRequestSpiMock>();
@@ -680,7 +680,7 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_shouldReturnResponse)
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_))
         .WillRepeatedly(Return(responseApdu));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu())
-        .WillRepeatedly(Return(requestApdu));
+        .WillRepeatedly(ReturnRef(requestApdu));
 
     LocalConfigurableReaderAdapter localReaderAdapter(readerSpi, PLUGIN_NAME);
     localReaderAdapter.doRegister();
@@ -710,7 +710,7 @@ TEST(LocalReaderAdapterTest, transmitCardRequest_isCase4)
         = HexUtil::toByteArray("00009000");
 
     EXPECT_CALL(*apduRequestSpi.get(), getApdu())
-        .WillRepeatedly(Return(requestApdu));
+        .WillRepeatedly(ReturnRef(requestApdu));
     EXPECT_CALL(*readerSpi.get(), transmitApdu(requestApdu))
         .WillRepeatedly(Return(responseApdu));
     EXPECT_CALL(*readerSpi.get(), transmitApdu(getResponseRApdu))
@@ -740,7 +740,7 @@ TEST(
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_))
         .WillRepeatedly(Return(responseApdu));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu())
-        .WillRepeatedly(Return(requestApdu));
+        .WillRepeatedly(ReturnRef(requestApdu));
     EXPECT_CALL(*apduRequestSpi.get(), getSuccessfulStatusWords())
         .WillRepeatedly(ReturnRef(resp));
     EXPECT_CALL(*cardRequestSpi.get(), stopOnUnsuccessfulStatusWord())
@@ -768,7 +768,7 @@ TEST(
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_))
         .WillRepeatedly(Throw(CardIOException("")));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu())
-        .WillRepeatedly(Return(requestApdu));
+        .WillRepeatedly(ReturnRef(requestApdu));
 
     LocalReaderAdapter localReaderAdapter(readerSpi, PLUGIN_NAME);
     localReaderAdapter.doRegister();
@@ -792,7 +792,7 @@ TEST(
     EXPECT_CALL(*readerSpi.get(), transmitApdu(_))
         .WillRepeatedly(Throw(ReaderIOException("")));
     EXPECT_CALL(*apduRequestSpi.get(), getApdu())
-        .WillRepeatedly(Return(requestApdu));
+        .WillRepeatedly(ReturnRef(requestApdu));
 
     LocalReaderAdapter localReaderAdapter(readerSpi, PLUGIN_NAME);
     localReaderAdapter.doRegister();

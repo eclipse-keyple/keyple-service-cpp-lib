@@ -15,6 +15,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -31,23 +32,22 @@ class PluginObservationExceptionHandlerMock final
 : public PluginObservationExceptionHandlerSpi {
 public:
     explicit PluginObservationExceptionHandlerMock(
-        const std::shared_ptr<RuntimeException> throwEx)
+        std::unique_ptr<RuntimeException> throwEx)
     : mInvoked(true)
-    , mThrowEx(throwEx)
+    , mThrowEx(std::move(throwEx))
     {
     }
 
     void
     onPluginObservationError(
-        const std::string& pluginName,
-        const std::shared_ptr<Exception> e) override
+        const std::string& pluginName, std::unique_ptr<Exception> e) override
     {
         mInvoked = true;
         if (mThrowEx) {
             throw *mThrowEx.get();
         }
         mPluginName = pluginName;
-        mE = e;
+        mE = std::move(e);
     }
 
     bool
@@ -62,15 +62,15 @@ public:
         return mPluginName;
     }
 
-    const std::shared_ptr<std::exception>
+    const Exception*
     getE() const
     {
-        return mE;
+        return mE ? mE.get() : nullptr;
     }
 
 private:
     bool mInvoked = false;
     std::string mPluginName;
-    std::shared_ptr<Exception> mE;
-    const std::shared_ptr<RuntimeException> mThrowEx;
+    std::unique_ptr<Exception> mE;
+    const std::unique_ptr<RuntimeException> mThrowEx;
 };

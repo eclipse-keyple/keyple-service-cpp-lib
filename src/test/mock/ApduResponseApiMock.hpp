@@ -25,7 +25,7 @@ using keypop::card::ApduResponseApi;
 class ApduResponseApiMock final : public ApduResponseApi {
 public:
     MOCK_METHOD((const std::vector<uint8_t>&), getApdu, (), (const, override));
-    MOCK_METHOD(
-        (const std::vector<uint8_t>), getDataOut, (), (const, override));
+    MOCK_METHOD(void, setApdu, ((const std::vector<uint8_t>&)), (override));
+    MOCK_METHOD((std::vector<uint8_t>), getDataOut, (), (const, override));
     MOCK_METHOD(int, getStatusWord, (), (const, override));
 };

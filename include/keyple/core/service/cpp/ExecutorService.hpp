@@ -13,7 +13,9 @@
 
 #pragma once
 
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <typeinfo>
 #include <vector>
@@ -74,22 +76,32 @@ private:
     /**
      *
      */
+    std::mutex mMutex;
+
+    /**
+     *
+     */
+    std::condition_variable mCondition;
+
+    /**
+     *
+     */
+    bool mRunning;
+
+    /**
+     *
+     */
+    bool mTerminated;
+
+    /**
+     *
+     */
+    std::unique_ptr<std::thread> mThread;
+
+    /**
+     *
+     */
     void run();
-
-    /**
-     *
-     */
-    std::atomic<bool> mRunning;
-
-    /**
-     *
-     */
-    std::atomic<bool> mTerminated;
-
-    /**
-     *
-     */
-    std::thread* mThread;
 };
 
 } /* namespace cpp */

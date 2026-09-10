@@ -469,6 +469,43 @@ private:
             cardSelectionResponses);
 };
 
+/**
+ * Operator << for InternalEvent enum to enable readable logging.
+ *
+ * @param os The output stream.
+ * @param event The internal event.
+ * @return The output stream.
+ */
+inline std::ostream&
+operator<<(std::ostream& os,
+           const ObservableLocalReaderAdapter::InternalEvent event)
+{
+    switch (event) {
+    case ObservableLocalReaderAdapter::InternalEvent::CARD_INSERTED:
+        os << "CARD_INSERTED";
+        break;
+    case ObservableLocalReaderAdapter::InternalEvent::CARD_REMOVED:
+        os << "CARD_REMOVED";
+        break;
+    case ObservableLocalReaderAdapter::InternalEvent::CARD_PROCESSED:
+        os << "CARD_PROCESSED";
+        break;
+    case ObservableLocalReaderAdapter::InternalEvent::START_DETECT:
+        os << "START_DETECT";
+        break;
+    case ObservableLocalReaderAdapter::InternalEvent::STOP_DETECT:
+        os << "STOP_DETECT";
+        break;
+    case ObservableLocalReaderAdapter::InternalEvent::TIME_OUT:
+        os << "TIME_OUT";
+        break;
+    default:
+        os << "UNKNOWN_EVENT(" << static_cast<int>(event) << ")";
+        break;
+    }
+    return os;
+}
+
 } /* namespace service */
 } /* namespace core */
 } /* namespace keyple */

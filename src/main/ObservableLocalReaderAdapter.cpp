@@ -137,9 +137,8 @@ ObservableLocalReaderAdapter::isCardPresentPing()
         mObservableReaderSpi->transmitApdu(APDU_PING_CARD_PRESENCE);
     } catch (const ReaderIOException& e) {
         /* Notify the reader communication failure with the exception handler */
-        const auto rioe = std::make_shared<ReaderIOException>(e);
         const auto rce = std::make_shared<ReaderCommunicationException>(
-            READER_MONITORING_ERROR, rioe);
+            READER_MONITORING_ERROR, e);
         getObservationExceptionHandler()->onReaderObservationError(
             getPluginName(), getName(), rce);
         return false;
@@ -160,8 +159,9 @@ ObservableLocalReaderAdapter::processCardInserted()
     mIsCardRemovedEventNotificationEnabled = true;
 
     if (mCardSelectionScenario == nullptr) {
-        mLogger->trace("No card selection scenario defined. Notify "
-                       "[CARD_INSERTED] event\n");
+        mLogger->trace(
+            "No card selection scenario defined. Notify "
+            "[CARD_INSERTED] event\n");
 
         /* No default request is defined, just notify the card insertion */
         return std::make_shared<ReaderEventAdapter>(
@@ -218,10 +218,8 @@ ObservableLocalReaderAdapter::processCardInserted()
 
     } catch (const ReaderBrokenCommunicationException& e) {
         /* Notify the reader communication failure with the exception handler */
-        const auto rbce
-            = std::make_shared<ReaderBrokenCommunicationException>(e);
         const auto rce = std::make_shared<ReaderCommunicationException>(
-            READER_MONITORING_ERROR, rbce);
+            READER_MONITORING_ERROR, e);
         getObservationExceptionHandler()->onReaderObservationError(
             getPluginName(), getName(), rce);
 
@@ -245,11 +243,11 @@ ObservableLocalReaderAdapter::processCardInserted()
      */
     try {
         mObservableReaderSpi->closePhysicalChannel();
+
     } catch (const ReaderIOException& e) {
         /* Notify the reader communication failure with the exception handler */
-        const auto rioe = std::make_shared<ReaderIOException>(e);
         const auto rce = std::make_shared<ReaderCommunicationException>(
-            READER_MONITORING_ERROR, rioe);
+            READER_MONITORING_ERROR, e);
         getObservationExceptionHandler()->onReaderObservationError(
             getPluginName(), getName(), rce);
     }
@@ -284,11 +282,12 @@ ObservableLocalReaderAdapter::processCardRemoved()
     /* RL-DET-REMNOTIF.1 */
     closeLogicalAndPhysicalChannelsSilently();
     if (mIsCardRemovedEventNotificationEnabled) {
-        notifyObservers(std::make_shared<ReaderEventAdapter>(
-            getPluginName(),
-            getName(),
-            CardReaderEvent::Type::CARD_REMOVED,
-            nullptr));
+        notifyObservers(
+            std::make_shared<ReaderEventAdapter>(
+                getPluginName(),
+                getName(),
+                CardReaderEvent::Type::CARD_REMOVED,
+                nullptr));
     }
 }
 
@@ -355,11 +354,12 @@ ObservableLocalReaderAdapter::doUnregister()
     /* Finally */
     mStateService->shutdown();
 
-    notifyObservers(std::make_shared<ReaderEventAdapter>(
-        getPluginName(),
-        getName(),
-        CardReaderEvent::Type::UNAVAILABLE,
-        nullptr));
+    notifyObservers(
+        std::make_shared<ReaderEventAdapter>(
+            getPluginName(),
+            getName(),
+            CardReaderEvent::Type::UNAVAILABLE,
+            nullptr));
     clearObservers();
     LocalReaderAdapter::doUnregister();
 }

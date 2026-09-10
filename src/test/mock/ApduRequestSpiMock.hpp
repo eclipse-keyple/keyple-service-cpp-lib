@@ -19,13 +19,16 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include "keyple/core/util/cpp/Any.hpp"
 #include "keypop/card/spi/ApduRequestSpi.hpp"
 
+using keyple::core::util::cpp::any;
 using keypop::card::spi::ApduRequestSpi;
 
 class ApduRequestSpiMock final : public ApduRequestSpi {
 public:
-    MOCK_METHOD(std::vector<uint8_t>, getApdu, (), (const, override));
+    MOCK_METHOD(const std::vector<uint8_t>&, getApdu, (), (const, override));
+    MOCK_METHOD(void, setApdu, (const std::vector<std::uint8_t>&), (override));
     MOCK_METHOD(
         const std::vector<int>&,
         getSuccessfulStatusWords,

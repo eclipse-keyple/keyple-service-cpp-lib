@@ -60,7 +60,14 @@ public:
      *
      * @since 2.0.0
      */
-    const std::vector<uint8_t> getDataOut() const override;
+    void setApdu(const std::vector<std::uint8_t>& apdu) override;
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.0.0
+     */
+    std::vector<uint8_t> getDataOut() const override;
 
     /**
      * {@inheritDoc}
@@ -85,7 +92,7 @@ private:
     /**
      *
      */
-    const std::vector<uint8_t> mApdu;
+    std::vector<uint8_t> mApdu;
 
     /**
      *

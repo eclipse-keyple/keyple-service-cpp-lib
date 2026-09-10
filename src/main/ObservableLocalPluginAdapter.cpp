@@ -15,6 +15,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "keyple/core/plugin/PluginIOException.hpp"
@@ -117,13 +118,11 @@ ObservableLocalPluginAdapter::UncaughtExceptionHandler::
 
 void
 ObservableLocalPluginAdapter::UncaughtExceptionHandler::uncaughtException(
-    std::shared_ptr<Thread> t, std::shared_ptr<Exception> e)
+    std::shared_ptr<Thread> /*t*/, std::unique_ptr<Exception> e)
 {
-    (void)t;
-
     mParent->getObservationManager()
         ->getObservationExceptionHandler()
-        ->onPluginObservationError(mParent->mThread->mPluginName, e);
+        ->onPluginObservationError(mParent->mThread->mPluginName, std::move(e));
 }
 
 /* EVENT THREAD
@@ -132,7 +131,7 @@ ObservableLocalPluginAdapter::UncaughtExceptionHandler::uncaughtException(
 
 ObservableLocalPluginAdapter::EventThread::EventThread(
     const std::string& pluginName, ObservableLocalPluginAdapter* parent)
-: Thread("ObservableLocalPluginAdapter-" + pluginName)
+: Thread(std::string("ObservableLocalPluginAdapter-") + pluginName)
 , mPluginName(pluginName)
 , mMonitoringCycleDuration(
       parent->mObservablePluginSpi->getMonitoringCycleDuration())
@@ -199,8 +198,9 @@ ObservableLocalPluginAdapter::EventThread::notifyChanges(
                                                     : "disconnection",
         changedReaderNames);
 
-    mParent->notifyObservers(std::make_shared<PluginEventAdapter>(
-        mPluginName, changedReaderNames, type));
+    mParent->notifyObservers(
+        std::make_shared<PluginEventAdapter>(
+            mPluginName, changedReaderNames, type));
 }
 
 void
@@ -293,12 +293,12 @@ ObservableLocalPluginAdapter::EventThread::execute()
         /* Restore interrupted state... */
         interrupt();
     } catch (const PluginIOException& e) {
-        const auto pioe = std::make_shared<PluginIOException>(e);
-        const auto kpe = std::make_shared<KeyplePluginException>(
-            "An error occurred while monitoring the readers", pioe);
+        auto kpe(
+            std::unique_ptr<KeyplePluginException>(new KeyplePluginException(
+                "An error occurred while monitoring the readers", e)));
         mParent->getObservationManager()
             ->getObservationExceptionHandler()
-            ->onPluginObservationError(mPluginName, kpe);
+            ->onPluginObservationError(mPluginName, std::move(kpe));
     }
 
     mTerminated = true;

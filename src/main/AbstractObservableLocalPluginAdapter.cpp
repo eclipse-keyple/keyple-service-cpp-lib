@@ -15,6 +15,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "keyple/core/service/PluginEventAdapter.hpp"
@@ -53,9 +54,10 @@ AbstractObservableLocalPluginAdapter::ObservableLocalPluginAdapterJob::execute()
 AbstractObservableLocalPluginAdapter::AbstractObservableLocalPluginAdapter(
     std::shared_ptr<PluginSpi> pluginSpi)
 : LocalPluginAdapter(pluginSpi)
-, mObservationManager(std::make_shared<ObservationManagerAdapter<
-                          PluginObserverSpi,
-                          PluginObservationExceptionHandlerSpi>>("", ""))
+, mObservationManager(
+      std::make_shared<ObservationManagerAdapter<
+          PluginObserverSpi,
+          PluginObservationExceptionHandlerSpi>>("", ""))
 {
 }
 
@@ -89,15 +91,16 @@ AbstractObservableLocalPluginAdapter::notifyObserver(
 {
     try {
         observer->onPluginEvent(event);
+
     } catch (const Exception& e) {
+        auto _e(std::unique_ptr<Exception>(new Exception(e)));
         try {
             mObservationManager->getObservationExceptionHandler()
-                ->onPluginObservationError(
-                    getName(), std::make_shared<Exception>(e));
+                ->onPluginObservationError(getName(), std::move(_e));
+
         } catch (const Exception& e2) {
-            mLogger->error(
-                "Event notification error: % %\n", e2.getMessage(), e2);
-            mLogger->error("Original cause: % %\n", e.getMessage(), e);
+            mLogger->error("Event notification error: %\n", e2.getMessage());
+            mLogger->error("Original cause: %\n", e.getMessage());
         }
     }
 }
@@ -107,8 +110,11 @@ AbstractObservableLocalPluginAdapter::doUnregister()
 {
     const std::vector<std::string>& unregisteredReaderNames = getReaderNames();
 
-    notifyObservers(std::make_shared<PluginEventAdapter>(
-        getName(), unregisteredReaderNames, PluginEvent::Type::UNAVAILABLE));
+    notifyObservers(
+        std::make_shared<PluginEventAdapter>(
+            getName(),
+            unregisteredReaderNames,
+            PluginEvent::Type::UNAVAILABLE));
 
     clearObservers();
     LocalPluginAdapter::doUnregister();
