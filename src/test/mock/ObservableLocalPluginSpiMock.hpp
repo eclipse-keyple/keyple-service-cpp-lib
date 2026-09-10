@@ -16,6 +16,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -40,10 +41,9 @@ class ObservableLocalPluginSpiMock final : public KeyplePluginExtension,
                                            public ObservablePluginSpi {
 public:
     ObservableLocalPluginSpiMock(
-        const std::string& name,
-        const std::shared_ptr<PluginIOException> pluginError)
+        const std::string& name, std::shared_ptr<PluginIOException> pluginError)
     : mName(name)
-    , mPluginError(pluginError)
+    , mPluginError(std::move(pluginError))
     {
     }
 

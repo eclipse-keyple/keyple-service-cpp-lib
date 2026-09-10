@@ -1,0 +1,23 @@
+/**
+ * @mainpage Keyple Service C++ Library
+ *
+ * @section overview Overview
+ *
+ * The **Keyple Service C++ Library** contains the Keyple core components,
+ * providing the fundamental services and orchestration layer for the
+ * Keyple middleware architecture.
+ *
+ * @section key_features Key Features
+ *
+ * - Core Keyple service components
+ * - Plugin and reader management
+ * - Card selection and transaction orchestration
+ * - Event-driven architecture support
+ * - Service layer coordination
+ *
+ * @section resources Resources
+ *
+ * - **Documentation**: [keyple.org](https://keyple.org)
+ * - **API Documentation**: [docs.keyple.org/keyple-service-cpp-lib](https://docs.keyple.org/keyple-service-cpp-lib)
+ * - **Examples**: [github.com/eclipse/keyple-cpp-example](https://github.com/eclipse/keyple-cpp-example)
+ */

@@ -13,7 +13,9 @@
 
 #include "keyple/core/service/ApduResponseAdapter.hpp"
 
+#include <iomanip>
 #include <memory>
+#include <sstream>
 #include <vector>
 
 #include "keyple/core/util/cpp/Arrays.hpp"
@@ -39,7 +41,13 @@ ApduResponseAdapter::getApdu() const
     return mApdu;
 }
 
-const std::vector<uint8_t>
+void
+ApduResponseAdapter::setApdu(const std::vector<std::uint8_t>& apdu)
+{
+    mApdu = apdu;
+}
+
+std::vector<uint8_t>
 ApduResponseAdapter::getDataOut() const
 {
     return Arrays::copyOfRange(mApdu, 0, static_cast<int>(mApdu.size()) - 2);
@@ -54,9 +62,13 @@ ApduResponseAdapter::getStatusWord() const
 std::ostream&
 operator<<(std::ostream& os, const ApduResponseAdapter& ara)
 {
+    std::stringstream ssSw;
+    ssSw << std::uppercase << std::hex << std::setfill('0') << std::setw(4)
+         << ara.mStatusWord;
+
     os << "APDU_RESPONSE_ADAPTER: {"
        << "APDU = " << ara.mApdu << ", "
-       << "STATUS_WORD = " << ara.mStatusWord << "}";
+       << "STATUS_WORD = " << ssSw.str() << "}";
 
     return os;
 }

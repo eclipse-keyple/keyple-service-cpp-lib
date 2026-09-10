@@ -15,6 +15,7 @@
 
 #include <map>
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -29,7 +30,7 @@ using keyple::core::util::cpp::exception::RuntimeException;
 
 class PluginObserverSpiMock final : public PluginObserverSpi {
 public:
-    explicit PluginObserverSpiMock(const std::shared_ptr<RuntimeException> e)
+    explicit PluginObserverSpiMock(std::shared_ptr<RuntimeException> e)
     : mThrowEx(e)
     {
     }

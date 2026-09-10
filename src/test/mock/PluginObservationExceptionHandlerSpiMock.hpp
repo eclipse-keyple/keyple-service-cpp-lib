@@ -15,6 +15,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -31,15 +32,15 @@ class PluginObservationExceptionHandlerSpiMock final
 : public PluginObservationExceptionHandlerSpi {
 public:
     explicit PluginObservationExceptionHandlerSpiMock(
-        const std::shared_ptr<RuntimeException> throwEx)
+        std::unique_ptr<RuntimeException> throwEx)
     : mInvoked(false)
-    , mThrowEx(throwEx)
+    , mThrowEx(std::move(throwEx))
     {
     }
 
     void
     onPluginObservationError(
-        const std::string& pluginName, const std::shared_ptr<Exception> e) final
+        const std::string& pluginName, std::unique_ptr<Exception> e) final
     {
         mInvoked = true;
         if (mThrowEx != nullptr) {
@@ -47,7 +48,7 @@ public:
         }
 
         mPluginName = pluginName;
-        mE = e;
+        mE = std::move(e);
     }
 
     bool
@@ -62,15 +63,15 @@ public:
         return mPluginName;
     }
 
-    const std::shared_ptr<Exception>
+    const Exception*
     getE() const
     {
-        return mE;
+        return mE ? mE.get() : nullptr;
     }
 
 private:
     bool mInvoked = false;
     std::string mPluginName;
-    std::shared_ptr<Exception> mE;
-    const std::shared_ptr<RuntimeException> mThrowEx;
+    std::unique_ptr<Exception> mE;
+    std::unique_ptr<RuntimeException> mThrowEx;
 };

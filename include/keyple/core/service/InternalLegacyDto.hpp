@@ -81,6 +81,22 @@ public:
     };
 
     /**
+     * @since 3.3.1
+     */
+    class LegacyCardRequestV0 final {
+    public:
+        /**
+         *
+         */
+        std::vector<std::shared_ptr<LegacyApduRequest>> mApduRequests;
+
+        /**
+         *
+         */
+        bool mIsStatusCodesVerificationEnabled;
+    };
+
+    /**
      * @since 2.1.1
      */
     class LegacyApduRequest {
@@ -104,7 +120,7 @@ public:
     /**
      * @since 2.1.1
      */
-    class LegacyCardRequest final {
+    class LegacyCardRequestV1 final {
     public:
         /**
          *
@@ -118,9 +134,9 @@ public:
     };
 
     /**
-     * @since 2.1.1
+     * @since 3.3.1
      */
-    class LegacyCardSelectionRequest final {
+    class LegacyCardSelectionRequestV0 final {
     public:
         /**
          *
@@ -130,14 +146,30 @@ public:
         /**
          *
          */
-        std::shared_ptr<LegacyCardRequest> mCardRequest;
+        std::shared_ptr<LegacyCardRequestV0> mCardRequest;
+    };
+
+    /**
+     * @since 2.1.1
+     */
+    class LegacyCardSelectionRequestV1 final {
+    public:
+        /**
+         *
+         */
+        std::shared_ptr<LegacyCardSelector> mCardSelector;
+
+        /**
+         *
+         */
+        std::shared_ptr<LegacyCardRequestV1> mCardRequest;
     };
 
     /**
      *
      */
-    static const std::vector<std::shared_ptr<LegacyCardSelectionRequest>>
-    mapToLegacyCardSelectionRequests(
+    static const std::vector<std::shared_ptr<LegacyCardSelectionRequestV0>>
+    mapToLegacyCardSelectionRequestsV0(
         const std::vector<std::shared_ptr<CardSelector>>& cardSelectors,
         const std::vector<std::shared_ptr<CardSelectionRequestSpi>>&
             cardSelectionRequests);
@@ -145,8 +177,25 @@ public:
     /**
      *
      */
-    static std::shared_ptr<LegacyCardSelectionRequest>
-    mapToLegacyCardSelectionRequest(
+    static const std::vector<std::shared_ptr<LegacyCardSelectionRequestV1>>
+    mapToLegacyCardSelectionRequestsV1(
+        const std::vector<std::shared_ptr<CardSelector>>& cardSelectors,
+        const std::vector<std::shared_ptr<CardSelectionRequestSpi>>&
+            cardSelectionRequests);
+
+    /**
+     *
+     */
+    static std::shared_ptr<LegacyCardSelectionRequestV0>
+    mapToLegacyCardSelectionRequestV0(
+        std::shared_ptr<CardSelector> cardSelector,
+        std::shared_ptr<CardSelectionRequestSpi> cardSelectionRequestSpi);
+
+    /**
+     *
+     */
+    static std::shared_ptr<LegacyCardSelectionRequestV1>
+    mapToLegacyCardSelectionRequestV1(
         std::shared_ptr<CardSelector> cardSelector,
         std::shared_ptr<CardSelectionRequestSpi> cardSelectionRequestSpi);
 
@@ -161,7 +210,13 @@ public:
      *
      */
     static std::shared_ptr<LegacyCardRequest>
-    mapToLegacyCardRequest(const std::shared_ptr<CardRequestSpi> cardRequest);
+    mapToLegacyCardRequestV0(const std::shared_ptr<CardRequestSpi> cardRequest);
+
+    /**
+     *
+     */
+    static std::shared_ptr<LegacyCardRequest>
+    mapToLegacyCardRequestV1(const std::shared_ptr<CardRequestSpi> cardRequest);
 
     /**
      *

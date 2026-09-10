@@ -20,6 +20,7 @@
 #include "keyple/core/common/KeypleCardExtension.hpp"
 #include "keyple/core/common/KeyplePluginExtensionFactory.hpp"
 #include "keyple/core/service/KeypleServiceExport.hpp"
+#include "keyple/core/service/Plugin.hpp"
 #include "keypop/reader/ReaderApiFactory.hpp"
 
 namespace keyple {
@@ -28,6 +29,7 @@ namespace service {
 
 using keyple::core::common::KeypleCardExtension;
 using keyple::core::common::KeyplePluginExtensionFactory;
+using keyple::core::service::Plugin;
 using keypop::reader::ReaderApiFactory;
 
 /**
@@ -134,7 +136,8 @@ public:
      * @since 2.0.0
      */
     virtual void checkCardExtension(
-        const std::shared_ptr<KeypleCardExtension> cardExtension) const = 0;
+        const std::shared_ptr<KeypleCardExtension> cardExtension) const
+        = 0;
 
     /**
      * Registers a new distributed local service to the service.

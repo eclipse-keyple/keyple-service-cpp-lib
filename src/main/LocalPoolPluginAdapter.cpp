@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <typeinfo>
+#include <utility>
 #include <vector>
 
 #include "keyple/core/common/KeypleReaderExtension.hpp"
@@ -38,8 +39,8 @@ using keyple::core::util::cpp::exception::Exception;
 LocalPoolPluginAdapter::LocalPoolPluginAdapter(
     std::shared_ptr<PoolPluginSpi> poolPluginSpi)
 : AbstractPluginAdapter(
-    poolPluginSpi->getName(),
-    std::dynamic_pointer_cast<KeyplePluginExtension>(poolPluginSpi))
+      poolPluginSpi->getName(),
+      std::dynamic_pointer_cast<KeyplePluginExtension>(poolPluginSpi))
 , mPoolPluginSpi(poolPluginSpi)
 {
 }
@@ -68,10 +69,10 @@ LocalPoolPluginAdapter::getReaderGroupReferences() const
         return mPoolPluginSpi->getReaderGroupReferences();
     } catch (const PluginIOException& e) {
         throw KeyplePluginException(
-            "Pool plugin [" + getName()
+            std::string("Pool plugin [") + getName()
                 + "] is unable to get reader group references: "
                 + e.getMessage(),
-            std::make_shared<PluginIOException>(e));
+            e);
     }
 }
 
@@ -94,10 +95,10 @@ LocalPoolPluginAdapter::allocateReader(const std::string& readerGroupReference)
         readerSpi = mPoolPluginSpi->allocateReader(readerGroupReference);
     } catch (const PluginIOException& e) {
         throw KeyplePluginException(
-            "Pool plugin [" + getName()
+            std::string("Pool plugin [") + getName()
                 + "] unable to allocate reader of reader group reference ["
                 + readerGroupReference + "]: " + e.getMessage(),
-            std::make_shared<PluginIOException>(e));
+            e);
     }
 
     std::shared_ptr<LocalReaderAdapter> localReaderAdapter
@@ -132,11 +133,11 @@ LocalPoolPluginAdapter::releaseReader(std::shared_ptr<CardReader> reader)
         /* Java 'finally' code moved here */
         getReadersMap().erase(reader->getName());
         std::dynamic_pointer_cast<LocalReaderAdapter>(reader)->doUnregister();
-
         throw KeyplePluginException(
-            "Pool plugin [" + getName() + "] unable to release reader ["
-                + reader->getName() + "]: " + e.getMessage(),
-            std::make_shared<PluginIOException>(e));
+            std::string("Pool plugin [") + getName()
+                + "] unable to release reader [" + reader->getName()
+                + "]: " + e.getMessage(),
+            e);
     }
 }
 

@@ -13,16 +13,17 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
 
 #include "keyple/core/service/KeypleServiceExport.hpp"
+#include "keyple/core/util/cpp/exception/Exception.hpp"
 #include "keyple/core/util/cpp/exception/RuntimeException.hpp"
 
 namespace keyple {
 namespace core {
 namespace service {
 
+using keyple::core::util::cpp::exception::Exception;
 using keyple::core::util::cpp::exception::RuntimeException;
 
 /**
@@ -46,8 +47,7 @@ public:
      * @param cause the cause
      * @since 2.0.0
      */
-    KeyplePluginException(
-        const std::string& message, const std::shared_ptr<Exception> cause)
+    KeyplePluginException(const std::string& message, const Exception& cause)
     : RuntimeException(message, cause)
     {
     }

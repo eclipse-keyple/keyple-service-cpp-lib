@@ -112,12 +112,10 @@ SmartCardServiceAdapter::compareVersions(
         }
 
         /* Replaced NumberFormatException by std::invalid_argument */
-    } catch (const std::invalid_argument& e) {
-        (void)e;
+    } catch (const std::invalid_argument&) {
         throw IllegalStateException(
-            "Bad version numbers: provided = " + providedVersion
-                + ", local = " + localVersion,
-            nullptr);
+            std::string("Bad version numbers: provided = ") + providedVersion
+            + ", local = " + localVersion);
     }
 
     /* Java uses compareTo() which returns 0 when equal */
@@ -184,16 +182,18 @@ SmartCardServiceAdapter::registerPlugin(
 
         mPlugins.insert({plugin->getName(), plugin});
         plugin->doRegister();
+
     } catch (const IllegalArgumentException& e) {
         throw IllegalArgumentException(
             "The provided plugin factory doesn't implement the plugin"
             " API properly",
-            std::make_shared<IllegalArgumentException>(e));
+            e);
+
     } catch (const PluginIOException& e) {
         throw KeyplePluginException(
-            "Unable to register the plugin [" + plugin->getName()
+            std::string("Unable to register the plugin [") + plugin->getName()
                 + "]: " + e.getMessage(),
-            std::make_shared<PluginIOException>(e));
+            e);
     }
 
     return plugin;
@@ -212,6 +212,7 @@ SmartCardServiceAdapter::unregisterPlugin(const std::string& pluginName)
         std::dynamic_pointer_cast<AbstractPluginAdapter>(removedPlugin)
             ->doUnregister();
         mPlugins.erase(i);
+
     } else {
         mLogger->warn("Plugin [%] not registered\n", pluginName);
     }
@@ -292,16 +293,10 @@ std::shared_ptr<CardReader>
 SmartCardServiceAdapter::findReader(const std::string& readerNameRegex) const
 {
     for (const auto& plugin : mPlugins) {
-        for (const auto& reader : plugin.second->getReaders()) {
-            try {
-                if (StringUtils::matches(reader->getName(), readerNameRegex)) {
-                    return reader;
-                }
-            } catch (const PatternSyntaxException& e) {
-                throw IllegalArgumentException(
-                    "readerNameRegex is invalid: " + e.getMessage(),
-                    std::make_shared<Exception>(e));
-            }
+        std::shared_ptr<CardReader> reader(
+            plugin.second->findReader(readerNameRegex));
+        if (reader != nullptr) {
+            return reader;
         }
     }
 
@@ -421,9 +416,10 @@ SmartCardServiceAdapter::createLocalPlugin(
 
     if (pluginSpi->getName() != pluginFactorySpi->getPluginName()) {
         throw IllegalArgumentException(
-            "Plugin name [" + pluginSpi->getName()
-            + "] mismatches the expected name ["
-            + pluginFactorySpi->getPluginName() + "] provided by the factory");
+            std::string("Plugin name [") + pluginSpi->getName()
+            + std::string("] mismatches the expected name [")
+            + pluginFactorySpi->getPluginName()
+            + std::string("] provided by the factory"));
     }
 
     std::shared_ptr<AbstractPluginAdapter> plugin = nullptr;
@@ -458,7 +454,7 @@ SmartCardServiceAdapter::createLocalPoolPlugin(
 
     if (poolPluginSpi->getName() != poolPluginFactorySpi->getPoolPluginName()) {
         throw IllegalArgumentException(
-            "Pool plugin name [" + poolPluginSpi->getName()
+            std::string("Pool plugin name [") + poolPluginSpi->getName()
             + "] mismatches the expected name ["
             + poolPluginFactorySpi->getPoolPluginName()
             + "] provided by the factory");
