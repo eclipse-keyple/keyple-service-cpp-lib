@@ -19,7 +19,6 @@
 #include <thread>
 
 #include "keyple/core/service/AbstractObservableStateAdapter.hpp"
-#include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/Thread.hpp"
 
 namespace keyple {
@@ -48,21 +47,23 @@ ExecutorService::run()
     while (true) {
         std::unique_lock<std::mutex> lock(mMutex);
 
-        // Wait until there's a job or the service is shutting down
+        /* Wait until there's a job or the service is shutting down */
         mCondition.wait(lock, [this] { return !mPool.empty() || !mRunning; });
 
-        // Check if we should terminate
+        /* Check if we should terminate */
         if (!mRunning && mPool.empty()) {
             break;
         }
 
-        // Get the job and remove it from the pool
+        /* Get the job and remove it from the pool */
         std::shared_ptr<Job> job = mPool.front();
         mPool.erase(mPool.begin());
 
-        // Unlock the mutex before running the job
-        // This allows other threads to submit new jobs while one is being
-        // processed
+        /*
+         * Unlock the mutex before running the job
+         * This allows other threads to submit new jobs while one is being
+         * processed
+         */
         lock.unlock();
 
         if (!job->isCancelled()) {
@@ -75,16 +76,12 @@ ExecutorService::run()
                 job->run();
 
             } catch (const std::exception& e) {
-                keyple::core::util::cpp::LoggerFactory::getLogger(
-                    typeid(ExecutorService))
-                    ->error("Job [%] failed: %\n", job->getName(), e.what());
+                mLogger->error("Job [%] failed: %\n", job->getName(), e.what());
 
             } catch (...) {
-                keyple::core::util::cpp::LoggerFactory::getLogger(
-                    typeid(ExecutorService))
-                    ->error(
-                        "Job [%] failed with an unknown exception\n",
-                        job->getName());
+                mLogger->error(
+                    "Job [%] failed with an unknown exception\n",
+                    job->getName());
             }
         }
     }
