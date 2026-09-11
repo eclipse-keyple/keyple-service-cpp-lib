@@ -13,7 +13,9 @@
 
 #include "keyple/core/service/ApduResponseAdapter.hpp"
 
+#include <iomanip>
 #include <memory>
+#include <sstream>
 #include <vector>
 
 #include "keyple/core/util/cpp/Arrays.hpp"
@@ -60,9 +62,13 @@ ApduResponseAdapter::getStatusWord() const
 std::ostream&
 operator<<(std::ostream& os, const ApduResponseAdapter& ara)
 {
+    std::stringstream ssSw;
+    ssSw << std::uppercase << std::hex << std::setfill('0') << std::setw(4)
+         << ara.mStatusWord;
+
     os << "APDU_RESPONSE_ADAPTER: {"
        << "APDU = " << ara.mApdu << ", "
-       << "STATUS_WORD = " << ara.mStatusWord << "}";
+       << "STATUS_WORD = " << ssSw.str() << "}";
 
     return os;
 }
