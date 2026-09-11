@@ -264,24 +264,53 @@ ObservableLocalPluginAdapter::EventThread::execute()
 {
     mStarted = true;
 
+    /* True while a reader enumeration outage is in progress, see below. */
+    bool isInError = false;
+
     try {
         while (mRunning) {
-            /* Retrieves the current readers names list */
-            const std::vector<std::string> actualNativeReaderNames
-                = mParent->mObservablePluginSpi->searchAvailableReaderNames();
+            try {
+                /* Retrieves the current readers names list */
+                const std::vector<std::string> actualNativeReaderNames
+                    = mParent->mObservablePluginSpi
+                          ->searchAvailableReaderNames();
 
-            /* Checks if it has changed this algorithm favors cases where
-             * nothing change */
-            const std::vector<std::string> currentlyRegisteredReaderNames
-                = mParent->getReaderNames();
-            if (!Arrays::containsAll(
-                    currentlyRegisteredReaderNames, actualNativeReaderNames)
-                || !Arrays::containsAll(
-                    actualNativeReaderNames, currentlyRegisteredReaderNames)) {
-                processChanges(actualNativeReaderNames);
+                /* Checks if it has changed this algorithm favors cases where
+                 * nothing change */
+                const std::vector<std::string> currentlyRegisteredReaderNames
+                    = mParent->getReaderNames();
+                if (!Arrays::containsAll(
+                        currentlyRegisteredReaderNames, actualNativeReaderNames)
+                    || !Arrays::containsAll(
+                        actualNativeReaderNames,
+                        currentlyRegisteredReaderNames)) {
+                    processChanges(actualNativeReaderNames);
+                }
+
+                isInError = false;
+
+            } catch (const PluginIOException& e) {
+                /*
+                 * Deliberate divergence from the Java reference, where this
+                 * catch sits outside the loop and the first such error ends
+                 * monitoring for good. On Windows, unplugging the LAST reader
+                 * stops the Smart Card service, so a terminal behaviour leaves
+                 * the plugin deaf even after the readers come back. Report the
+                 * outage once, then keep polling so reconnections are seen.
+                 */
+                if (!isInError) {
+                    isInError = true;
+                    auto kpe(std::unique_ptr<KeyplePluginException>(
+                        new KeyplePluginException(
+                            "An error occurred while monitoring the readers",
+                            e)));
+                    mParent->getObservationManager()
+                        ->getObservationExceptionHandler()
+                        ->onPluginObservationError(mPluginName, std::move(kpe));
+                }
             }
 
-            /* Sleep for a while */
+            /* Sleep for a while, whether or not the cycle succeeded */
             Thread::sleep(mMonitoringCycleDuration);
         }
     } catch (const InterruptedException& e) {
@@ -292,13 +321,6 @@ ObservableLocalPluginAdapter::EventThread::execute()
 
         /* Restore interrupted state... */
         interrupt();
-    } catch (const PluginIOException& e) {
-        auto kpe(
-            std::unique_ptr<KeyplePluginException>(new KeyplePluginException(
-                "An error occurred while monitoring the readers", e)));
-        mParent->getObservationManager()
-            ->getObservationExceptionHandler()
-            ->onPluginObservationError(mPluginName, std::move(kpe));
     }
 
     mTerminated = true;
