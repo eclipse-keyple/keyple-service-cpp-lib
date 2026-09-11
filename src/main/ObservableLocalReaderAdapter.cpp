@@ -329,6 +329,17 @@ ObservableLocalReaderAdapter::notifyObserver(
                 "Event notification error: % - %\n", e2.getMessage(), e2);
             mLogger->error("Original cause: % - %\n", e.getMessage(), e);
         }
+    } catch (const std::exception& e) {
+        try {
+            mObservationManager->getObservationExceptionHandler()
+                ->onReaderObservationError(
+                    getPluginName(),
+                    getName(),
+                    std::make_shared<std::runtime_error>(e.what()));
+        } catch (const std::exception& e2) {
+            mLogger->error("Event notification error: %\n", e2.what());
+            mLogger->error("Original cause: %\n", e.what());
+        }
     }
 }
 
