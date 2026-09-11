@@ -19,6 +19,7 @@
 #include <condition_variable>
 
 #include "keyple/core/service/AbstractObservableStateAdapter.hpp"
+#include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/Thread.hpp"
 
 namespace keyple {
@@ -65,7 +66,26 @@ ExecutorService::run()
         lock.unlock();
 
         if (!job->isCancelled()) {
-            job->run();
+            /*
+             * A failing job must not bring down the worker thread, and even
+             * less the process: a Java ThreadPoolExecutor captures the
+             * exception of a task in its Future and keeps the pool alive.
+             */
+            try {
+                job->run();
+
+            } catch (const std::exception& e) {
+                keyple::core::util::cpp::LoggerFactory::getLogger(
+                    typeid(ExecutorService))
+                    ->error("Job [%] failed: %\n", job->getName(), e.what());
+
+            } catch (...) {
+                keyple::core::util::cpp::LoggerFactory::getLogger(
+                    typeid(ExecutorService))
+                    ->error(
+                        "Job [%] failed with an unknown exception\n",
+                        job->getName());
+            }
         }
     }
 
