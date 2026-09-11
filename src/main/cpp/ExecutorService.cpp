@@ -13,10 +13,10 @@
 
 #include "keyple/core/service/cpp/ExecutorService.hpp"
 
-#include <memory>
-#include <thread>
-#include <mutex>
 #include <condition_variable>
+#include <memory>
+#include <mutex>
+#include <thread>
 
 #include "keyple/core/service/AbstractObservableStateAdapter.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
@@ -32,8 +32,8 @@ using keyple::core::util::cpp::Thread;
 
 ExecutorService::ExecutorService()
 : mRunning(false)
-, mTerminated(false)
 , mShutdown(false)
+, mTerminated(false)
 {
 }
 
@@ -49,9 +49,7 @@ ExecutorService::run()
         std::unique_lock<std::mutex> lock(mMutex);
 
         // Wait until there's a job or the service is shutting down
-        mCondition.wait(lock, [this]{
-            return !mPool.empty() || !mRunning;
-        });
+        mCondition.wait(lock, [this] { return !mPool.empty() || !mRunning; });
 
         // Check if we should terminate
         if (!mRunning && mPool.empty()) {
@@ -63,7 +61,8 @@ ExecutorService::run()
         mPool.erase(mPool.begin());
 
         // Unlock the mutex before running the job
-        // This allows other threads to submit new jobs while one is being processed
+        // This allows other threads to submit new jobs while one is being
+        // processed
         lock.unlock();
 
         if (!job->isCancelled()) {
@@ -108,7 +107,8 @@ ExecutorService::execute(std::shared_ptr<Job> job)
         }
         if (!mThread) {
             mRunning = true;
-            mThread = std::unique_ptr<std::thread>(new std::thread(&ExecutorService::run, this));
+            mThread = std::unique_ptr<std::thread>(
+                new std::thread(&ExecutorService::run, this));
         }
         mPool.push_back(job);
     }
