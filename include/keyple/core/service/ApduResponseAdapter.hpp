@@ -46,7 +46,7 @@ public:
     /**
      *
      */
-    virtual ~ApduResponseAdapter() = default;
+    ~ApduResponseAdapter() = default;
 
     /**
      * {@inheritDoc}
