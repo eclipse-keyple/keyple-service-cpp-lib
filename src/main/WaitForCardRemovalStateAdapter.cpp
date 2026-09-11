@@ -42,8 +42,8 @@ WaitForCardRemovalStateAdapter::onEvent(const InternalEvent event)
 {
     mLogger->trace(
         "Internal event [%] received for reader [%] in current state [%]\n",
-        getReader()->getName(),
         event,
+        getReader()->getName(),
         getMonitoringState());
 
     /* Process InternalEvent */

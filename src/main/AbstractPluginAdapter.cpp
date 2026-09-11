@@ -16,6 +16,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "keyple/core/service/AbstractReaderAdapter.hpp"
@@ -200,8 +201,7 @@ AbstractPluginAdapter::findReader(const std::string& readerNameRegex) const
 
         } catch (const std::regex_error& e) {
             throw IllegalArgumentException(
-                "readerNameRegex is invalid: " + std::string(e.what()),
-                std::make_shared<Exception>(e.what()));
+                "readerNameRegex is invalid: " + std::string(e.what()));
         }
     }
 

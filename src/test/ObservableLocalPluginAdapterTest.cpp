@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -115,12 +116,13 @@ TEST(
 {
     setUp();
 
-    std::shared_ptr<RuntimeException> exception
-        = std::make_shared<RuntimeException>();
+    auto exception = std::unique_ptr<RuntimeException>(new RuntimeException());
     exceptionHandlerMock
         = std::make_shared<PluginObservationExceptionHandlerSpiMock>(
-            std::make_shared<RuntimeException>());  // Not used
-    observerMock = std::make_shared<PluginObserverSpiMock>(exception);
+            std::unique_ptr<RuntimeException>(
+                new RuntimeException()));  // Not used
+    observerMock
+        = std::make_shared<PluginObserverSpiMock>(std::move(exception));
 
     /* Start plugin */
     pluginAdapter->doRegister();
@@ -223,8 +225,9 @@ whileMonitoring_readerNames_appears_shouldNotify_andCreateReaders()
     /* Check reader is created */
     const std::vector<std::string>& pluginReaderNames
         = pluginAdapter->getReaderNames();
-    ASSERT_TRUE(std::count(
-        pluginReaderNames.begin(), pluginReaderNames.end(), READER_NAME_1));
+    ASSERT_TRUE(
+        std::count(
+            pluginReaderNames.begin(), pluginReaderNames.end(), READER_NAME_1));
 }
 
 TEST(
@@ -271,7 +274,7 @@ TEST(
 {
     setUp();
 
-    const auto exception = std::make_shared<RuntimeException>();
+    auto exception(std::make_shared<RuntimeException>());
     observerMock = std::make_shared<PluginObserverSpiMock>(exception);
 
     /* Start plugin */
@@ -285,7 +288,8 @@ TEST(
 
     /* Check if exception has been thrown */
     ASSERT_EQ(exceptionHandlerMock->getPluginName(), PLUGIN_NAME);
-    ASSERT_EQ(*exceptionHandlerMock->getE().get(), *exception.get());
+    ASSERT_EQ(
+        exceptionHandlerMock->getE()->getMessage(), exception->getMessage());
 
     tearDown();
 }
@@ -296,7 +300,7 @@ TEST(
 {
     setUp();
 
-    const auto exception = std::make_shared<PluginIOException>("error");
+    auto exception(std::make_shared<PluginIOException>("error"));
     observablePluginMock = std::make_shared<ObservableLocalPluginSpiMock>(
         PLUGIN_NAME, exception);
     pluginAdapter
@@ -313,7 +317,8 @@ TEST(
     /* Check if exception has been thrown */
     ASSERT_EQ(exceptionHandlerMock->getPluginName(), PLUGIN_NAME);
     ASSERT_EQ(
-        *exceptionHandlerMock->getE()->getCause().get(), *exception.get());
+        exceptionHandlerMock->getE()->getCause()->getMessage(),
+        exception->getMessage());
 
     tearDown();
 }

@@ -13,7 +13,10 @@
 
 #include "keyple/core/service/cpp/ExecutorService.hpp"
 
+#include <condition_variable>
 #include <memory>
+#include <mutex>
+#include <thread>
 
 #include "keyple/core/service/AbstractObservableStateAdapter.hpp"
 #include "keyple/core/util/cpp/Thread.hpp"
@@ -27,37 +30,60 @@ using keyple::core::service::AbstractObservableStateAdapter;
 using keyple::core::util::cpp::Thread;
 
 ExecutorService::ExecutorService()
-: mRunning(true)
+: mRunning(false)
+, mShutdown(false)
 , mTerminated(false)
 {
-    mThread = new std::thread(&ExecutorService::run, this);
 }
 
 ExecutorService::~ExecutorService()
 {
-    mRunning = false;
-
-    while (!mTerminated) {
-        Thread::sleep(10);
-    }
+    shutdown();
 }
 
 void
 ExecutorService::run()
 {
-    /* Emulates a SingleThreadExecutor (e.g. only one thread at a time) */
+    while (true) {
+        std::unique_lock<std::mutex> lock(mMutex);
 
-    while (mRunning) {
-        if (mPool.size()) {
-            /* Start first service and wait until completion */
-            std::shared_ptr<Job> job = mPool[0];
-            job->run();
+        /* Wait until there's a job or the service is shutting down */
+        mCondition.wait(lock, [this] { return !mPool.empty() || !mRunning; });
 
-            /* Remove from vector */
-            mPool.erase(mPool.begin());
+        /* Check if we should terminate */
+        if (!mRunning && mPool.empty()) {
+            break;
         }
 
-        Thread::sleep(100);
+        /* Get the job and remove it from the pool */
+        std::shared_ptr<Job> job = mPool.front();
+        mPool.erase(mPool.begin());
+
+        /*
+         * Unlock the mutex before running the job
+         * This allows other threads to submit new jobs while one is being
+         * processed
+         */
+        lock.unlock();
+
+        if (!job->isCancelled()) {
+            /*
+             * A failing job must not bring down the worker thread, and even
+             * less the process: a Java ThreadPoolExecutor captures the
+             * exception of a task in its Future and keeps the pool alive.
+             */
+            try {
+                job->run();
+
+            } catch (const std::exception& e) {
+                mLogger->error("Job [%] failed: %\n", job->getName(), e.what());
+
+            } catch (...) {
+                mLogger->error(
+                    "Job [%] failed with an unknown exception\n",
+                    job->getName());
+            }
+        }
     }
 
     mTerminated = true;
@@ -66,25 +92,59 @@ ExecutorService::run()
 void
 ExecutorService::execute(std::shared_ptr<Job> job)
 {
-    mPool.push_back(job);
+    {
+        std::lock_guard<std::mutex> lock(mMutex);
+        /*
+         * Once shut down, reject the job as a Java ThreadPoolExecutor does.
+         * Accepting it would restart a worker thread that no shutdown will
+         * ever join, letting the job outlive the object that submitted it.
+         */
+        if (mShutdown) {
+            return;
+        }
+        if (!mThread) {
+            mRunning = true;
+            mThread = std::unique_ptr<std::thread>(
+                new std::thread(&ExecutorService::run, this));
+        }
+        mPool.push_back(job);
+    }
+    mCondition.notify_one();
 }
 
 std::shared_ptr<Job>
 ExecutorService::submit(std::shared_ptr<Job> job)
 {
-    mPool.push_back(job);
-
-    return mPool.back();
+    /*
+     * Return the job we were given directly: the worker thread may already
+     * have dequeued (and even completed) it by the time we could re-lock
+     * mMutex, so reading it back via mPool.back() is a data race that can
+     * return an empty-vector access or the wrong job entirely.
+     */
+    execute(job);
+    return job;
 }
 
 void
 ExecutorService::shutdown()
 {
-    mRunning = false;
-
-    while (!mTerminated) {
-        Thread::sleep(10);
+    {
+        std::lock_guard<std::mutex> lock(mMutex);
+        mShutdown = true;
+        if (!mThread) {
+            return;
+        }
+        mRunning = false;
     }
+
+    mCondition.notify_one();
+
+    if (mThread->joinable()) {
+        mThread->join();
+    }
+
+    mThread.reset();
+    mTerminated = true;
 }
 
 } /* namespace cpp */

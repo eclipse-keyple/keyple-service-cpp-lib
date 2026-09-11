@@ -15,6 +15,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "keyple/core/plugin/PluginIOException.hpp"
@@ -117,13 +118,11 @@ ObservableLocalPluginAdapter::UncaughtExceptionHandler::
 
 void
 ObservableLocalPluginAdapter::UncaughtExceptionHandler::uncaughtException(
-    std::shared_ptr<Thread> t, std::shared_ptr<Exception> e)
+    std::shared_ptr<Thread> /*t*/, std::unique_ptr<Exception> e)
 {
-    (void)t;
-
     mParent->getObservationManager()
         ->getObservationExceptionHandler()
-        ->onPluginObservationError(mParent->mThread->mPluginName, e);
+        ->onPluginObservationError(mParent->mThread->mPluginName, std::move(e));
 }
 
 /* EVENT THREAD
@@ -132,7 +131,7 @@ ObservableLocalPluginAdapter::UncaughtExceptionHandler::uncaughtException(
 
 ObservableLocalPluginAdapter::EventThread::EventThread(
     const std::string& pluginName, ObservableLocalPluginAdapter* parent)
-: Thread("ObservableLocalPluginAdapter-" + pluginName)
+: Thread(std::string("ObservableLocalPluginAdapter-") + pluginName)
 , mPluginName(pluginName)
 , mMonitoringCycleDuration(
       parent->mObservablePluginSpi->getMonitoringCycleDuration())
@@ -199,8 +198,9 @@ ObservableLocalPluginAdapter::EventThread::notifyChanges(
                                                     : "disconnection",
         changedReaderNames);
 
-    mParent->notifyObservers(std::make_shared<PluginEventAdapter>(
-        mPluginName, changedReaderNames, type));
+    mParent->notifyObservers(
+        std::make_shared<PluginEventAdapter>(
+            mPluginName, changedReaderNames, type));
 }
 
 void
@@ -264,24 +264,53 @@ ObservableLocalPluginAdapter::EventThread::execute()
 {
     mStarted = true;
 
+    /* True while a reader enumeration outage is in progress, see below. */
+    bool isInError = false;
+
     try {
         while (mRunning) {
-            /* Retrieves the current readers names list */
-            const std::vector<std::string> actualNativeReaderNames
-                = mParent->mObservablePluginSpi->searchAvailableReaderNames();
+            try {
+                /* Retrieves the current readers names list */
+                const std::vector<std::string> actualNativeReaderNames
+                    = mParent->mObservablePluginSpi
+                          ->searchAvailableReaderNames();
 
-            /* Checks if it has changed this algorithm favors cases where
-             * nothing change */
-            const std::vector<std::string> currentlyRegisteredReaderNames
-                = mParent->getReaderNames();
-            if (!Arrays::containsAll(
-                    currentlyRegisteredReaderNames, actualNativeReaderNames)
-                || !Arrays::containsAll(
-                    actualNativeReaderNames, currentlyRegisteredReaderNames)) {
-                processChanges(actualNativeReaderNames);
+                /* Checks if it has changed this algorithm favors cases where
+                 * nothing change */
+                const std::vector<std::string> currentlyRegisteredReaderNames
+                    = mParent->getReaderNames();
+                if (!Arrays::containsAll(
+                        currentlyRegisteredReaderNames, actualNativeReaderNames)
+                    || !Arrays::containsAll(
+                        actualNativeReaderNames,
+                        currentlyRegisteredReaderNames)) {
+                    processChanges(actualNativeReaderNames);
+                }
+
+                isInError = false;
+
+            } catch (const PluginIOException& e) {
+                /*
+                 * Deliberate divergence from the Java reference, where this
+                 * catch sits outside the loop and the first such error ends
+                 * monitoring for good. On Windows, unplugging the LAST reader
+                 * stops the Smart Card service, so a terminal behaviour leaves
+                 * the plugin deaf even after the readers come back. Report the
+                 * outage once, then keep polling so reconnections are seen.
+                 */
+                if (!isInError) {
+                    isInError = true;
+                    auto kpe(std::unique_ptr<KeyplePluginException>(
+                        new KeyplePluginException(
+                            "An error occurred while monitoring the readers",
+                            e)));
+                    mParent->getObservationManager()
+                        ->getObservationExceptionHandler()
+                        ->onPluginObservationError(mPluginName, std::move(kpe));
+                }
             }
 
-            /* Sleep for a while */
+            /* Sleep for a while, whether or not the cycle succeeded */
             Thread::sleep(mMonitoringCycleDuration);
         }
     } catch (const InterruptedException& e) {
@@ -292,13 +321,6 @@ ObservableLocalPluginAdapter::EventThread::execute()
 
         /* Restore interrupted state... */
         interrupt();
-    } catch (const PluginIOException& e) {
-        const auto pioe = std::make_shared<PluginIOException>(e);
-        const auto kpe = std::make_shared<KeyplePluginException>(
-            "An error occurred while monitoring the readers", pioe);
-        mParent->getObservationManager()
-            ->getObservationExceptionHandler()
-            ->onPluginObservationError(mPluginName, kpe);
     }
 
     mTerminated = true;

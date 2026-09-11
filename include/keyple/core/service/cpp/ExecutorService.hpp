@@ -13,18 +13,25 @@
 
 #pragma once
 
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <typeinfo>
 #include <vector>
 
 #include "keyple/core/service/KeypleServiceExport.hpp"
 #include "keyple/core/service/cpp/Job.hpp"
+#include "keyple/core/util/cpp/Logger.hpp"
+#include "keyple/core/util/cpp/LoggerFactory.hpp"
 
 namespace keyple {
 namespace core {
 namespace service {
 namespace cpp {
+
+using keyple::core::util::cpp::Logger;
+using keyple::core::util::cpp::LoggerFactory;
 
 class KEYPLESERVICE_API ExecutorService final {
 public:
@@ -69,27 +76,49 @@ private:
     /**
      *
      */
+    const std::unique_ptr<Logger> mLogger
+        = LoggerFactory::getLogger(typeid(ExecutorService));
+
+    /**
+     *
+     */
     std::vector<std::shared_ptr<Job>> mPool;
 
     /**
      *
      */
+    std::mutex mMutex;
+
+    /**
+     *
+     */
+    std::condition_variable mCondition;
+
+    /**
+     *
+     */
+    bool mRunning;
+
+    /**
+     * Set once shutdown() has been called; the service then rejects new jobs
+     * instead of starting a fresh worker thread nobody would ever join.
+     */
+    bool mShutdown;
+
+    /**
+     *
+     */
+    bool mTerminated;
+
+    /**
+     *
+     */
+    std::unique_ptr<std::thread> mThread;
+
+    /**
+     *
+     */
     void run();
-
-    /**
-     *
-     */
-    std::atomic<bool> mRunning;
-
-    /**
-     *
-     */
-    std::atomic<bool> mTerminated;
-
-    /**
-     *
-     */
-    std::thread* mThread;
 };
 
 } /* namespace cpp */

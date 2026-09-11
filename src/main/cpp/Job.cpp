@@ -39,11 +39,11 @@ Job::cancel(const bool mayInterruptIfRunning)
             "Unsupported value for mayInterruptIfRunning (true)");
     }
 
+    mCancelled = true;
+
     if (!isAlive()) {
         return false;
     }
-
-    mCancelled = true;
 
     return true;
 }

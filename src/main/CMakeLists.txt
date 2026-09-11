@@ -48,6 +48,7 @@ ADD_LIBRARY(
     ${CMAKE_CURRENT_SOURCE_DIR}/CardSelectionResponseAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CardSelectionResultAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CardSelectionScenarioAdapter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/InternalDto.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IsoCardSelectorAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/LocalConfigurableReaderAdapter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/LocalPluginAdapter.cpp

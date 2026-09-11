@@ -15,29 +15,38 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
+
+#include "keyple/core/util/cpp/exception/UnsupportedOperationException.hpp"
 
 namespace keyple {
 namespace core {
 namespace service {
 
+using keyple::core::util::cpp::exception::UnsupportedOperationException;
+
+/* CARD SELECTION ADAPTER
+ * ----------------------------------------------------------------------- */
+
 InternalDto::CardSelectionAdapter::CardSelectionAdapter(
     const std::shared_ptr<CardSelectionExtensionSpi> src)
 : mCardSelectionRequest(
-      std::make_shared<CardSelectionRequest>(src->getCardSelectionRequest()))
+      std::unique_ptr<CardSelectionRequest>(
+          new CardSelectionRequest(src->getCardSelectionRequest())))
 {
 }
 
-const std::shared_ptr<CardSelectionRequestSpi>
-InternalDto::CardSelectionAdapter::getCardSelectionRequest() const
+std::unique_ptr<CardSelectionRequestSpi>
+InternalDto::CardSelectionAdapter::getCardSelectionRequest()
 {
-    return mCardSelectionRequest;
+    return std::move(mCardSelectionRequest);
 }
 
-const std::shared_ptr<SmartCardSpi>
+std::shared_ptr<SmartCardSpi>
 InternalDto::CardSelectionAdapter::parse(
-    const std::shared_ptr<CardSelectionResponseApi> cardSelectionResponseApi)
-    const
+    const std::shared_ptr<
+        CardSelectionResponseApi>& /* cardSelectionResponseApi */)
 {
     throw UnsupportedOperationException(
         "Method not supported for internal DTO");
@@ -46,7 +55,7 @@ InternalDto::CardSelectionAdapter::parse(
 /* CARD SELECTION REQUEST
  * ----------------------------------------------------------------------- */
 
-InternalDto::CardSelectionAdapter::CardSelectionRequest(
+InternalDto::CardSelectionRequest::CardSelectionRequest(
     const std::shared_ptr<CardSelectionRequestSpi> src)
 {
     if (src->getCardRequest() != nullptr) {
@@ -56,26 +65,25 @@ InternalDto::CardSelectionAdapter::CardSelectionRequest(
     mSuccessfulSelectionStatusWords = src->getSuccessfulSelectionStatusWords();
 }
 
-const std::vector<int>
-InternalDto::CardSelectionAdapter::getSuccessfulSelectionStatusWords() const
+const std::vector<int>&
+InternalDto::CardSelectionRequest::getSuccessfulSelectionStatusWords() const
 {
     return mSuccessfulSelectionStatusWords;
 }
 
 const std::shared_ptr<CardRequestSpi>
-InternalDto::CardSelectionAdapter::getCardRequest() const
+InternalDto::CardSelectionRequest::getCardRequest() const
 {
     return mCardRequest;
 }
 
 /* CARD REQUEST
- * ---------------------------------------------------------------------------------
- */
+ * ----------------------------------------------------------------------- */
 
 InternalDto::CardRequest::CardRequest(const std::shared_ptr<CardRequestSpi> src)
 {
     for (const auto& apduRequestSpi : src->getApduRequests()) {
-        apduRequests.push_back(std::make_shared<ApduRequest>(apduRequestSpi));
+        mApduRequests.push_back(std::make_shared<ApduRequest>(apduRequestSpi));
     }
 
     mStopOnUnsuccessfulStatusWord = src->stopOnUnsuccessfulStatusWord();
@@ -84,22 +92,17 @@ InternalDto::CardRequest::CardRequest(const std::shared_ptr<CardRequestSpi> src)
 const std::vector<std::shared_ptr<ApduRequestSpi>>&
 InternalDto::CardRequest::getApduRequests() const
 {
-    return mAapduRequests;
+    return mApduRequests;
 }
 
-cool
+bool
 InternalDto::CardRequest::stopOnUnsuccessfulStatusWord() const
 {
     return mStopOnUnsuccessfulStatusWord;
 }
 
-/* APDU REQUESR
- * ---------------------------------------------------------------------------------
- */
-
-InternalDto::ApduRequest::ApduRequest()
-{
-}
+/* APDU REQUEST
+ * ----------------------------------------------------------------------- */
 
 InternalDto::ApduRequest::ApduRequest(const std::shared_ptr<ApduRequestSpi> src)
 : mApdu(src->getApdu())
@@ -114,10 +117,16 @@ InternalDto::ApduRequest::getApdu() const
     return mApdu;
 }
 
+void
+InternalDto::ApduRequest::setApdu(const std::vector<uint8_t>& apdu)
+{
+    mApdu = apdu;
+}
+
 const std::vector<int>&
 InternalDto::ApduRequest::getSuccessfulStatusWords() const
 {
-    return successfulStatusWords;
+    return mSuccessfulStatusWords;
 }
 
 const std::string&
