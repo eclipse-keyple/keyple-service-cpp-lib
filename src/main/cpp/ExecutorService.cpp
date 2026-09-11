@@ -33,6 +33,7 @@ using keyple::core::util::cpp::Thread;
 ExecutorService::ExecutorService()
 : mRunning(false)
 , mTerminated(false)
+, mShutdown(false)
 {
 }
 
@@ -97,6 +98,14 @@ ExecutorService::execute(std::shared_ptr<Job> job)
 {
     {
         std::lock_guard<std::mutex> lock(mMutex);
+        /*
+         * Once shut down, reject the job as a Java ThreadPoolExecutor does.
+         * Accepting it would restart a worker thread that no shutdown will
+         * ever join, letting the job outlive the object that submitted it.
+         */
+        if (mShutdown) {
+            return;
+        }
         if (!mThread) {
             mRunning = true;
             mThread = std::unique_ptr<std::thread>(new std::thread(&ExecutorService::run, this));
@@ -124,6 +133,7 @@ ExecutorService::shutdown()
 {
     {
         std::lock_guard<std::mutex> lock(mMutex);
+        mShutdown = true;
         if (!mThread) {
             return;
         }

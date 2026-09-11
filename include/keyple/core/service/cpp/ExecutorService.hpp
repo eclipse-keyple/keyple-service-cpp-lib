@@ -89,6 +89,12 @@ private:
     bool mRunning;
 
     /**
+     * Set once shutdown() has been called; the service then rejects new jobs
+     * instead of starting a fresh worker thread nobody would ever join.
+     */
+    bool mShutdown;
+
+    /**
      *
      */
     bool mTerminated;
