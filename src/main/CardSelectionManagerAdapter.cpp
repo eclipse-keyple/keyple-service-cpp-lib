@@ -14,6 +14,7 @@
 #include "keyple/core/service/CardSelectionManagerAdapter.hpp"
 
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -96,8 +97,10 @@ CardSelectionManagerAdapter::prepareSelection(
             cardSelectionExtension);
     if (!cardSelectionExtensionSpi) {
         throw IllegalArgumentException(
-            "The provided 'cardSelectionExtension' must be an instance"
-            " of 'CardSelectionExtensionSpi");
+            std::string(
+                "Cannot cast 'cardSelectionExtension' to "
+                "CardSelectionExtensionSpi. Actual type: ")
+            + typeid(cardSelectionExtension).name());
     }
 
     /* Keep the selection request */
@@ -233,9 +236,11 @@ CardSelectionManagerAdapter::processCardSelectionResponses(
                     mCardSelections[index]->parse(cardSelectionResponse));
 
             } catch (const ParseException& e) {
+                std::stringstream ss;
+                ss << cardSelectionResponse;
                 throw InvalidCardResponseException(
-                    "Error occurred while parsing the card response: "
-                        + e.getMessage(),
+                    std::string("Failed to parse the card response: ")
+                        + ss.str(),
                     e);
 
             } catch (const UnsupportedOperationException&) {

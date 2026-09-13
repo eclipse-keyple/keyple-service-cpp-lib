@@ -14,6 +14,7 @@
 #include "keyple/core/service/ObservableReaderStateServiceAdapter.hpp"
 
 #include <memory>
+#include <string>
 
 #include "keyple/core/plugin/spi/reader/observable/state/insertion/CardInsertionWaiterAsynchronousSpi.hpp"
 #include "keyple/core/plugin/spi/reader/observable/state/insertion/CardInsertionWaiterBlockingSpi.hpp"
@@ -117,8 +118,10 @@ ObservableReaderStateServiceAdapter::ObservableReaderStateServiceAdapter(
 
     } else {
         throw IllegalStateException(
-            "Reader should implement implement a WaitForCardInsertion "
-            "interface");
+            std::string(
+                "Cannot cast the provided reader extension to a valid "
+                "WaitForCardInsertion interface. Actual type: ")
+            + typeid(mReaderSpi).name());
     }
 
     /* Processing */
@@ -185,8 +188,10 @@ ObservableReaderStateServiceAdapter::ObservableReaderStateServiceAdapter(
 
     } else {
         throw IllegalStateException(
-            "Reader should implement implement a WaitForCardRemoval "
-            "interface");
+            std::string(
+                "Cannot cast the provided reader extension to a valid "
+                "WaitForCardRemoval interface. Actual type: ")
+            + typeid(mReaderSpi).name());
     }
 
     switchState(MonitoringState::WAIT_FOR_START_DETECTION);
@@ -224,14 +229,16 @@ ObservableReaderStateServiceAdapter::switchState(const MonitoringState stateId)
 
     if (mCurrentState != nullptr) {
         mLogger->trace(
-            "Switch state of reader [%] from % to %\n",
+            "[fsmService=%] Switching state [from=%, to=%]\n",
             mReader->getName(),
             mCurrentState->getMonitoringState(),
             stateId);
         mCurrentState->onDeactivate();
     } else {
         mLogger->trace(
-            "Switch state of reader [%] to %\n", mReader->getName(), stateId);
+            "[fsmService=%] Switching state [from=null, to=%]\n",
+            mReader->getName(),
+            stateId);
     }
 
     /* Switch currentState */
@@ -247,6 +254,12 @@ ObservableReaderStateServiceAdapter::switchState(const MonitoringState stateId)
 
     /* onActivate the new current state */
     mCurrentState->onActivate();
+
+    mLogger->trace(
+        "[fsmService=%] State switched [current=%, expected=%]",
+        mReader->getName(),
+        mCurrentState->getMonitoringState(),
+        stateId);
 }
 
 std::shared_ptr<AbstractObservableStateAdapter>

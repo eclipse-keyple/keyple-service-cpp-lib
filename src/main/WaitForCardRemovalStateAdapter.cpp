@@ -41,10 +41,10 @@ void
 WaitForCardRemovalStateAdapter::onEvent(const InternalEvent event)
 {
     mLogger->trace(
-        "Internal event [%] received for reader [%] in current state [%]\n",
-        event,
+        "[fsmState=%, reader=%] Processing internal event [type=%]\n",
+        getMonitoringState(),
         getReader()->getName(),
-        getMonitoringState());
+        event);
 
     /* Process InternalEvent */
     switch (event) {
@@ -68,9 +68,18 @@ WaitForCardRemovalStateAdapter::onEvent(const InternalEvent event)
         break;
 
     default:
-        mLogger->trace("Event ignored\n");
+        mLogger->trace(
+            "[fsmState=%, reader=%] Internal event ignored\n",
+            getMonitoringState(),
+            getReader()->getName());
         break;
     }
+
+    mLogger->trace(
+        "[fsmState=%, reader=%] Internal event processed [type=%]\n",
+        getMonitoringState(),
+        getReader()->getName(),
+        event);
 }
 
 } /* namespace service */

@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "keyple/core/service/PluginEventAdapter.hpp"
+#include "keyple/core/util/cpp/KeypleStd.hpp"
 #include "keyple/core/util/cpp/exception/Exception.hpp"
 
 namespace keyple {
@@ -74,14 +75,18 @@ AbstractObservableLocalPluginAdapter::notifyObservers(
     const std::shared_ptr<PluginEvent> event)
 {
     mLogger->debug(
-        "Plugin [%] notifies event [%] to % observer(s)\n",
+        "[plugin=%] Notifying observers [eventType=%, readerNames=%, "
+        "observeCount=%]\n",
         getName(),
         event->getType(),
+        event->getReaderNames(),
         countObservers());
 
     for (const auto& observer : mObservationManager->getObservers()) {
         notifyObserver(observer, event);
     }
+
+    mLogger->debug("[plugin=%] Observers notified\n", getName());
 }
 
 void
@@ -99,8 +104,15 @@ AbstractObservableLocalPluginAdapter::notifyObserver(
                 ->onPluginObservationError(getName(), std::move(_e));
 
         } catch (const Exception& e2) {
-            mLogger->error("Event notification error: %\n", e2.getMessage());
-            mLogger->error("Original cause: %\n", e.getMessage());
+            mLogger->error(
+                "[plugin=%] Failed to notify observer [reason=%]\n",
+                getName(),
+                e.getMessage());
+            mLogger->error(
+                "[plugin=%] Failed to notify observation exception handler "
+                "[reason=%]\n",
+                getName(),
+                e2.getMessage());
         }
     }
 }

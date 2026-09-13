@@ -13,6 +13,7 @@
 
 #include "keyple/core/service/SmartCardServiceAdapter.hpp"
 
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <utility>
@@ -63,11 +64,27 @@ using keypop::card::CardApiProperties_VERSION;
 using keypop::reader::ReaderApiProperties_VERSION;
 
 const std::string SmartCardServiceAdapter::MSG_VERSION_MISMATCH_DETECTED
-    = "Version mismatch detected: % [%] uses '%' version '%' (expected '%'). "
+    = "Version mismatch detected: % '%' uses '%' version '%' (expected '%'). "
       "Compatibility issues "
       "may arise\n";
 
 std::shared_ptr<SmartCardServiceAdapter> SmartCardServiceAdapter::mInstance;
+
+SmartCardServiceAdapter::SmartCardServiceAdapter()
+{
+    const char* value = std::getenv("isAutomaticStatusCodeHandlingEnabled");
+    if (value != nullptr
+        && StringUtils::tolower(std::string(value)) == "false") {
+        mIsAutomaticStatusCodeHandlingEnabled = false;
+        mLogger->warn("Automatic status code handling is disabled\n");
+    }
+}
+
+bool
+SmartCardServiceAdapter::isAutomaticStatusCodeHandlingEnabled() const
+{
+    return mIsAutomaticStatusCodeHandlingEnabled;
+}
 
 std::shared_ptr<SmartCardServiceAdapter>
 SmartCardServiceAdapter::getInstance()
@@ -94,8 +111,8 @@ SmartCardServiceAdapter::compareVersions(
 
     if (providedVersions.size() != localVersions.size()) {
         throw IllegalStateException(
-            "Inconsistent version numbers: provided = " + providedVersion
-            + ", local = " + localVersion);
+            "Inconsistent version numbers. Provided = " + providedVersion
+            + ", Local: " + localVersion);
     }
 
     int provided = 0;
@@ -177,7 +194,11 @@ SmartCardServiceAdapter::registerPlugin(
             // pluginFactory);
         } else {
             throw IllegalArgumentException(
-                "The factory doesn't implement the right SPI");
+                std::string(
+                    "Cannot cast the provided factory to PluginFactorySpi, "
+                    "PoolPluginFactorySpi or RemotePluginFactorySpi. Actual "
+                    "type: ")
+                + typeid(pluginFactory).name());
         }
 
         mPlugins.insert({plugin->getName(), plugin});
@@ -191,9 +212,7 @@ SmartCardServiceAdapter::registerPlugin(
 
     } catch (const PluginIOException& e) {
         throw KeyplePluginException(
-            std::string("Unable to register the plugin [") + plugin->getName()
-                + "]: " + e.getMessage(),
-            e);
+            std::string("Failed to register plugin: ") + plugin->getName(), e);
     }
 
     return plugin;
@@ -202,7 +221,7 @@ SmartCardServiceAdapter::registerPlugin(
 void
 SmartCardServiceAdapter::unregisterPlugin(const std::string& pluginName)
 {
-    mLogger->info("Unregister plugin [%]\n", pluginName);
+    mLogger->info("Unregistering plugin [plugin=%]\n", pluginName);
 
     const std::lock_guard<std::mutex> lock(mMutex);
 
@@ -214,7 +233,7 @@ SmartCardServiceAdapter::unregisterPlugin(const std::string& pluginName)
         mPlugins.erase(i);
 
     } else {
-        mLogger->warn("Plugin [%] not registered\n", pluginName);
+        mLogger->warn("Plugin not registered [plugin=%]\n", pluginName);
     }
 }
 
@@ -395,13 +414,13 @@ SmartCardServiceAdapter::checkCardExtensionVersion(
 void
 SmartCardServiceAdapter::checkPluginRegistration(const std::string& pluginName)
 {
-    mLogger->info("Registering a new Plugin to the service : %\n", pluginName);
+    mLogger->info("Registering plugin [plugin=%]\n", pluginName);
 
     const auto it = mPlugins.find(pluginName);
     if (it != mPlugins.end()) {
         throw IllegalStateException(
-            "Plugin [" + pluginName
-            + "] has already been registered to the service.");
+            "Plugin '" + pluginName
+            + "' has already been registered to the service");
     }
 }
 
@@ -416,10 +435,9 @@ SmartCardServiceAdapter::createLocalPlugin(
 
     if (pluginSpi->getName() != pluginFactorySpi->getPluginName()) {
         throw IllegalArgumentException(
-            std::string("Plugin name [") + pluginSpi->getName()
-            + std::string("] mismatches the expected name [")
-            + pluginFactorySpi->getPluginName()
-            + std::string("] provided by the factory"));
+            std::string("Plugin name '") + pluginSpi->getName()
+            + "' mismatches the expected name '"
+            + pluginFactorySpi->getPluginName() + "' provided by the factory");
     }
 
     std::shared_ptr<AbstractPluginAdapter> plugin = nullptr;
@@ -454,10 +472,10 @@ SmartCardServiceAdapter::createLocalPoolPlugin(
 
     if (poolPluginSpi->getName() != poolPluginFactorySpi->getPoolPluginName()) {
         throw IllegalArgumentException(
-            std::string("Pool plugin name [") + poolPluginSpi->getName()
-            + "] mismatches the expected name ["
+            std::string("Pool plugin name '") + poolPluginSpi->getName()
+            + "' mismatches the expected name '"
             + poolPluginFactorySpi->getPoolPluginName()
-            + "] provided by the factory");
+            + "' provided by the factory");
     }
 
     return std::make_shared<LocalPoolPluginAdapter>(poolPluginSpi);

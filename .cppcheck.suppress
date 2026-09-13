@@ -16,3 +16,4 @@ missingInclude
 unusedStructMember
 accessMoved
 normalCheckLevelMaxBranches
+useStlAlgorithm

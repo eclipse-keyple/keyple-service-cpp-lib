@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include "keyple/core/service/InternalCardSelector.hpp"
@@ -63,6 +64,18 @@ public:
      */
     BasicCardSelector&
     filterByPowerOnData(const std::string& powerOnDataRegex) override;
+
+    /**
+     *
+     */
+    friend KEYPLESERVICE_API std::ostream&
+    operator<<(std::ostream& os, const BasicCardSelectorAdapter& bcsa);
+
+    /**
+     *
+     */
+    friend KEYPLESERVICE_API std::ostream& operator<<(
+        std::ostream& os, const std::shared_ptr<BasicCardSelectorAdapter> bcsa);
 
 private:
     /**

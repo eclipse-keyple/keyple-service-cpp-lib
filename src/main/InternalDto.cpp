@@ -13,7 +13,9 @@
 
 #include "keyple/core/service/InternalDto.hpp"
 
+#include <iomanip>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -52,6 +54,37 @@ InternalDto::CardSelectionAdapter::parse(
         "Method not supported for internal DTO");
 }
 
+std::ostream&
+operator<<(std::ostream& os, const InternalDto::CardSelectionAdapter& csa)
+{
+    os << "CARD_SELECTION_ADAPTER: {"
+       << "CARD_SELECTION_REQUEST: ";
+
+    if (csa.mCardSelectionRequest == nullptr) {
+        os << "null";
+    } else {
+        os << *csa.mCardSelectionRequest;
+    }
+
+    os << "}";
+
+    return os;
+}
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const std::shared_ptr<InternalDto::CardSelectionAdapter> csa)
+{
+    if (csa == nullptr) {
+        os << "CARD_SELECTION_ADAPTER: null";
+    } else {
+        os << *csa;
+    }
+
+    return os;
+}
+
 /* CARD SELECTION REQUEST
  * ----------------------------------------------------------------------- */
 
@@ -77,6 +110,49 @@ InternalDto::CardSelectionRequest::getCardRequest() const
     return mCardRequest;
 }
 
+std::ostream&
+operator<<(std::ostream& os, const InternalDto::CardSelectionRequest& csr)
+{
+    std::stringstream ssSw;
+    for (auto it = std::begin(csr.mSuccessfulSelectionStatusWords);
+         it != std::end(csr.mSuccessfulSelectionStatusWords);
+         ++it) {
+        ssSw << std::uppercase << std::hex << std::setfill('0') << std::setw(4)
+             << static_cast<int>(*it);
+        if (it != csr.mSuccessfulSelectionStatusWords.end() - 1) {
+            ssSw << ", ";
+        }
+    }
+
+    os << "CARD_SELECTION_REQUEST: {"
+       << "CARD_REQUEST: ";
+
+    if (csr.mCardRequest == nullptr) {
+        os << "null";
+    } else {
+        os << *csr.mCardRequest;
+    }
+
+    os << ", "
+       << "SUCCESSFUL_SELECTION_STATUS_WORDS: " << ssSw.str() << "}";
+
+    return os;
+}
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const std::shared_ptr<InternalDto::CardSelectionRequest> csr)
+{
+    if (csr == nullptr) {
+        os << "CARD_SELECTION_REQUEST: null";
+    } else {
+        os << *csr;
+    }
+
+    return os;
+}
+
 /* CARD REQUEST
  * ----------------------------------------------------------------------- */
 
@@ -99,6 +175,29 @@ bool
 InternalDto::CardRequest::stopOnUnsuccessfulStatusWord() const
 {
     return mStopOnUnsuccessfulStatusWord;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const InternalDto::CardRequest& cr)
+{
+    os << "CARD_REQUEST: {"
+       << "APDU_REQUESTS: " << cr.mApduRequests << ", "
+       << "STOP_ON_UNSUCCESSFUL_STATUS_WORD: "
+       << cr.mStopOnUnsuccessfulStatusWord << "}";
+
+    return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const std::shared_ptr<InternalDto::CardRequest> cr)
+{
+    if (cr == nullptr) {
+        os << "CARD_REQUEST: null";
+    } else {
+        os << *cr;
+    }
+
+    return os;
 }
 
 /* APDU REQUEST
@@ -133,6 +232,46 @@ const std::string&
 InternalDto::ApduRequest::getInfo() const
 {
     return mInfo;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const InternalDto::ApduRequest& ar)
+{
+    std::stringstream ssApdu;
+    for (const auto val : ar.mApdu) {
+        ssApdu << std::uppercase << std::hex << std::setfill('0')
+               << std::setw(2) << static_cast<int>(val);
+    }
+
+    std::stringstream ssSw;
+    for (auto it = std::begin(ar.mSuccessfulStatusWords);
+         it != std::end(ar.mSuccessfulStatusWords);
+         ++it) {
+        ssSw << std::uppercase << std::hex << std::setfill('0') << std::setw(4)
+             << static_cast<int>(*it);
+        if (it != ar.mSuccessfulStatusWords.end() - 1) {
+            ssSw << ", ";
+        }
+    }
+
+    os << "APDU_REQUEST: {"
+       << "APDU: " << ssApdu.str() << ", "
+       << "SUCCESSFUL_STATUS_WORD: " << ssSw.str() << ", "
+       << "INFO: " << ar.mInfo << "}";
+
+    return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const std::shared_ptr<InternalDto::ApduRequest> ar)
+{
+    if (ar == nullptr) {
+        os << "APDU_REQUEST: null";
+    } else {
+        os << *ar;
+    }
+
+    return os;
 }
 
 } /* namespace service */

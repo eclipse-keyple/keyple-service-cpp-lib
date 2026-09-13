@@ -13,6 +13,8 @@
 
 #include "keyple/core/service/BasicCardSelectorAdapter.hpp"
 
+#include <memory>
+#include <sstream>
 #include <string>
 
 namespace keyple {
@@ -49,6 +51,31 @@ BasicCardSelectorAdapter::filterByPowerOnData(
     return *this;
 }
 
+std::ostream&
+operator<<(std::ostream& os, const BasicCardSelectorAdapter& bcsa)
+{
+    os << "BASIC_CARD_SELECTOR_ADAPTER: {"
+       << "LOGICAL_PROTOCOL_NAME: " << bcsa.mLogicalProtocolName << ", "
+       << "POWER_ON_DATA_REGEX: " << bcsa.mPowerOnDataRegex << "}";
+
+    return os;
+}
+
+/**
+ *
+ */
+std::ostream&
+operator<<(
+    std::ostream& os, const std::shared_ptr<BasicCardSelectorAdapter> bcsa)
+{
+    if (bcsa == nullptr) {
+        os << "BASIC_CARD_SELECTOR_ADAPTER: null";
+    } else {
+        os << *bcsa;
+    }
+
+    return os;
+}
 } /* namespace service */
 } /* namespace core */
 } /* namespace keyple */

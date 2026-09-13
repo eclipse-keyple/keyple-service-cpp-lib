@@ -154,14 +154,15 @@ std::shared_ptr<CardReaderEvent>
 ObservableLocalReaderAdapter::processCardInserted()
 {
     /* RL-DET-INSNOTIF.1 */
-    mLogger->trace("Process inserted card\n");
+    mLogger->trace("[reader=%] Processing inserted card\n", getName());
 
     mIsCardRemovedEventNotificationEnabled = true;
 
     if (mCardSelectionScenario == nullptr) {
         mLogger->trace(
-            "No card selection scenario defined. Notify "
-            "[CARD_INSERTED] event\n");
+            "[reader=%] No card selection scenario defined. Notifying card "
+            "reader event [eventType=CARD_INSERTED]\n",
+            getName());
 
         /* No default request is defined, just notify the card insertion */
         return std::make_shared<ReaderEventAdapter>(
@@ -193,19 +194,23 @@ ObservableLocalReaderAdapter::processCardInserted()
         }
 
         if (mNotificationMode == NotificationMode::MATCHED_ONLY) {
-            /* Notify only if a card matched the selection, just ignore if not
+            /*
+             * Notify only if a card matched the selection, just ignore if not.
              */
             mLogger->trace(
-                "Selection hasn't matched. Do not throw any event because of "
-                "[MATCHED_ONLY] flag\n");
+                "[reader=%] Selection hasn't matched. Event not notified "
+                "because the notification mode is MATCHED_ONLY\n",
+                getName());
 
             return nullptr;
         }
 
-        /* The card didn't match, notify an CARD_INSERTED event with the
-         * received response */
-        mLogger->trace(
-            "[%] none of % default selection matched\n",
+        /*
+         * The card didn't match, notify an CARD_INSERTED event with the
+         * received response.
+         */
+        mLogger->debug(
+            "[reader=%] No selection cases matched [selectionCaseCount=%]\n",
             getName(),
             cardSelectionResponses.size());
 
@@ -223,8 +228,9 @@ ObservableLocalReaderAdapter::processCardInserted()
         getObservationExceptionHandler()->onReaderObservationError(
             getPluginName(), getName(), rce);
 
-    } catch (const CardBrokenCommunicationException&) {
-        /* The last transmission failed, close the logical and physical channels
+    } catch (const CardBrokenCommunicationException& e) {
+        /*
+         * The last transmission failed, close the logical and physical channels
          */
         closeLogicalAndPhysicalChannelsSilently();
 
@@ -233,8 +239,9 @@ ObservableLocalReaderAdapter::processCardInserted()
          * event notification, just log.
          */
         mLogger->warn(
-            "Error while processing card selection scenario: %\n",
-            "");  // e.getMessage());
+            "[reader=%] Failed to process card selection scenario [reason=%]\n",
+            getName(),
+            e.getMessage());
     }
 
     /*
@@ -269,7 +276,8 @@ ObservableLocalReaderAdapter::hasACardMatched(
                 return cardSelectionResponse != nullptr
                        && cardSelectionResponse->hasMatched();
             })) {
-        mLogger->trace("A default selection case matched\n");
+        mLogger->trace(
+            "[reader=%] A default selection case matched\n", getName());
         return true;
     }
 
@@ -302,7 +310,7 @@ ObservableLocalReaderAdapter::notifyObservers(
     const std::shared_ptr<CardReaderEvent> event)
 {
     mLogger->debug(
-        "Reader [%] notifies event [%] to % observer(s)\n",
+        "[reader=%] Notifying observers [eventType=%, observerCount=%]\n",
         getName(),
         event->getType(),
         countObservers());
@@ -310,6 +318,8 @@ ObservableLocalReaderAdapter::notifyObservers(
     for (const auto& observer : mObservationManager->getObservers()) {
         notifyObserver(observer, event);
     }
+
+    mLogger->debug("[reader=%] Observers notified\n", getName());
 }
 
 void
@@ -319,16 +329,25 @@ ObservableLocalReaderAdapter::notifyObserver(
 {
     try {
         observer->onReaderEvent(event);
+
     } catch (const Exception& e) {
         try {
             mObservationManager->getObservationExceptionHandler()
                 ->onReaderObservationError(
                     getPluginName(), getName(), std::make_shared<Exception>(e));
+
         } catch (const Exception& e2) {
             mLogger->error(
-                "Event notification error: % - %\n", e2.getMessage(), e2);
-            mLogger->error("Original cause: % - %\n", e.getMessage(), e);
+                "[reader=%] Failed to notify observer [reason=%]\n",
+                getName(),
+                e.getMessage());
+            mLogger->error(
+                "[reader=%] Failed to notify observation exception handler "
+                "[reason=%]\n",
+                getName(),
+                e2.getMessage());
         }
+
     } catch (const std::exception& e) {
         try {
             mObservationManager->getObservationExceptionHandler()
@@ -337,8 +356,15 @@ ObservableLocalReaderAdapter::notifyObserver(
                     getName(),
                     std::make_shared<std::runtime_error>(e.what()));
         } catch (const std::exception& e2) {
-            mLogger->error("Event notification error: %\n", e2.what());
-            mLogger->error("Original cause: %\n", e.what());
+            mLogger->error(
+                "Reader [%] failed to notify observer: %\n",
+                getName(),
+                e.what());
+            mLogger->error(
+                "Reader [%] failed to notify observation exception handler: "
+                "%\n",
+                getName(),
+                e2.what());
         }
     }
 }
@@ -358,8 +384,10 @@ ObservableLocalReaderAdapter::doUnregister()
     try {
         stopCardDetection();
     } catch (const Exception& e) {
-        mLogger->error(
-            "Error stopping card detection on reader [%] - %\n", getName(), e);
+        mLogger->warn(
+            "[reader=%] Failed to stop card monitoring [reason=%]\n",
+            getName(),
+            e.getMessage());
     }
 
     /* Finally */
@@ -435,7 +463,7 @@ ObservableLocalReaderAdapter::startCardDetection(
     checkStatus();
 
     mLogger->info(
-        "Reader [%] starts card detection with polling mode [%]\n",
+        "[reader=%] Starting card monitoring [detectionMode=%]\n",
         getName(),
         detectionMode);
 
@@ -447,7 +475,7 @@ void
 ObservableLocalReaderAdapter::stopCardDetection()
 {
     /* RL-DET-REMCTRL.1 */
-    mLogger->info("Reader [%] stops card detection\n", getName());
+    mLogger->info("[reader=%] Stopping card monitoring\n", getName());
 
     mStateService->onEvent(InternalEvent::STOP_DETECT);
 }
@@ -455,7 +483,7 @@ ObservableLocalReaderAdapter::stopCardDetection()
 void
 ObservableLocalReaderAdapter::finalizeCardProcessing()
 {
-    mLogger->info("Reader [%] starts card removal sequence\n", getName());
+    mLogger->info("[reader=%] Starting card removal sequence\n", getName());
 
     mStateService->onEvent(InternalEvent::CARD_PROCESSED);
 }

@@ -25,6 +25,7 @@
 #include "keyple/core/plugin/spi/reader/AutonomousSelectionReaderSpi.hpp"
 #include "keyple/core/plugin/spi/reader/ConfigurableReaderSpi.hpp"
 #include "keyple/core/service/CardSelectionResponseAdapter.hpp"
+#include "keyple/core/service/SmartCardServiceProvider.hpp"
 #include "keyple/core/util/ApduUtil.hpp"
 #include "keyple/core/util/HexUtil.hpp"
 #include "keyple/core/util/KeypleAssert.hpp"
@@ -85,6 +86,9 @@ LocalReaderAdapter::LocalReaderAdapter(
 , mCurrentLogicalProtocolName("")
 , mCurrentPhysicalProtocolName("")
 , mProtocolAssociations({})
+, mIsAutomaticStatusCodeHandlingEnabled(
+      SmartCardServiceProvider::getService()
+          ->isAutomaticStatusCodeHandlingEnabled())
 {
 }
 
@@ -432,55 +436,130 @@ LocalReaderAdapter::processApduRequest(
         apduResponse,
         elapsed10ms / 10.0);
 
-    if (apduResponse->getDataOut().size() == 0) {
+    if (mIsAutomaticStatusCodeHandlingEnabled) {
         if ((apduResponse->getStatusWord() & SW1_MASK) == SW_6100) {
             /*
              * RL-SW-61XX.1
-             * Build a GetResponse APDU command with the provided "le"
+             * Handle chained responses by accumulating data from multiple
+             * GET RESPONSE commands
              */
-            const uint8_t le = apduResponse->getStatusWord() & SW2_MASK;
-            const std::vector<uint8_t> getResponseApdu
-                = {0x00, 0xC0, 0x00, 0x00, le};
+            std::vector<std::vector<uint8_t>> dataChunks;
 
-            /* Execute APDU */
-            auto adapter = std::shared_ptr<ApduRequest>(
-                new ApduRequest(getResponseApdu));
-            adapter->setInfo("Internal Get Response");
-            apduResponse = processApduRequest(adapter);
+            /* Add initial data if present */
+            if (apduResponse->getDataOut().size() > 0) {
+                dataChunks.push_back(apduResponse->getDataOut());
+            }
 
-        } else if ((apduResponse->getStatusWord() & SW1_MASK) == SW_6C00) {
             /*
-             * RL-SW-6CXX.1
-             * Update the last command with the provided "le"
+             * Keep sending GET RESPONSE until we get a status word other
+             * than 61XX
              */
-            std::vector<std::uint8_t> apdu = apduRequest->getApdu();
-            apdu[apduRequest->getApdu().size() - 1]
-                = (apduResponse->getStatusWord() & SW2_MASK);
-            apduRequest->setApdu(apdu);
+            while ((apduResponse->getStatusWord() & SW1_MASK) == SW_6100) {
+                /* Build a GetResponse APDU command with the length from SW2 */
+                const uint8_t le = apduResponse->getStatusWord() & SW2_MASK;
+                const std::vector<uint8_t> getResponseApdu
+                    = {0x00, 0xC0, 0x00, 0x00, le};
 
-            /* Replay the last command APDU */
-            apduResponse = processApduRequest(apduRequest);
+                uint64_t chainedTimeStamp = System::nanoTime();
+                uint64_t chainedElapsed10ms
+                    = (chainedTimeStamp - mBefore) / 100000;
+                mBefore = chainedTimeStamp;
 
-        } else if (
-            ApduUtil::isCase4(apduRequest->getApdu())
-            && Arrays::contains(
-                apduRequest->getSuccessfulStatusWords(),
-                apduResponse->getStatusWord())) {
+                mLogger->debug(
+                    "Reader [%] --> GET RESPONSE (chained): %, elapsed % ms\n",
+                    getName(),
+                    HexUtil::toHex(getResponseApdu),
+                    chainedElapsed10ms / 10.0);
+
+                /* Execute APDU directly to avoid recursive status handling */
+                apduResponse = std::make_shared<ApduResponseAdapter>(
+                    mReaderSpi->transmitApdu(getResponseApdu));
+
+                chainedTimeStamp = System::nanoTime();
+                chainedElapsed10ms = (chainedTimeStamp - mBefore) / 100000;
+                mBefore = chainedTimeStamp;
+
+                mLogger->debug(
+                    "Reader [%] <-- apduResponse (chained): %, elapsed % ms\n",
+                    getName(),
+                    apduResponse,
+                    chainedElapsed10ms / 10.0);
+
+                /* Add data from this response */
+                if (apduResponse->getDataOut().size() > 0) {
+                    dataChunks.push_back(apduResponse->getDataOut());
+                }
+            }
+
             /*
-             * RL-SW-ANALYSIS.1
-             * RL-SW-CASE4.1 (SW=6200 not taken into account here)
-             * Build a GetResponse APDU command with the original "le"
+             * Merge all data chunks into a single response with the final
+             * status word
              */
-            const uint8_t le
-                = apduRequest->getApdu()[apduRequest->getApdu().size() - 1];
-            const std::vector<uint8_t> getResponseApdu
-                = {0x00, 0xC0, 0x00, 0x00, le};
+            if (!dataChunks.empty()) {
+                size_t totalLength = 0;
+                for (const auto& chunk : dataChunks) {
+                    totalLength += chunk.size();
+                }
 
-            /* Execute GetResponse APDU */
-            auto adapter = std::shared_ptr<ApduRequest>(
-                new ApduRequest(getResponseApdu));
-            adapter->setInfo("Internal Get Response");
-            apduResponse = processApduRequest(adapter);
+                /* +2 for status word */
+                std::vector<uint8_t> completeApdu(totalLength + 2);
+                size_t offset = 0;
+                for (const auto& chunk : dataChunks) {
+                    std::copy(
+                        chunk.begin(),
+                        chunk.end(),
+                        completeApdu.begin() + offset);
+                    offset += chunk.size();
+                }
+
+                /* Append final status word */
+                completeApdu[totalLength] = static_cast<uint8_t>(
+                    (apduResponse->getStatusWord() >> 8) & 0xFF);
+                completeApdu[totalLength + 1] = static_cast<uint8_t>(
+                    apduResponse->getStatusWord() & 0xFF);
+
+                apduResponse
+                    = std::make_shared<ApduResponseAdapter>(completeApdu);
+            }
+
+        } else if (apduResponse->getDataOut().size() == 0) {
+            /* Handle 6CXX and Case4 only when there's no data in the response
+             */
+
+            if ((apduResponse->getStatusWord() & SW1_MASK) == SW_6C00) {
+                /*
+                 * RL-SW-6CXX.1
+                 * Update the last command with the provided "le"
+                 */
+                std::vector<std::uint8_t> apdu = apduRequest->getApdu();
+                apdu[apduRequest->getApdu().size() - 1]
+                    = (apduResponse->getStatusWord() & SW2_MASK);
+                apduRequest->setApdu(apdu);
+
+                /* Replay the last command APDU */
+                apduResponse = processApduRequest(apduRequest);
+
+            } else if (
+                ApduUtil::isCase4(apduRequest->getApdu())
+                && Arrays::contains(
+                    apduRequest->getSuccessfulStatusWords(),
+                    apduResponse->getStatusWord())) {
+                /*
+                 * RL-SW-ANALYSIS.1
+                 * RL-SW-CASE4.1 (SW=6200 not taken into account here)
+                 * Build a GetResponse APDU command with the original "le"
+                 */
+                const uint8_t le
+                    = apduRequest->getApdu()[apduRequest->getApdu().size() - 1];
+                const std::vector<uint8_t> getResponseApdu
+                    = {0x00, 0xC0, 0x00, 0x00, le};
+
+                /* Execute GetResponse APDU */
+                auto adapter = std::shared_ptr<ApduRequest>(
+                    new ApduRequest(getResponseApdu));
+                adapter->setInfo("Internal Get Response");
+                apduResponse = processApduRequest(adapter);
+            }
         }
     }
 
@@ -599,7 +678,7 @@ LocalReaderAdapter::processCardRequest(
             throw ReaderBrokenCommunicationException(
                 std::make_shared<CardResponseAdapter>(apduResponses, false),
                 false,
-                "Reader communication failure while transmitting a card "
+                "Failed to communicate with reader. Unable to transmit card "
                 "request",
                 std::make_shared<ReaderIOException>(e));
 
@@ -608,7 +687,8 @@ LocalReaderAdapter::processCardRequest(
             throw CardBrokenCommunicationException(
                 std::make_shared<CardResponseAdapter>(apduResponses, false),
                 false,
-                "Card communication failure while transmitting a card request",
+                "Failed to communicate with card. Unable to transmit card "
+                "request",
                 std::make_shared<CardIOException>(e));
         }
     }
@@ -641,13 +721,15 @@ LocalReaderAdapter::processCardSelectionRequests(
             throw ReaderBrokenCommunicationException(
                 nullptr,
                 false,
-                "Reader communication failure while opening physical channel",
+                "Failed to communicate with reader. Unable to open physical "
+                "channel",
                 std::make_shared<ReaderIOException>(e));
         } catch (const CardIOException& e) {
             throw CardBrokenCommunicationException(
                 nullptr,
                 false,
-                "Card communication failure while opening physical channel",
+                "Failed to communicate with card. Unable to open physical "
+                "channel",
                 std::make_shared<CardIOException>(e));
         }
     }
@@ -694,18 +776,19 @@ LocalReaderAdapter::doUnregister()
     try {
         mReaderSpi->closePhysicalChannel();
     } catch (const Exception& e) {
-        mLogger->error(
-            "Error closing physical channel on reader [%] - %\n", getName(), e);
+        mLogger->warn(
+            "[reader=%] Failed to close physical channel [reason=%]\n",
+            getName(),
+            e.getMessage());
     }
 
     try {
         mReaderSpi->onUnregister();
     } catch (const Exception& e) {
-        mLogger->error(
-            "Error unregistering reader extension of reader [%]: % - %\n",
+        mLogger->warn(
+            "[reader=%] Failed to unregister reader extension [reason=%]\n",
             getName(),
-            e.getMessage(),
-            e);
+            e.getMessage());
     }
 
     AbstractReaderAdapter::doUnregister();
@@ -724,10 +807,9 @@ LocalReaderAdapter::closeLogicalAndPhysicalChannelsSilently()
         mReaderSpi->closePhysicalChannel();
     } catch (const ReaderIOException& e) {
         mLogger->error(
-            "Error closing physical channel on reader [%]: % - %\n",
+            "[reader=%] Failed to close physical channel [reason=%]\n",
             getName(),
-            e.getMessage(),
-            e);
+            e.getMessage());
     }
 }
 

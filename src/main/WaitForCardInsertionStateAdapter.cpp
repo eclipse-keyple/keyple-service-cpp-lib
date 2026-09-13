@@ -41,10 +41,10 @@ void
 WaitForCardInsertionStateAdapter::onEvent(const InternalEvent event)
 {
     mLogger->trace(
-        "Internal event [%] received for reader [%] in current state [%]\n",
-        event,
+        "[fsmState=%, reader=%] Processing internal event [type=%]\n",
+        getMonitoringState(),
         getReader()->getName(),
-        getMonitoringState());
+        event);
 
     /* Process InternalEvent */
     switch (event) {
@@ -63,7 +63,10 @@ WaitForCardInsertionStateAdapter::onEvent(const InternalEvent event)
              * stay in the same state, however switch to WAIT_FOR_CARD_INSERTION
              * to relaunch the monitoring job
              */
-            mLogger->trace("Inserted card hasn't matched\n");
+            mLogger->trace(
+                "[fsmState=%, reader=%] Inserted card hasn't matched",
+                getMonitoringState(),
+                getReader()->getName());
 
             switchState(MonitoringState::WAIT_FOR_CARD_REMOVAL);
         }
@@ -73,9 +76,18 @@ WaitForCardInsertionStateAdapter::onEvent(const InternalEvent event)
         switchState(MonitoringState::WAIT_FOR_START_DETECTION);
         break;
     default:
-        mLogger->trace("Event ignored\n");
+        mLogger->trace(
+            "[fsmState=%, reader=%] Internal event ignored\n",
+            getMonitoringState(),
+            getReader()->getName());
         break;
     }
+
+    mLogger->trace(
+        "[fsmState=%, reader=%] Internal event processed [type=%]\n",
+        getMonitoringState(),
+        getReader()->getName(),
+        event);
 }
 
 } /* namespace service */

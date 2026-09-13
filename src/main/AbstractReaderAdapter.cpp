@@ -79,10 +79,11 @@ AbstractReaderAdapter::transmitCardSelectionRequests(
     uint64_t elapsed10ms = (timeStamp - mBefore) / 100000;
     mBefore = timeStamp;
 
-    mLogger->trace(
-        "Reader [%] --> cardSelectionRequests: %, elapsed % ms\n",
+    mLogger->debug(
+        "[reader=%] Send [type=CardSelectionRequests, "
+        "cardSelectionRequestCount=%, elapsedMs=%]\n",
         getName(),
-        cardSelectionRequests,
+        cardSelectionRequests.size(),
         elapsed10ms / 10.0);
 
     try {
@@ -95,7 +96,8 @@ AbstractReaderAdapter::transmitCardSelectionRequests(
         throw CardBrokenCommunicationException(
             e.getCardResponse(),
             false,
-            "An unexpected status word was received",
+            "An unexpected status word was received during the processing of "
+            "the card selection requests",
             std::make_shared<UnexpectedStatusWordException>(e));
     }
 
@@ -103,10 +105,11 @@ AbstractReaderAdapter::transmitCardSelectionRequests(
     elapsed10ms = (timeStamp - mBefore) / 100000;
     mBefore = timeStamp;
 
-    mLogger->trace(
-        "Reader [%] <-- cardSelectionResponses: %, elapsed % ms\n",
+    mLogger->debug(
+        "[reader=%] Receive [type=CardSelectionResponses, "
+        "cardSelectionResponseCount=%, elapsedMs=%]\n",
         getName(),
-        cardSelectionResponses,
+        cardSelectionResponses.size(),
         elapsed10ms / 10.0);
 
     return cardSelectionResponses;
@@ -117,7 +120,7 @@ AbstractReaderAdapter::checkStatus() const
 {
     if (!mIsRegistered) {
         throw IllegalStateException(
-            "This reader, " + getName() + " is not registered");
+            "Reader '" + getName() + "' is not registered");
     }
 }
 
@@ -154,10 +157,11 @@ AbstractReaderAdapter::transmitCardRequest(
     uint64_t elapsed10ms = (timeStamp - mBefore) / 100000;
     mBefore = timeStamp;
 
-    mLogger->trace(
-        "Reader [%] --> cardRequest: %, elapsed % ms\n",
+    mLogger->debug(
+        "[reader=%] Send [type=CardRequest, apduRequestCount=%, "
+        "elapsedMs=%]\n",
         getName(),
-        cardRequest,
+        cardRequest->getApduRequests().size(),
         elapsed10ms / 10.0);
 
     try {
@@ -168,10 +172,12 @@ AbstractReaderAdapter::transmitCardRequest(
         timeStamp = System::nanoTime();
         elapsed10ms = (timeStamp - mBefore) / 100000;
         mBefore = timeStamp;
-        mLogger->trace(
-            "Reader [%] <-- cardResponse: %, elapsed % ms\n",
+        mLogger->debug(
+            "[reader=%] Receive [type=CardResponse, apduResponseCount=%, "
+            "elapsedMs=%]\n",
             getName(),
-            cardResponse,
+            cardResponse != nullptr ? cardResponse->getApduResponses().size()
+                                    : 0,
             elapsed10ms / 10.0);
         throw;
     }

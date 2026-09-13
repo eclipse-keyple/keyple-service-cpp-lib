@@ -58,7 +58,8 @@ AbstractObservableStateAdapter::onActivate()
     /* Launch the monitoringJob if necessary */
     if (mMonitoringJob != nullptr) {
         if (mExecutorService == nullptr) {
-            throw IllegalStateException("ExecutorService must be set");
+            throw IllegalStateException(
+                "ExecutorService is not set. Cannot launch monitoring job");
         }
 
         mMonitoringEvent = mExecutorService->submit(

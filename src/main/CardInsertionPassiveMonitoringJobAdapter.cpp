@@ -14,6 +14,7 @@
 #include "keyple/core/service/CardInsertionPassiveMonitoringJobAdapter.hpp"
 
 #include <memory>
+#include <string>
 
 #include "keyple/core/plugin/ReaderIOException.hpp"
 #include "keyple/core/plugin/TaskCanceledException.hpp"
@@ -35,8 +36,8 @@ using keyple::core::util::cpp::exception::RuntimeException;
 
 using InternalEvent = ObservableLocalReaderAdapter::InternalEvent;
 
-/* CARD INSERTION PASSIVE MONITORING JOB
- * -------------------------------------------------------- */
+const std::string CardInsertionPassiveMonitoringJobAdapter::JOB_ID
+    = "INSERTION_PASSIVE";
 
 CardInsertionPassiveMonitoringJobAdapter::CardInsertionPassiveMonitoringJob ::
     CardInsertionPassiveMonitoringJob(
@@ -54,7 +55,8 @@ CardInsertionPassiveMonitoringJobAdapter::CardInsertionPassiveMonitoringJob::
 {
     try {
         mParent->mLogger->trace(
-            "Start monitoring job process on reader [%]\n",
+            "[fsmJob=%, reader=%] Starting monitoring job process\n",
+            JOB_ID,
             mParent->getReader()->getName());
 
         const auto& cardInsertion
@@ -73,14 +75,19 @@ CardInsertionPassiveMonitoringJobAdapter::CardInsertionPassiveMonitoringJob::
     } catch (const ReaderIOException& e) {
         /* Just warn as it can be a disconnection of the reader. */
         mParent->mLogger->warn(
-            "Monitoring job error while processing card insertion event on "
-            "reader [%]: %\n",
+            "[fsmJob=%, reader=%] Failed to process card insertion event "
+            "[reason=%]\n",
+            JOB_ID,
             mParent->getReader()->getName(),
             e.getMessage());
 
     } catch (const TaskCanceledException& e) {
         mParent->mLogger->warn(
-            "Monitoring job process cancelled: %\n", e.getMessage());
+            "[fsmJob=%, reader=%] Monitoring job process cancelled "
+            "[reason=%]\n",
+            JOB_ID,
+            mParent->getReader()->getName(),
+            e.getMessage());
 
     } catch (const RuntimeException& e) {
         mParent->getReader()
@@ -91,9 +98,6 @@ CardInsertionPassiveMonitoringJobAdapter::CardInsertionPassiveMonitoringJob::
                 std::make_shared<RuntimeException>(e));
     }
 }
-
-/* CARD INSERTION PASSIVE MONITORING JOB ADAPTER
- * ------------------------------------------------ */
 
 CardInsertionPassiveMonitoringJobAdapter::
     CardInsertionPassiveMonitoringJobAdapter(
@@ -114,7 +118,10 @@ CardInsertionPassiveMonitoringJobAdapter::getMonitoringJob(
 void
 CardInsertionPassiveMonitoringJobAdapter::stop()
 {
-    mLogger->trace("Stop monitoring job process\n");
+    mLogger->trace(
+        "[fsmJob=%, reader=%] Stopping monitoring job process\n",
+        JOB_ID,
+        getReader()->getName());
 
     const auto& cardInsertion
         = std::dynamic_pointer_cast<CardInsertionWaiterBlockingSpi>(mReaderSpi);
@@ -127,7 +134,10 @@ CardInsertionPassiveMonitoringJobAdapter::stop()
         waitForCard->stopWaitForCardInsertion();
     }
 
-    mLogger->trace("Monitoring job process stopped\n");
+    mLogger->trace(
+        "[fsmJob=%, reader=%] Monitoring job process stopped\n",
+        JOB_ID,
+        getReader()->getName());
 }
 
 } /* namespace service */

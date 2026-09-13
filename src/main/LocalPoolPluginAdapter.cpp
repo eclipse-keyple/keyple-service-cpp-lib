@@ -51,8 +51,8 @@ LocalPoolPluginAdapter::doUnregister()
     try {
         mPoolPluginSpi->onUnregister();
     } catch (const Exception& e) {
-        mLogger->error(
-            "Error unregistering plugin extension [%]: %\n",
+        mLogger->warn(
+            "[plugin=%] Failed to unregister plugin extension [reason=%]\n",
             getName(),
             e.getMessage());
     }
@@ -69,9 +69,8 @@ LocalPoolPluginAdapter::getReaderGroupReferences() const
         return mPoolPluginSpi->getReaderGroupReferences();
     } catch (const PluginIOException& e) {
         throw KeyplePluginException(
-            std::string("Pool plugin [") + getName()
-                + "] is unable to get reader group references: "
-                + e.getMessage(),
+            std::string("Plugin '") + getName()
+                + "' failed to retrieve reader group references",
             e);
     }
 }
@@ -82,7 +81,7 @@ LocalPoolPluginAdapter::allocateReader(const std::string& readerGroupReference)
     checkStatus();
 
     mLogger->debug(
-        "Pool plugin [%] allocates reader of group reference [%]\n",
+        "[plugin=%] Allocating reader [readerGroupReference=%]\n",
         getName(),
         readerGroupReference);
 
@@ -95,9 +94,9 @@ LocalPoolPluginAdapter::allocateReader(const std::string& readerGroupReference)
         readerSpi = mPoolPluginSpi->allocateReader(readerGroupReference);
     } catch (const PluginIOException& e) {
         throw KeyplePluginException(
-            std::string("Pool plugin [") + getName()
-                + "] unable to allocate reader of reader group reference ["
-                + readerGroupReference + "]: " + e.getMessage(),
+            std::string("Plugin '") + getName()
+                + "' failed to allocate reader of reader group reference: "
+                + readerGroupReference,
             e);
     }
 
@@ -105,6 +104,8 @@ LocalPoolPluginAdapter::allocateReader(const std::string& readerGroupReference)
         = buildLocalReaderAdapter(readerSpi);
     getReadersMap().insert({localReaderAdapter->getName(), localReaderAdapter});
     localReaderAdapter->doRegister();
+
+    mLogger->debug("[plugin=%] Reader allocated\n", getName());
 
     return localReaderAdapter;
 }
@@ -115,7 +116,7 @@ LocalPoolPluginAdapter::releaseReader(std::shared_ptr<CardReader> reader)
     checkStatus();
 
     mLogger->debug(
-        "Pool plugin [%] releases reader [%]\n",
+        "[plugin=%] Releasing reader [reader=%]\n",
         getName(),
         reader != nullptr ? reader->getName() : "null");
 
@@ -129,16 +130,18 @@ LocalPoolPluginAdapter::releaseReader(std::shared_ptr<CardReader> reader)
         /* Java 'finally' code moved here */
         getReadersMap().erase(reader->getName());
         std::dynamic_pointer_cast<LocalReaderAdapter>(reader)->doUnregister();
+
     } catch (const PluginIOException& e) {
         /* Java 'finally' code moved here */
         getReadersMap().erase(reader->getName());
         std::dynamic_pointer_cast<LocalReaderAdapter>(reader)->doUnregister();
         throw KeyplePluginException(
-            std::string("Pool plugin [") + getName()
-                + "] unable to release reader [" + reader->getName()
-                + "]: " + e.getMessage(),
+            std::string("Plugin '") + getName()
+                + "failed to release reader:" + reader->getName(),
             e);
     }
+
+    mLogger->debug("[plugin=%] Reader released\n", getName());
 }
 
 std::shared_ptr<SmartCard>

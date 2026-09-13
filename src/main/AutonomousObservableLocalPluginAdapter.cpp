@@ -36,10 +36,11 @@ AutonomousObservableLocalPluginAdapter::AutonomousObservableLocalPluginAdapter(
 {
     try {
         autonomousObservablePluginSpi->setCallback(this);
-    } catch (const Exception& e) {
+    } catch (const Exception&) {
         mLogger->trace(
-            "Method 'setCallback(...)' unavailable for legacy plugin: %\n",
-            e.getMessage());
+            "[plugin=%] Method 'setCallback(...)' unavailable for legacy "
+            "plugin\n",
+            getName());
         autonomousObservablePluginSpi->connect(this);
     }
 }
@@ -57,8 +58,9 @@ AutonomousObservableLocalPluginAdapter::onReaderConnected(
         notifyReaders.push_back(readerSpi->getName());
     }
 
-    notifyObservers(std::make_shared<PluginEventAdapter>(
-        getName(), notifyReaders, PluginEvent::Type::READER_CONNECTED));
+    notifyObservers(
+        std::make_shared<PluginEventAdapter>(
+            getName(), notifyReaders, PluginEvent::Type::READER_CONNECTED));
 }
 
 void
@@ -72,7 +74,7 @@ AutonomousObservableLocalPluginAdapter::onReaderDisconnected(
         const std::shared_ptr<CardReader> reader = getReader(readerName);
         if (reader == nullptr) {
             mLogger->warn(
-                "Plugin [%] unable to remove unknown reader [%]\n",
+                "[plugin=%] Unable to remove unknown reader [reader=%]\n",
                 getName(),
                 readerName);
         } else {
@@ -81,7 +83,7 @@ AutonomousObservableLocalPluginAdapter::onReaderDisconnected(
                 ->doUnregister();
             getReadersMap().erase(reader->getName());
             mLogger->info(
-                "Plugin [%] removes reader [%] from readers list\n",
+                "[plugin=%] Reader removed from readers list [reader=%]\n",
                 getName(),
                 reader->getName());
 
@@ -89,8 +91,9 @@ AutonomousObservableLocalPluginAdapter::onReaderDisconnected(
         }
     }
 
-    notifyObservers(std::make_shared<PluginEventAdapter>(
-        getName(), notifyReaders, PluginEvent::Type::READER_DISCONNECTED));
+    notifyObservers(
+        std::make_shared<PluginEventAdapter>(
+            getName(), notifyReaders, PluginEvent::Type::READER_DISCONNECTED));
 }
 
 void
@@ -103,7 +106,7 @@ AutonomousObservableLocalPluginAdapter::addReader(
     getReadersMap().insert({reader->getName(), reader});
 
     mLogger->info(
-        "Plugin [%] adds reader [%] to readers list\n",
+        "[plugin=%] Reader added to readers list [reader=%]\n",
         getName(),
         readerSpi->getName());
 }

@@ -955,3 +955,214 @@ TEST(LocalReaderAdapterTest, isCardPresent_whenReaderSpiFails_shouldKRCE)
 
     tearDown();
 }
+
+/*
+ * APDU chaining tests (61XX status word handling)
+ */
+
+TEST(
+    LocalReaderAdapterTest,
+    transmitCardRequest_with61XXResponse_withNoInitialData_shouldChainGetResponse)  // NOLINT
+{
+    setUp();
+
+    std::vector<uint8_t> requestApdu = HexUtil::toByteArray("00A4040000");
+    /* First response: no data, status 6110 (16 bytes available) */
+    const std::vector<uint8_t> firstResponseApdu = HexUtil::toByteArray("6110");
+    /* GET RESPONSE command: 00C0000010 */
+    const std::vector<uint8_t> getResponseApdu
+        = HexUtil::toByteArray("00C0000010");
+    /* GET RESPONSE response: 16 bytes + 9000 */
+    const std::vector<uint8_t> getResponseCApdu
+        = HexUtil::toByteArray("112233445566778899AABBCCDDEEFF009000");
+
+    EXPECT_CALL(*apduRequestSpi.get(), getApdu())
+        .WillRepeatedly(ReturnRef(requestApdu));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(requestApdu))
+        .WillRepeatedly(Return(firstResponseApdu));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(getResponseApdu))
+        .WillRepeatedly(Return(getResponseCApdu));
+
+    LocalReaderAdapter localReaderAdapter(readerSpi, PLUGIN_NAME);
+    localReaderAdapter.doRegister();
+    auto response = localReaderAdapter.transmitCardRequest(
+        cardRequestSpi, ChannelControl::CLOSE_AFTER);
+
+    /* Should return the merged data with final status word */
+    ASSERT_EQ(response->getApduResponses()[0]->getApdu(), getResponseCApdu);
+    ASSERT_EQ(response->getApduResponses()[0]->getStatusWord(), 0x9000);
+    ASSERT_EQ(
+        response->getApduResponses()[0]->getDataOut(),
+        HexUtil::toByteArray("112233445566778899AABBCCDDEEFF00"));
+
+    tearDown();
+}
+
+TEST(
+    LocalReaderAdapterTest,
+    transmitCardRequest_with61XXResponse_withInitialData_shouldChainAndAccumulateData)  // NOLINT
+{
+    setUp();
+
+    std::vector<uint8_t> requestApdu = HexUtil::toByteArray("00A4040000");
+    /* First response: 9 bytes of data, status 6108 (8 more bytes available) */
+    const std::vector<uint8_t> firstResponseApdu
+        = HexUtil::toByteArray("AABBCCDDEE112233446108");
+    /* GET RESPONSE command: 00C0000008 */
+    const std::vector<uint8_t> getResponseApdu
+        = HexUtil::toByteArray("00C0000008");
+    /* GET RESPONSE response: 8 bytes + 9000 */
+    const std::vector<uint8_t> getResponseCApdu
+        = HexUtil::toByteArray("55667788990011229000");
+
+    EXPECT_CALL(*apduRequestSpi.get(), getApdu())
+        .WillRepeatedly(ReturnRef(requestApdu));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(requestApdu))
+        .WillRepeatedly(Return(firstResponseApdu));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(getResponseApdu))
+        .WillRepeatedly(Return(getResponseCApdu));
+
+    LocalReaderAdapter localReaderAdapter(readerSpi, PLUGIN_NAME);
+    localReaderAdapter.doRegister();
+    auto response = localReaderAdapter.transmitCardRequest(
+        cardRequestSpi, ChannelControl::CLOSE_AFTER);
+
+    /* Should return all data accumulated: first 9 bytes + second 8 bytes = 17
+     * bytes total */
+    const std::vector<uint8_t> expectedData
+        = HexUtil::toByteArray("AABBCCDDEE112233445566778899001122");
+    const std::vector<uint8_t> expectedApdu
+        = HexUtil::toByteArray("AABBCCDDEE1122334455667788990011229000");
+
+    ASSERT_EQ(response->getApduResponses()[0]->getApdu(), expectedApdu);
+    ASSERT_EQ(response->getApduResponses()[0]->getStatusWord(), 0x9000);
+    ASSERT_EQ(response->getApduResponses()[0]->getDataOut(), expectedData);
+
+    tearDown();
+}
+
+TEST(
+    LocalReaderAdapterTest,
+    transmitCardRequest_with61XXResponse_multipleChains_shouldAccumulateAllData)
+{
+    setUp();
+
+    std::vector<uint8_t> requestApdu = HexUtil::toByteArray("00A4040000");
+    /* First response: 4 bytes, status 6104 (4 more bytes) */
+    const std::vector<uint8_t> firstResponseApdu
+        = HexUtil::toByteArray("AABBCCDD6104");
+    /* GET RESPONSE: 00C0000004 (will be sent twice with different responses) */
+    const std::vector<uint8_t> getResponseApdu
+        = HexUtil::toByteArray("00C0000004");
+    /* Second response: 4 bytes, status 6104 (4 more bytes) */
+    const std::vector<uint8_t> secondResponseApdu
+        = HexUtil::toByteArray("112233446104");
+    /* Third response: 4 bytes, status 9000 (done) */
+    const std::vector<uint8_t> thirdResponseApdu
+        = HexUtil::toByteArray("556677889000");
+
+    EXPECT_CALL(*apduRequestSpi.get(), getApdu())
+        .WillRepeatedly(ReturnRef(requestApdu));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(requestApdu))
+        .WillRepeatedly(Return(firstResponseApdu));
+    /* Chain multiple responses for the same GET RESPONSE command */
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(getResponseApdu))
+        .WillOnce(Return(secondResponseApdu))
+        .WillOnce(Return(thirdResponseApdu));
+
+    LocalReaderAdapter localReaderAdapter(readerSpi, PLUGIN_NAME);
+    localReaderAdapter.doRegister();
+    auto response = localReaderAdapter.transmitCardRequest(
+        cardRequestSpi, ChannelControl::CLOSE_AFTER);
+
+    /* Should accumulate all three chunks: 4 + 4 + 4 = 12 bytes */
+    const std::vector<uint8_t> expectedData
+        = HexUtil::toByteArray("AABBCCDD1122334455667788");
+    const std::vector<uint8_t> expectedApdu
+        = HexUtil::toByteArray("AABBCCDD11223344556677889000");
+
+    ASSERT_EQ(response->getApduResponses()[0]->getApdu(), expectedApdu);
+    ASSERT_EQ(response->getApduResponses()[0]->getStatusWord(), 0x9000);
+    ASSERT_EQ(response->getApduResponses()[0]->getDataOut(), expectedData);
+
+    tearDown();
+}
+
+TEST(
+    LocalReaderAdapterTest,
+    transmitCardRequest_with61XXResponse_finalStatusNotSuccess_shouldReturnAllDataWithFinalStatus)  // NOLINT
+{
+    setUp();
+
+    std::vector<uint8_t> requestApdu = HexUtil::toByteArray("00A4040000");
+    /* First response: 4 bytes, status 6104 */
+    const std::vector<uint8_t> firstResponseApdu
+        = HexUtil::toByteArray("AABBCCDD6104");
+    /* GET RESPONSE: 00C0000004 */
+    const std::vector<uint8_t> getResponseApdu
+        = HexUtil::toByteArray("00C0000004");
+    /* Second response: 4 bytes, status 6283 (file invalidated) */
+    const std::vector<uint8_t> secondResponseApdu
+        = HexUtil::toByteArray("112233446283");
+
+    EXPECT_CALL(*apduRequestSpi.get(), getApdu())
+        .WillRepeatedly(ReturnRef(requestApdu));
+    /* Allow both 9000 and 6283 as successful */
+    EXPECT_CALL(*apduRequestSpi.get(), getSuccessfulStatusWords())
+        .WillRepeatedly(ReturnRef(statusWords));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(requestApdu))
+        .WillRepeatedly(Return(firstResponseApdu));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(getResponseApdu))
+        .WillRepeatedly(Return(secondResponseApdu));
+
+    LocalReaderAdapter localReaderAdapter(readerSpi, PLUGIN_NAME);
+    localReaderAdapter.doRegister();
+    auto response = localReaderAdapter.transmitCardRequest(
+        cardRequestSpi, ChannelControl::CLOSE_AFTER);
+
+    /* Should accumulate data and return final status 6283 */
+    const std::vector<uint8_t> expectedData
+        = HexUtil::toByteArray("AABBCCDD11223344");
+    const std::vector<uint8_t> expectedApdu
+        = HexUtil::toByteArray("AABBCCDD112233446283");
+
+    ASSERT_EQ(response->getApduResponses()[0]->getApdu(), expectedApdu);
+    ASSERT_EQ(response->getApduResponses()[0]->getStatusWord(), 0x6283);
+    ASSERT_EQ(response->getApduResponses()[0]->getDataOut(), expectedData);
+
+    tearDown();
+}
+
+TEST(
+    LocalReaderAdapterTest,
+    transmitCardRequest_with6100Response_withMaxLength_shouldRequestMaxBytes)
+{
+    setUp();
+
+    std::vector<uint8_t> requestApdu = HexUtil::toByteArray("00A4040000");
+    /* Response: status 6100 (0 bytes in SW2 means 256 bytes available) */
+    const std::vector<uint8_t> firstResponseApdu = HexUtil::toByteArray("6100");
+    /* GET RESPONSE should request 0x00 (which means 256) */
+    const std::vector<uint8_t> getResponseApdu
+        = HexUtil::toByteArray("00C0000000");
+    /* Return some data with 9000 */
+    const std::vector<uint8_t> getResponseCApdu
+        = HexUtil::toByteArray("AABBCCDD9000");
+
+    EXPECT_CALL(*apduRequestSpi.get(), getApdu())
+        .WillRepeatedly(ReturnRef(requestApdu));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(requestApdu))
+        .WillRepeatedly(Return(firstResponseApdu));
+    EXPECT_CALL(*readerSpi.get(), transmitApdu(getResponseApdu))
+        .WillRepeatedly(Return(getResponseCApdu));
+
+    LocalReaderAdapter localReaderAdapter(readerSpi, PLUGIN_NAME);
+    localReaderAdapter.doRegister();
+    auto response = localReaderAdapter.transmitCardRequest(
+        cardRequestSpi, ChannelControl::CLOSE_AFTER);
+
+    ASSERT_EQ(response->getApduResponses()[0]->getApdu(), getResponseCApdu);
+    ASSERT_EQ(response->getApduResponses()[0]->getStatusWord(), 0x9000);
+
+    tearDown();
+}

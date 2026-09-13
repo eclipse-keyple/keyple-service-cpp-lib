@@ -80,7 +80,7 @@ AbstractPluginAdapter::checkStatus() const
 {
     if (!mIsRegistered) {
         throw IllegalStateException(
-            "Plugin [" + mPluginName + "] is not or no longer registered");
+            "Plugin '" + mPluginName + "' is not or no longer registered");
     }
 }
 
@@ -95,14 +95,15 @@ AbstractPluginAdapter::doUnregister()
 {
     mIsRegistered = false;
 
-    for (const auto& pair : mReaders) {
+    for (const auto& reader : mReaders) {
         try {
-            std::dynamic_pointer_cast<AbstractReaderAdapter>(pair.second)
+            std::dynamic_pointer_cast<AbstractReaderAdapter>(reader.second)
                 ->doUnregister();
         } catch (const Exception& e) {
-            mLogger->error(
-                "Error unregistering reader [%] %'\n",
-                pair.second->getName(),
+            mLogger->warn(
+                "[plugin=%] Failed to unregister reader [reader=%, reason=%]\n",
+                mPluginName,
+                reader.second->getName(),
                 e.getMessage());
         }
     }
@@ -139,7 +140,7 @@ AbstractPluginAdapter::getReaderExtension(
         getReader(readerName));
     if (reader == nullptr) {
         throw IllegalArgumentException(
-            "Reader [" + readerName + "] not found!");
+            "Reader '" + readerName + "' is not found");
     }
 
     return reader->getExtension(readerExtensionClass);
@@ -201,7 +202,8 @@ AbstractPluginAdapter::findReader(const std::string& readerNameRegex) const
 
         } catch (const std::regex_error& e) {
             throw IllegalArgumentException(
-                "readerNameRegex is invalid: " + std::string(e.what()));
+                "Parameter 'readerNameRegex' has an invalid regex syntax:"
+                + readerNameRegex + ": " + e.what());
         }
     }
 
