@@ -44,8 +44,8 @@ std::ostream&
 operator<<(std::ostream& os, const CardResponseAdapter& cra)
 {
     os << "CARD_RESPONSE_ADAPTER: {"
-       << "APDU_RESPONSE = <TODO>, "
-       << "IS_LOGICAL_CHANNEL_OPEN = " << cra.mIsLogicalChannelOpen << "}";
+       << "APDU_RESPONSE: " << cra.mApduResponses << ", "
+       << "IS_LOGICAL_CHANNEL_OPEN: " << cra.mIsLogicalChannelOpen << "}";
 
     return os;
 }

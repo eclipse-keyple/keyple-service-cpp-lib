@@ -137,6 +137,10 @@ TEST(
     EXPECT_CALL(*response.get(), getApduResponses())
         .WillRepeatedly(ReturnRef(empty));
 
+    const std::vector<std::shared_ptr<ApduRequestSpi>> emptyApduRequests;
+    EXPECT_CALL(*cardRequestSpi.get(), getApduRequests())
+        .WillRepeatedly(ReturnRef(emptyApduRequests));
+
     EXPECT_CALL(*readerAdapter.get(), processCardRequest(_, _))
         .Times(1)
         .WillOnce(Return(response));

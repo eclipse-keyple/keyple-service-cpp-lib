@@ -14,6 +14,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <typeinfo>
 
 #include "keyple/core/plugin/spi/reader/observable/ObservableReaderSpi.hpp"
@@ -78,6 +79,11 @@ public:
     void stop() override;
 
 private:
+    /**
+     *
+     */
+    static const std::string JOB_ID;
+
     /**
      *
      */

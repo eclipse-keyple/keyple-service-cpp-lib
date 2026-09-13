@@ -30,8 +30,8 @@ using keyple::core::util::cpp::exception::IllegalArgumentException;
 
 LocalPluginAdapter::LocalPluginAdapter(std::shared_ptr<PluginSpi> pluginSpi)
 : AbstractPluginAdapter(
-    pluginSpi ? pluginSpi->getName() : "",
-    std::dynamic_pointer_cast<KeyplePluginExtension>(pluginSpi))
+      pluginSpi ? pluginSpi->getName() : "",
+      std::dynamic_pointer_cast<KeyplePluginExtension>(pluginSpi))
 , mPluginSpi(pluginSpi)
 {
     if (pluginSpi == nullptr) {
@@ -61,8 +61,8 @@ LocalPluginAdapter::doUnregister()
     try {
         mPluginSpi->onUnregister();
     } catch (const Exception& e) {
-        mLogger->error(
-            "Error unregistering plugin extension [%]: %\n",
+        mLogger->warn(
+            "[plugin=%] Failed to unregister plugin extension [reason=%]\n",
             getName(),
             e.getMessage());
     }

@@ -14,6 +14,7 @@
 #pragma once
 
 #include <memory>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -78,6 +79,18 @@ public:
          *
          */
         std::vector<int> mSuccessfulSelectionStatusWords;
+
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const LegacyCardSelector& lcs);
+
+        /**
+         *
+         */
+        friend std::ostream& operator<<(
+            std::ostream& os, const std::shared_ptr<LegacyCardSelector> lcs);
     };
 
     /**
@@ -94,6 +107,18 @@ public:
          *
          */
         bool mIsStatusCodesVerificationEnabled;
+
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const LegacyCardRequestV0& lcr);
+
+        /**
+         *
+         */
+        friend std::ostream& operator<<(
+            std::ostream& os, const std::shared_ptr<LegacyCardRequestV0> lcr);
     };
 
     /**
@@ -115,6 +140,18 @@ public:
          *
          */
         std::string mInfo;
+
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const LegacyApduRequest& lar);
+
+        /**
+         *
+         */
+        friend std::ostream& operator<<(
+            std::ostream& os, const std::shared_ptr<LegacyApduRequest> lar);
     };
 
     /**
@@ -131,6 +168,18 @@ public:
          *
          */
         bool mStopOnUnsuccessfulStatusWord;
+
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const LegacyCardRequestV1& lcr);
+
+        /**
+         *
+         */
+        friend std::ostream& operator<<(
+            std::ostream& os, const std::shared_ptr<LegacyCardRequestV1> lcr);
     };
 
     /**
@@ -147,6 +196,19 @@ public:
          *
          */
         std::shared_ptr<LegacyCardRequestV0> mCardRequest;
+
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const LegacyCardSelectionRequestV0& lcsr);
+
+        /**
+         *
+         */
+        friend std::ostream& operator<<(
+            std::ostream& os,
+            const std::shared_ptr<LegacyCardSelectionRequestV0> lcsr);
     };
 
     /**
@@ -163,6 +225,19 @@ public:
          *
          */
         std::shared_ptr<LegacyCardRequestV1> mCardRequest;
+
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const LegacyCardSelectionRequestV1& lcsr);
+
+        /**
+         *
+         */
+        friend std::ostream& operator<<(
+            std::ostream& os,
+            const std::shared_ptr<LegacyCardSelectionRequestV1> lcsr);
     };
 
     /**

@@ -67,7 +67,7 @@ ObservableLocalPluginAdapter::addObserver(
     AbstractObservableLocalPluginAdapter::addObserver(observer);
 
     if (countObservers() == 1) {
-        mLogger->info("Start monitoring the plugin [%]\n", getName());
+        mLogger->info("[plugin=%] Starting reader monitoring\n", getName());
         mThread = std::make_shared<EventThread>(getName(), this);
         mThread->setName("PluginEventMonitoringThread");
         mThread->setUncaughtExceptionHandler(
@@ -90,7 +90,8 @@ ObservableLocalPluginAdapter::removeObserver(
         if (countObservers() == 0) {
             if (mThread != nullptr) {
                 mThread->end();
-                mLogger->info("Plugin monitoring stopped\n");
+                mLogger->info(
+                    "[plugin=%] Reader monitoring stopped\n", getName());
             }
         }
     }
@@ -103,7 +104,7 @@ ObservableLocalPluginAdapter::clearObservers()
 
     if (mThread != nullptr) {
         mThread->end();
-        mLogger->info("Plugin monitoring stopped\n");
+        mLogger->info("[plugin=%] Reader monitoring stopped\n", getName());
     }
 }
 
@@ -168,7 +169,7 @@ ObservableLocalPluginAdapter::EventThread::addReader(
     mParent->getReadersMap().insert({reader->getName(), reader});
 
     mParent->mLogger->info(
-        "Plugin [%] adds plugged reader [%] to readers list\n",
+        "[plugin=%] New plugged reader added to readers list [reader=%]\n",
         mPluginName,
         readerName);
 }
@@ -181,7 +182,7 @@ ObservableLocalPluginAdapter::EventThread::removeReader(
     mParent->getReadersMap().erase(reader->getName());
 
     mParent->mLogger->info(
-        "Plugin [%] removes unplugged reader [%] from readers list\n",
+        "[plugin=%] Unplugged reader removed from readers list [reader=%]\n",
         mPluginName,
         reader->getName());
 }
@@ -209,8 +210,10 @@ ObservableLocalPluginAdapter::EventThread::processChanges(
 {
     std::vector<std::string> changedReaderNames;
 
-    /* Parse the current readers list, notify for disappeared readers, update
-     * readers list */
+    /*
+     * Parse the current readers list, notify for disappeared readers, update
+     * readers list
+     */
     const std::vector<std::shared_ptr<CardReader>> readers
         = mParent->getReaders();
     for (const auto& reader : readers) {
@@ -234,8 +237,11 @@ ObservableLocalPluginAdapter::EventThread::processChanges(
             }
         }
 
-        notifyChanges(
-            PluginEvent::Type::READER_DISCONNECTED, changedReaderNames);
+        mParent->notifyObservers(
+            std::make_shared<PluginEventAdapter>(
+                mPluginName,
+                changedReaderNames,
+                PluginEvent::Type::READER_DISCONNECTED));
 
         /* Clean the list for a possible connection notification */
         changedReaderNames.clear();
@@ -255,7 +261,11 @@ ObservableLocalPluginAdapter::EventThread::processChanges(
 
     /* Notify connections if any */
     if (!changedReaderNames.empty()) {
-        notifyChanges(PluginEvent::Type::READER_CONNECTED, changedReaderNames);
+        mParent->notifyObservers(
+            std::make_shared<PluginEventAdapter>(
+                mPluginName,
+                changedReaderNames,
+                PluginEvent::Type::READER_CONNECTED));
     }
 }
 
@@ -264,10 +274,10 @@ ObservableLocalPluginAdapter::EventThread::execute()
 {
     mStarted = true;
 
-    /* True while a reader enumeration outage is in progress, see below. */
-    bool isInError = false;
-
     try {
+        /* True while a reader enumeration outage is in progress, see below. */
+        bool isInError = false;
+
         while (mRunning) {
             try {
                 /* Retrieves the current readers names list */
@@ -300,8 +310,9 @@ ObservableLocalPluginAdapter::EventThread::execute()
                  */
                 if (!isInError) {
                     isInError = true;
-                    auto kpe(std::unique_ptr<KeyplePluginException>(
-                        new KeyplePluginException(
+                    auto kpe(
+                        std::unique_ptr<
+                            KeyplePluginException>(new KeyplePluginException(
                             "An error occurred while monitoring the readers",
                             e)));
                     mParent->getObservationManager()
@@ -316,8 +327,9 @@ ObservableLocalPluginAdapter::EventThread::execute()
     } catch (const InterruptedException& e) {
         (void)e;
         mParent->mLogger->info(
-            "Plugin monitoring stopped, possibly because there is no more "
-            "registered observer");
+            "[plugin=%] Reader monitoring stopped, possibly because there is "
+            "no more registered observer",
+            getName());
 
         /* Restore interrupted state... */
         interrupt();

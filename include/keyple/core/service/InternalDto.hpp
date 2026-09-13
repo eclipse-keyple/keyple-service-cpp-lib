@@ -14,6 +14,7 @@
 #pragma once
 
 #include <memory>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -87,6 +88,18 @@ public:
          */
         const std::string& getInfo() const override;
 
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const ApduRequest& ar);
+
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const std::shared_ptr<ApduRequest> ar);
+
     private:
         /**
          *
@@ -137,6 +150,18 @@ public:
          */
         bool stopOnUnsuccessfulStatusWord() const override;
 
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const CardRequest& cr);
+
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const std::shared_ptr<CardRequest> cr);
+
     private:
         /**
          *
@@ -182,6 +207,18 @@ public:
          *
          */
         const std::shared_ptr<CardRequestSpi> getCardRequest() const override;
+
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const CardSelectionRequest& csr);
+
+        /**
+         *
+         */
+        friend std::ostream& operator<<(
+            std::ostream& os, const std::shared_ptr<CardSelectionRequest> csr);
 
     private:
         /**
@@ -231,6 +268,18 @@ public:
         std::shared_ptr<SmartCardSpi> parse(
             const std::shared_ptr<CardSelectionResponseApi>&
                 cardSelectionResponseApi) override;
+
+        /**
+         *
+         */
+        friend std::ostream&
+        operator<<(std::ostream& os, const CardSelectionAdapter& csa);
+
+        /**
+         *
+         */
+        friend std::ostream& operator<<(
+            std::ostream& os, const std::shared_ptr<CardSelectionAdapter> csa);
 
     private:
         /**

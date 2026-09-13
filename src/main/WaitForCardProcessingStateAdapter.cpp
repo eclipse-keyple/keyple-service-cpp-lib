@@ -26,10 +26,10 @@ WaitForCardProcessingStateAdapter::WaitForCardProcessingStateAdapter(
     std::shared_ptr<AbstractMonitoringJobAdapter> monitoringJob,
     std::shared_ptr<ExecutorService> executorService)
 : AbstractObservableStateAdapter(
-    MonitoringState::WAIT_FOR_CARD_PROCESSING,
-    reader,
-    monitoringJob,
-    executorService)
+      MonitoringState::WAIT_FOR_CARD_PROCESSING,
+      reader,
+      monitoringJob,
+      executorService)
 {
 }
 
@@ -43,10 +43,10 @@ void
 WaitForCardProcessingStateAdapter::onEvent(const InternalEvent event)
 {
     mLogger->trace(
-        "Internal event [%] received for reader [%] in current state [%]\n",
-        event,
+        "[fsmState=%, reader=%] Processing internal event [type=%]\n",
+        getMonitoringState(),
         getReader()->getName(),
-        getMonitoringState());
+        event);
 
     /* Process InternalEvent */
     switch (event) {
@@ -81,9 +81,18 @@ WaitForCardProcessingStateAdapter::onEvent(const InternalEvent event)
         break;
 
     default:
-        mLogger->trace("Event ignored\n");
+        mLogger->trace(
+            "[fsmState=%, reader=%] Internal event ignored\n",
+            getMonitoringState(),
+            getReader()->getName());
         break;
     }
+
+    mLogger->trace(
+        "[fsmState=%, reader=%] Internal event processed [type=%]\n",
+        getMonitoringState(),
+        getReader()->getName(),
+        event);
 }
 
 } /* namespace service */

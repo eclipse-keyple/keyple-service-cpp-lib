@@ -14,6 +14,7 @@
 #include "keyple/core/service/CardInsertionActiveMonitoringJobAdapter.hpp"
 
 #include <memory>
+#include <string>
 
 #include "keyple/core/util/cpp/exception/InterruptedException.hpp"
 #include "keyple/core/util/cpp/exception/RuntimeException.hpp"
@@ -26,6 +27,9 @@ using keyple::core::util::cpp::exception::InterruptedException;
 using keyple::core::util::cpp::exception::RuntimeException;
 
 using InternalEvent = ObservableLocalReaderAdapter::InternalEvent;
+
+const std::string CardInsertionActiveMonitoringJobAdapter::JOB_ID
+    = "INSERTION_ACTIVE";
 
 /* CARD INSERTION ACTIVE MONITORING JOB
  * --------------------------------------------------------- */
@@ -46,18 +50,30 @@ CardInsertionActiveMonitoringJobAdapter::CardInsertionActiveMonitoringJob::
 {
     try {
         mParent->mLogger->trace(
-            "Start monitoring job polling process using 'isCardPresent()' "
-            "method on reader [%]\n",
+            "[fsmJob=%, reader=%] Starting monitoring job process "
+            "[mode=Polling using 'isCardPresent()']\n",
+            JOB_ID,
             mParent->mReader->getName());
 
         /* Re-init loop value to true */
         mParent->mLoop = true;
 
-        while (mParent->mLoop) {
+        /*
+         * C++: jobs are queued asynchronously by the ExecutorService, so
+         * stop() may already have been called (and cancel() set) before this
+         * method starts running, in which case the reset above would
+         * otherwise silently revive a job that was already told to stop and
+         * loop forever. Checking isCancelled() here and on every iteration
+         * closes that race.
+         */
+        while (mParent->mLoop && !isCancelled()) {
             /* Polls for CARD_INSERTED */
             if (mParent->mMonitorInsertion
                 && mParent->mReader->isCardPresent()) {
-                mParent->mLogger->trace("Card present\n");
+                mParent->mLogger->trace(
+                    "[fsmJob=%, reader=%] Card present\n",
+                    JOB_ID,
+                    mParent->mReader->getName());
                 mMonitoringState->onEvent(InternalEvent::CARD_INSERTED);
                 return;
             }
@@ -65,7 +81,10 @@ CardInsertionActiveMonitoringJobAdapter::CardInsertionActiveMonitoringJob::
             /* Polls for CARD_REMOVED */
             if (!mParent->mMonitorInsertion
                 && !mParent->mReader->isCardPresent()) {
-                mParent->mLogger->trace("Card not present\n");
+                mParent->mLogger->trace(
+                    "[fsmJob=%, reader=%] Card not present\n",
+                    JOB_ID,
+                    mParent->mReader->getName());
                 mParent->mLoop = false;
                 mMonitoringState->onEvent(InternalEvent::CARD_REMOVED);
                 return;
@@ -81,7 +100,10 @@ CardInsertionActiveMonitoringJobAdapter::CardInsertionActiveMonitoringJob::
                 mParent->mLoop = false;
             }
         }
-        mParent->mLogger->trace("Monitoring job polling process stopped");
+        mParent->mLogger->trace(
+            "[fsmJob=%, reader=%] Monitoring job polling process stopped\n",
+            JOB_ID,
+            mParent->mReader->getName());
 
     } catch (const RuntimeException& e) {
         dynamic_cast<ObservableLocalReaderAdapter*>(mParent->mReader)

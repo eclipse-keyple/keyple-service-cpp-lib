@@ -15,6 +15,7 @@
 
 #include <atomic>
 #include <memory>
+#include <string>
 #include <typeinfo>
 
 #include "keyple/core/plugin/spi/reader/observable/state/removal/WaitForCardRemovalBlockingSpi.hpp"
@@ -87,6 +88,11 @@ public:
     void stop() override;
 
 private:
+    /**
+     *
+     */
+    static const std::string JOB_ID;
+
     /**
      *
      */

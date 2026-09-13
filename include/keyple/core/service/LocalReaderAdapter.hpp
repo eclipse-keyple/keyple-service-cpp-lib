@@ -314,6 +314,11 @@ private:
     std::map<const std::string, const std::string> mProtocolAssociations;
 
     /**
+     *
+     */
+    const bool mIsAutomaticStatusCodeHandlingEnabled;
+
+    /**
      * This POJO contains the card selection status.
      */
     class SelectionStatus {

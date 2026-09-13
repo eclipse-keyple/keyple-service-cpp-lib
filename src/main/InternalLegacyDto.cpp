@@ -13,7 +13,9 @@
 
 #include "keyple/core/service/InternalLegacyDto.hpp"
 
+#include <iomanip>
 #include <memory>
+#include <sstream>
 #include <vector>
 
 #include "keyple/core/service/InternalCardSelector.hpp"
@@ -177,6 +179,249 @@ InternalLegacyDto::mapToLegacyApduRequest(
     result->mSuccessfulStatusWords = apduRequestSpi->getSuccessfulStatusWords();
 
     return result;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const InternalLegacyDto::LegacyCardSelector& lcs)
+{
+    std::stringstream ssAid;
+    for (const auto val : lcs.mAid) {
+        ssAid << std::uppercase << std::hex << std::setfill('0') << std::setw(2)
+              << static_cast<int>(val);
+    }
+
+    std::stringstream ssSw;
+    for (auto it = std::begin(lcs.mSuccessfulSelectionStatusWords);
+         it != std::end(lcs.mSuccessfulSelectionStatusWords);
+         ++it) {
+        ssSw << std::uppercase << std::hex << std::setfill('0') << std::setw(4)
+             << static_cast<int>(*it);
+        if (it != lcs.mSuccessfulSelectionStatusWords.end() - 1) {
+            ssSw << ", ";
+        }
+    }
+
+    os << "LEGACY_CARD_SELECTOR: {"
+       << "CARD_PROTOCOL: " << lcs.mCardProtocol << ", "
+       << "POWER_ON_DATA_REGEX: " << lcs.mPowerOnDataRegex << ", "
+       << "AID: " << ssAid.str() << ", "
+       << "FILE_OCCURRENCE: " << lcs.mFileOccurrence << ", "
+       << "FILE_CONTROL_INFORMATION: " << lcs.mFileControlInformation << ", "
+       << "SUCCESSFUL_SELECTION_STATUS_WORDS: " << ssSw.str() << "}";
+
+    return os;
+}
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const std::shared_ptr<InternalLegacyDto::LegacyCardSelector> lcs)
+{
+    if (lcs == nullptr) {
+        os << "LEGACY_CARD_SELECTOR: null";
+    } else {
+        os << *lcs;
+    }
+
+    return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const InternalLegacyDto::LegacyApduRequest& lar)
+{
+    std::stringstream ssApdu;
+    for (const auto val : lar.mApdu) {
+        ssApdu << std::uppercase << std::hex << std::setfill('0')
+               << std::setw(2) << static_cast<int>(val);
+    }
+
+    std::stringstream ssSw;
+    for (auto it = std::begin(lar.mSuccessfulStatusWords);
+         it != std::end(lar.mSuccessfulStatusWords);
+         ++it) {
+        ssSw << std::uppercase << std::hex << std::setfill('0') << std::setw(4)
+             << static_cast<int>(*it);
+        if (it != lar.mSuccessfulStatusWords.end() - 1) {
+            ssSw << ", ";
+        }
+    }
+
+    os << "LEGACY_APDU_REQUEST: {"
+       << "APDU: " << ssApdu.str() << ", "
+       << "SUCCESSFUL_STATUS_WORD: " << ssSw.str() << ", "
+       << "INFO: " << lar.mInfo << "}";
+
+    return os;
+}
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const std::shared_ptr<InternalLegacyDto::LegacyApduRequest> lar)
+{
+    if (lar == nullptr) {
+        os << "LEGACY_APDU_REQUEST: null";
+    } else {
+        os << *lar;
+    }
+
+    return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const InternalLegacyDto::LegacyCardRequestV0& lcr)
+{
+    os << "LEGACY_CARD_REQUEST_V0: {"
+       << "APDU_REQUESTS: {";
+
+    for (auto it = std::begin(lcr.mApduRequests);
+         it != std::end(lcr.mApduRequests);
+         ++it) {
+        os << **it;
+        if (it != lcr.mApduRequests.end() - 1) {
+            os << ", ";
+        }
+    }
+
+    os << "}, "
+       << "IS_STATUS_CODES_VERIFICATION_ENABLED: "
+       << lcr.mIsStatusCodesVerificationEnabled << "}";
+
+    return os;
+}
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const std::shared_ptr<InternalLegacyDto::LegacyCardRequestV0> lcr)
+{
+    if (lcr == nullptr) {
+        os << "LEGACY_CARD_REQUEST_V0: null";
+    } else {
+        os << *lcr;
+    }
+
+    return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const InternalLegacyDto::LegacyCardRequestV1& lcr)
+{
+    os << "LEGACY_CARD_REQUEST_V1: {"
+       << "APDU_REQUESTS: {";
+
+    for (auto it = std::begin(lcr.mApduRequests);
+         it != std::end(lcr.mApduRequests);
+         ++it) {
+        os << **it;
+        if (it != lcr.mApduRequests.end() - 1) {
+            os << ", ";
+        }
+    }
+
+    os << "}, "
+       << "STOP_ON_UNSUCCESSFUL_STATUS_WORD: "
+       << lcr.mStopOnUnsuccessfulStatusWord << "}";
+
+    return os;
+}
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const std::shared_ptr<InternalLegacyDto::LegacyCardRequestV1> lcr)
+{
+    if (lcr == nullptr) {
+        os << "LEGACY_CARD_REQUEST_V1: null";
+    } else {
+        os << *lcr;
+    }
+
+    return os;
+}
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const InternalLegacyDto::LegacyCardSelectionRequestV0& lcsr)
+{
+    os << "LEGACY_CARD_SELECTION_REQUEST_V0: {"
+       << "CARD_SELECTOR: ";
+
+    if (lcsr.mCardSelector == nullptr) {
+        os << "null";
+    } else {
+        os << *lcsr.mCardSelector;
+    }
+
+    os << ", "
+       << "CARD_REQUEST: ";
+
+    if (lcsr.mCardRequest == nullptr) {
+        os << "null";
+    } else {
+        os << *lcsr.mCardRequest;
+    }
+
+    os << "}";
+
+    return os;
+}
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const std::shared_ptr<InternalLegacyDto::LegacyCardSelectionRequestV0> lcsr)
+{
+    if (lcsr == nullptr) {
+        os << "LEGACY_CARD_SELECTION_REQUEST_V0: null";
+    } else {
+        os << *lcsr;
+    }
+
+    return os;
+}
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const InternalLegacyDto::LegacyCardSelectionRequestV1& lcsr)
+{
+    os << "LEGACY_CARD_SELECTION_REQUEST_V1: {"
+       << "CARD_SELECTOR: ";
+
+    if (lcsr.mCardSelector == nullptr) {
+        os << "null";
+    } else {
+        os << *lcsr.mCardSelector;
+    }
+
+    os << ", "
+       << "CARD_REQUEST: ";
+
+    if (lcsr.mCardRequest == nullptr) {
+        os << "null";
+    } else {
+        os << *lcsr.mCardRequest;
+    }
+
+    os << "}";
+
+    return os;
+}
+
+std::ostream&
+operator<<(
+    std::ostream& os,
+    const std::shared_ptr<InternalLegacyDto::LegacyCardSelectionRequestV1> lcsr)
+{
+    if (lcsr == nullptr) {
+        os << "LEGACY_CARD_SELECTION_REQUEST_V1: null";
+    } else {
+        os << *lcsr;
+    }
+
+    return os;
 }
 
 } /* namespace service */

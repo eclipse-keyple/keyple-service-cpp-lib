@@ -272,6 +272,11 @@ public:
      */
     std::unique_ptr<ReaderApiFactory> getReaderApiFactory() final;
 
+    /**
+     *
+     */
+    bool isAutomaticStatusCodeHandlingEnabled() const;
+
 private:
     /**
      *
@@ -302,6 +307,11 @@ private:
     /**
      *
      */
+    bool mIsAutomaticStatusCodeHandlingEnabled = true;
+
+    /**
+     *
+     */
     // private final Object pluginMonitor = new Object();
 
     /**
@@ -325,7 +335,7 @@ private:
     /**
      * Private constructor
      */
-    SmartCardServiceAdapter() = default;
+    SmartCardServiceAdapter();
 
     /**
      * Compare versions.

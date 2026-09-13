@@ -14,6 +14,7 @@
 #include "keyple/core/service/CardRemovalPassiveMonitoringJobAdapter.hpp"
 
 #include <memory>
+#include <string>
 
 #include "keyple/core/plugin/ReaderIOException.hpp"
 #include "keyple/core/plugin/TaskCanceledException.hpp"
@@ -41,6 +42,9 @@ using keyple::core::plugin::spi::reader::observable::state::removal::
 using keyple::core::util::cpp::exception::RuntimeException;
 
 using InternalEvent = ObservableLocalReaderAdapter::InternalEvent;
+
+const std::string CardRemovalPassiveMonitoringJobAdapter::JOB_ID
+    = "REMOVAL_PASSIVE";
 
 /* CARD REMOVAL PASSIVE MONITORING JOB
  * ---------------------------------------------------------- */
@@ -89,14 +93,19 @@ CardRemovalPassiveMonitoringJobAdapter::CardRemovalPassiveMonitoringJob::
     } catch (const ReaderIOException& e) {
         /* Just warn as it can be a disconnection of the reader. */
         mParent->mLogger->warn(
-            "Monitoring job error while processing card removal event on "
-            "reader [%]: %\n",
+            "[fsmJob=%, reader=%] Failed to process card removal event "
+            "[reason=%]\n",
+            JOB_ID,
             mParent->getReader()->getName(),
             e.getMessage());
     } catch (const TaskCanceledException& e) {
         isTaskCanceled = true;
         mParent->mLogger->warn(
-            "Monitoring job process cancelled: %\n", e.getMessage());
+            "[fsmJob=%, reader=%] Monitoring job process cancelled "
+            "[reason=%]\n",
+            JOB_ID,
+            mParent->getReader()->getName(),
+            e.getMessage());
     } catch (const RuntimeException& e) {
         mParent->getReader()
             ->getObservationExceptionHandler()
@@ -111,9 +120,6 @@ CardRemovalPassiveMonitoringJobAdapter::CardRemovalPassiveMonitoringJob::
         mMonitoringState->onEvent(InternalEvent::CARD_REMOVED);
     }
 }
-
-/* CARD REMOVAL PASSIVE MONITORING JOB ADAPTER
- * -------------------------------------------------- */
 
 CardRemovalPassiveMonitoringJobAdapter::CardRemovalPassiveMonitoringJobAdapter(
     ObservableLocalReaderAdapter* reader)
@@ -133,7 +139,10 @@ CardRemovalPassiveMonitoringJobAdapter::getMonitoringJob(
 void
 CardRemovalPassiveMonitoringJobAdapter::stop()
 {
-    mLogger->trace("Stop monitoring job process\n");
+    mLogger->trace(
+        "[fsmJob=%, reader=%] Stopping monitoring job process\n",
+        JOB_ID,
+        getReader()->getName());
 
     auto cardRemovalWaiterBlockingSpi
         = std::dynamic_pointer_cast<CardRemovalWaiterBlockingSpi>(mReaderSpi);
@@ -157,7 +166,10 @@ CardRemovalPassiveMonitoringJobAdapter::stop()
             ->stopWaitForCardRemovalDuringProcessing();
     }
 
-    mLogger->trace("Monitoring job process stopped\n");
+    mLogger->trace(
+        "[fsmJob=%, reader=%] Monitoring job process stopped\n",
+        JOB_ID,
+        getReader()->getName());
 }
 
 } /* namespace service */
