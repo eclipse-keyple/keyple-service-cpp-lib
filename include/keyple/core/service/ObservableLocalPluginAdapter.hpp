@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <typeinfo>
@@ -147,17 +148,17 @@ private:
         /**
          *
          */
-        bool mRunning;
+        std::atomic<bool> mRunning;
 
         /**
          *
          */
-        bool mStarted;
+        std::atomic<bool> mStarted;
 
         /**
          *
          */
-        bool mTerminated;
+        std::atomic<bool> mTerminated;
 
         /**
          *

@@ -51,17 +51,17 @@ TARGET_INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Include deps
-SET(GOOGLETEST_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-INCLUDE("CMakeLists.txt.googletest")
+# GTest/GMock are supplied by Conan (test_requires) via CMakeDeps
+FIND_PACKAGE(GTest REQUIRED CONFIG)
+FIND_PACKAGE(keyple-util-cpp-lib REQUIRED CONFIG)
 
 TARGET_LINK_LIBRARIES(
     ${EXECTUABLE_NAME}
 
     PUBLIC
 
-    gtest
-    gmock
+    GTest::gtest
+    GTest::gmock
     Keyple::Service
     Keyple::Util
 )

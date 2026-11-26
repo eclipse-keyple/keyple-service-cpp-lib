@@ -79,7 +79,8 @@ public:
             mStubReaders.begin(),
             mStubReaders.end(),
             back_inserter(readerNames),
-            [](const auto& reader) { return reader.first; });
+            [](const std::pair<const std::string, std::shared_ptr<ReaderSpi>>&
+                   reader) { return reader.first; });  // NOLINT
 
         return readerNames;
     }
@@ -111,7 +112,8 @@ public:
             mStubReaders.begin(),
             mStubReaders.end(),
             back_inserter(readers),
-            [](const auto& reader) { return reader.second; });
+            [](const std::pair<const std::string, std::shared_ptr<ReaderSpi>>&
+                   reader) { return reader.second; });  // NOLINT
 
         return readers;
     }
