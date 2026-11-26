@@ -14,6 +14,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -113,10 +114,12 @@ TEST(
     auto smartCards = cardSelectionResult.getSmartCards();
     ASSERT_NE(smartCards.size(), 0);
 
-    auto it
-        = std::find_if(smartCards.begin(), smartCards.end(), [](const auto& s) {
-              return s.second == smartCard;
-          });
+    auto it = std::find_if(
+        smartCards.begin(),
+        smartCards.end(),
+        [&](const std::pair<const int, std::shared_ptr<SmartCard>>& s) {
+            return s.second == smartCard;
+        });
 
     ASSERT_NE(it, smartCards.end());
 

@@ -90,6 +90,8 @@ ObservableLocalPluginAdapter::removeObserver(
         if (countObservers() == 0) {
             if (mThread != nullptr) {
                 mThread->end();
+                while (mThread->mRunning || !mThread->mTerminated) {
+                }
                 mLogger->info(
                     "[plugin=%] Reader monitoring stopped\n", getName());
             }
@@ -104,6 +106,8 @@ ObservableLocalPluginAdapter::clearObservers()
 
     if (mThread != nullptr) {
         mThread->end();
+        while (mThread->mRunning || !mThread->mTerminated) {
+        }
         mLogger->info("[plugin=%] Reader monitoring stopped\n", getName());
     }
 }

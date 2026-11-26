@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -48,7 +49,11 @@ public:
     hasReceived(const CardReaderEvent::Type eventType)
     {
         return std::any_of(
-            mEventTypeReceived.begin(), mEventTypeReceived.end(), [&](auto p) {
+            mEventTypeReceived.begin(),
+            mEventTypeReceived.end(),
+            [&](const std::pair<
+                const CardReaderEvent::Type,
+                std::shared_ptr<CardReaderEvent>>& p) {
                 return eventType == p.first;
             });
     }
